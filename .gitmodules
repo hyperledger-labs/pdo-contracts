@@ -1,0 +1,3 @@
+[submodule "private-data-objects"]
+	path = private-data-objects
+	url = https://github.com/hyperledger-labs/private-data-objects.git
