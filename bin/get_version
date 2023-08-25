@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+# Copyright 2018 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import subprocess
+import sys
+import warnings
+
+count = 0
+commit = ''
+dirty = ''
+
+try :
+    output = subprocess.check_output(['git', 'describe', '--dirty'])
+    (version, *rest) = output.decode('utf-8').strip().split('-')
+    (major, minor, patch) = version.strip('v').split('.')
+
+    # first case: this is a dirty tagged release, only dirty flag
+    if len(rest) == 1 :
+        assert rest[0] == 'dirty'
+        dirty = 'dirty'
+    # second case: this is a committed post tag release
+    elif len(rest) == 2 :
+        count = rest[0]
+        commit = rest[1]
+    # third case: this is a dirty, committed post tag release
+    elif len(rest) == 3 :
+        assert rest[2] == 'dirty'
+        count = rest[0]
+        commit = rest[1]
+        dirty = rest[2]
+
+    print('{}.{}.{}'.format(major, minor, count))
+except Exception as e :
+    warnings.warn('failed to compute version, using default')
+    print('0.0.0')
