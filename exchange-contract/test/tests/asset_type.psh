@@ -1,0 +1,29 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2018 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s _type_identity_ -v green_type
+set --conditional -s _type_contract_ -v ${save}/green_type.pdo
+
+## -----------------------------------------------------------------
+echo ${HEADER} basic asset type tests ${ENDC}
+## -----------------------------------------------------------------
+identity -n ${_type_identity_}
+asset_type_contract describe -f ${_type_contract_}
+asset_type_contract get_asset_type_identifier -f ${_type_contract_} -s _type_id_
+
+echo green marble type identifier is ${_type_id_}
+
+echo ${BOLD} asset type test complete ${ENDC}

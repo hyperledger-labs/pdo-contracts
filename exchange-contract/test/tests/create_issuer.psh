@@ -1,0 +1,52 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2018 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s _test_ -v escrow1
+set --conditional -s _color_ -v green
+
+set -s issuer_contract -v ${save}/${_test_}_${_color_}_issuer.pdo
+set -s _vetting_contract_ -v ${save}/${_test_}_${_color_}_vetting.pdo
+set -s _type_contract_ -v ${save}/${_test_}_${_color_}_type.pdo
+
+## =================================================================
+echo ${HEADER} create the ${_color_} issuer contract for test ${_test_} ${ENDC}
+## =================================================================
+identity -n ${color}_type
+contract create -c asset_type --source ${contracts}/_asset_type -f ${_type_contract_}
+asset_type_contract initialize -w -f ${_type_contract_} -n "red marbles" -d "red marble description" -l "http://"
+asset_type_contract get_asset_type_identifier -f ${_type_contract_} -s _type_id_
+
+identity -n ${color}_vetting
+contract create -c vetting-organization-contract --source ${contracts}/_vetting_organization -f ${_vetting_contract_}
+vetting_contract initialize -w -f ${_vetting_contract_} -t ${_type_id_}
+vetting_contract get_verifying_key -f ${_vetting_contract_} -s _vetting_id_
+
+identity -n ${color}_issuer
+contract create -c issuer-contract --source ${contracts}/_issuer -f ${issuer_contract}
+issuer_contract get_verifying_key -f ${issuer_contract} -s _issuer_id_
+
+identity -n ${color}_vetting
+vetting_contract approve_issuer -f ${_vetting_contract_} -i ${_issuer_id_}
+
+identity -n ${color}_issuer
+vetting_contract get_issuer_authority -f ${_vetting_contract_} -s _authority_ -i ${_issuer_id_}
+issuer_contract initialize -f ${issuer_contract} -a ${_authority_}
+
+issuer_contract issue -w -f ${issuer_contract} -o ${user1_key} -c 51
+issuer_contract issue -w -f ${issuer_contract} -o ${user2_key} -c 52
+issuer_contract issue -w -f ${issuer_contract} -o ${user3_key} -c 53
+issuer_contract issue -w -f ${issuer_contract} -o ${user4_key} -c 54
+issuer_contract issue -w -f ${issuer_contract} -o ${user5_key} -c 55

@@ -1,0 +1,86 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2018 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s _issuer_identity_ -v green_issuer
+
+set --conditional -s _issuer_contract_ -v ${save}/green_issuer.pdo
+set --conditional -s _vetting_contract_ -v ${save}/green_vetting.pdo
+set --conditional -s _type_contract_ -v ${save}/green_type.pdo
+
+## =================================================================
+echo ${HEADER} check cascading issuer authority ${ENDC}
+## =================================================================
+
+## This test cascades issuing authority through several levels
+## of authority. The authority and attestation should chain from
+## the green vetting type through green, green1, green2 and ultimately
+## green3 issuers
+
+## ---------- green 1 ----------
+
+identity -n green1_issuer
+contract create -c issuer-contract --source ${contracts}/_issuer -f ${save}/green1_issuer.pdo
+issuer_contract get_verifying_key -f ${save}/green1_issuer.pdo -s _green1_issuer_id_
+
+identity -n ${_issuer_identity_}
+vetting_contract approve_issuer -f ${save}/${_issuer_identity_}.pdo -i ${_green1_issuer_id_}
+
+identity -n green1_issuer
+issuer_contract get_issuer_authority -f ${save}/${_issuer_identity_}.pdo -s _green1_authority_ -i ${_green1_issuer_id_}
+issuer_contract initialize -f ${save}/green1_issuer.pdo -a ${_green1_authority_}
+
+## ---------- green 2 ----------
+
+identity -n green2_issuer
+contract create -c issuer-contract --source ${contracts}/_issuer -f ${save}/green2_issuer.pdo
+issuer_contract get_verifying_key -f ${save}/green2_issuer.pdo -s _green2_issuer_id_
+
+identity -n green1_issuer
+vetting_contract approve_issuer -f ${save}/green1_issuer.pdo -i ${_green2_issuer_id_}
+
+identity -n green2_issuer
+issuer_contract get_issuer_authority -f ${save}/green1_issuer.pdo  -s _green2_authority_ -i ${_green2_issuer_id_}
+issuer_contract initialize -f ${save}/green2_issuer.pdo -a ${_green2_authority_}
+
+## ---------- green 3 ----------
+
+identity -n green3_issuer
+contract create -c issuer-contract --source ${contracts}/_issuer -f ${save}/green3_issuer.pdo
+issuer_contract get_verifying_key -f ${save}/green3_issuer.pdo -s _green3_issuer_id_
+
+identity -n green2_issuer
+vetting_contract approve_issuer -f ${save}/green2_issuer.pdo -i ${_green3_issuer_id_}
+
+identity -n green3_issuer
+issuer_contract get_issuer_authority -f ${save}/green2_issuer.pdo -s _green3_authority_ -i ${_green3_issuer_id_}
+issuer_contract initialize -f ${save}/green3_issuer.pdo -a ${_green3_authority_}
+
+echo issuer authority for green3 issuer:
+echo -r ${_green3_authority_}
+
+## ---------- make sure we can issue assets ----------
+issuer_contract issue -w -f ${save}/green3_issuer.pdo -o ${user1_key} -c 51
+issuer_contract issue -w -f ${save}/green3_issuer.pdo -o ${user2_key} -c 52
+issuer_contract issue -w -f ${save}/green3_issuer.pdo -o ${user3_key} -c 53
+issuer_contract issue -w -f ${save}/green3_issuer.pdo -o ${user4_key} -c 54
+issuer_contract issue -w -f ${save}/green3_issuer.pdo -o ${user5_key} -c 55
+
+identity -n user1
+issuer_contract escrow -w -f ${save}/green3_issuer.pdo -s _attestation_ -a user2
+echo escrow attestation for green3 issuer:
+echo -r ${_attestation_}
+
+echo ${BOLD} issuer2 test complete ${ENDC}

@@ -1,0 +1,210 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2022 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s _test_ -v token1
+set --conditional -s _bin_ -v ${home}/contracts/exchange/scripts
+
+set -s _dg_contract_ -v ${save}/${_test_}_guardian.pdo
+set -s _ti_contract_ -v ${save}/${_test_}_issuer.pdo
+set -s _to1_contract_ -v ${save}/${_test_}_object_1.pdo
+set -s _to2_contract_ -v ${save}/${_test_}_object_2.pdo
+set -s _to3_contract_ -v ${save}/${_test_}_object_3.pdo
+set -s _to4_contract_ -v ${save}/${_test_}_object_4.pdo
+set -s _to5_contract_ -v ${save}/${_test_}_object_5.pdo
+set -s _type_contract_ -v ${save}/${_test_}_type.pdo
+set -s _vetting_contract_ -v ${save}/${_test_}_vetting.pdo
+
+set -s holder1_key -i token_holder1
+set -s holder2_key -i token_holder2
+set -s holder3_key -i token_holder3
+set -s holder4_key -i token_holder4
+set -s holder5_key -i token_holder5
+
+## =================================================================
+ledger ledger-key -s _ledger_key_
+
+## =================================================================
+echo ${HEADER} create the vetting and type contracts for test ${_test_} ${ENDC}
+## =================================================================
+
+## Token issuers are an issuer and require all of the context that
+## is required for all issuers. The type represents a type of all
+## related tokens. The vetting organization is one vetter that ensures
+## that token issuers are "reasonable".
+
+identity -n token_type
+contract create -c asset_type --source ${contracts}/_asset_type -f ${_type_contract_}
+asset_type_contract initialize -w -f ${_type_contract_} -n "token test type" -d "token test type" -l "http://"
+asset_type_contract get_asset_type_identifier -f ${_type_contract_} -s _type_id_
+
+identity -n token_vetting
+contract create -c vetting_organization --source ${contracts}/_vetting_organization -f ${_vetting_contract_}
+vetting_contract initialize -w -f ${_vetting_contract_} -t ${_type_id_}
+vetting_contract get_verifying_key -f ${_vetting_contract_} -s _vetting_id_
+
+## =================================================================
+echo ${HEADER} create a data guardian for test ${_test_} ${ENDC}
+## =================================================================
+identity -n token_issuer
+contract create -c data_guardian --source ${contracts}/_data_guardian -f ${_dg_contract_}
+guardian_contract initialize -w -f ${_dg_contract_} \
+         -t token_issuer ${contracts}/_token_issuer -l "${_ledger_key_}"
+
+## =================================================================
+echo ${HEADER} create a token issuer for test ${_test_} ${ENDC}
+## =================================================================
+identity -n token_issuer
+contract create -c token_issuer --source ${contracts}/_token_issuer -f ${_ti_contract_}
+
+contract info -f ${_ti_contract_} -s _ti_id_ --field contract-id
+ledger contract-info -s _ti_info_ -i ${_ti_id_}
+token_issuer_contract get_contract_code_metadata -f ${_ti_contract_} -s _ti_code_metadata_
+token_issuer_contract get_contract_metadata -f ${_ti_contract_} -s _ti_metadata_
+
+guardian_contract add_endpoint -w -f ${_dg_contract_} \
+    -i ${_ti_id_} -l "${_ti_info_}" -c "${_ti_code_metadata_}" -m "${_ti_metadata_}"
+guardian_contract provision_token_issuer -f ${_dg_contract_} -s _ti_package_ -i ${_ti_id_}
+
+identity -n token_vetting
+parse -e ${_ti_metadata_} -p "verifying_key" -s _ti_verifying_key_
+vetting_contract approve_issuer -w -f ${_vetting_contract_} -i ${_ti_verifying_key_}
+
+identity -n token_issuer
+vetting_contract get_issuer_authority -f ${_vetting_contract_} -s _authority_ -i ${_ti_verifying_key_}
+token_issuer_contract initialize -w -f ${_ti_contract_} \
+    -a ${_authority_} -t token_object ${contracts}/_token_object \
+    --metadata '{"nonce":5}' -d "test token" -i "${_ti_package_}" -l "${_ledger_key_}" -m 5
+
+## =================================================================
+echo ${HEADER} create the token objects for test ${_test_} ${ENDC}
+## =================================================================
+
+## we need to create a token object though it is only for the purpose
+## of getting the code hash to put in the token issuer. the code hash
+## could be computed without access to one of the objects but this is
+## the easiest way to make it work for the test.
+
+script -f ${_bin_}/mint_token.psh -m to_file ${_to1_contract_} -m ti_file ${_ti_contract_} -m dg_file ${_dg_contract_}
+script -f ${_bin_}/mint_token.psh -m to_file ${_to2_contract_} -m ti_file ${_ti_contract_} -m dg_file ${_dg_contract_}
+script -f ${_bin_}/mint_token.psh -m to_file ${_to3_contract_} -m ti_file ${_ti_contract_} -m dg_file ${_dg_contract_}
+script -f ${_bin_}/mint_token.psh -m to_file ${_to4_contract_} -m ti_file ${_ti_contract_} -m dg_file ${_dg_contract_}
+script -f ${_bin_}/mint_token.psh -m to_file ${_to5_contract_} -m ti_file ${_ti_contract_} -m dg_file ${_dg_contract_}
+
+## =================================================================
+echo ${HEADER} invoke the operation ${ENDC}
+## =================================================================
+
+identity -n token_issuer
+token_object_contract echo -w -f ${_to1_contract_} -s _capability_ -m "test message1"
+guardian_contract process_capability -w -f ${_dg_contract_} -s _result_ -c ${_capability_}
+if --not -e ${_result_} "\"test message1\""
+   echo failed to perform the operation correctly
+   exit -v -1
+fi
+
+## =================================================================
+echo ${HEADER} transfer ownership of the token ${ENDC}
+## =================================================================
+identity -n token_issuer
+token_object_contract transfer -w -f ${_to1_contract_} -c 1 -n ${holder1_key}
+token_object_contract transfer -w -f ${_to2_contract_} -c 1 -n ${holder2_key}
+token_object_contract transfer -w -f ${_to3_contract_} -c 1 -n ${holder3_key}
+token_object_contract transfer -w -f ${_to4_contract_} -c 1 -n ${holder4_key}
+token_object_contract transfer -w -f ${_to5_contract_} -c 1 -n ${holder5_key}
+
+identity -n token_holder1
+token_object_contract echo -w -f ${_to1_contract_} -s _capability_ -m "test message2"
+guardian_contract process_capability -w -f ${_dg_contract_} -s _result_ -c ${_capability_}
+if --not -e ${_result_} "\"test message2\""
+   echo failed to perform the operation correctly
+   exit -v -1
+fi
+
+## =================================================================
+## =================================================================
+
+## we are assuming that previous tests have created the green issuer
+## and that user1 has been issued at least one green marble
+
+set --conditional -s _ec1_ -v ${save}/token_exchange1.pdo
+set --conditional -s _ec2_ -v ${save}/token_exchange2.pdo
+
+set --conditional -s _green_issuer_contract_ -v ${save}/green_issuer.pdo
+set --conditional -s _green_vetting_contract_ -v ${save}/green_vetting.pdo
+set --conditional -s _green_type_contract_ -v ${save}/green_type.pdo
+
+identity -n user1
+
+## =================================================================
+echo ${HEADER} create an exchange contract, test escrow and cancel ${ENDC}
+## =================================================================
+identity -n token_holder1
+
+vetting_contract get_asset_type_identifier -f ${_green_vetting_contract_} -s _green_type_id_
+vetting_contract get_verifying_key  -f ${_green_vetting_contract_} -s _green_vetting_id_
+
+contract create -c exchange-contract --source ${contracts}/_exchange -f ${_ec1_}
+exchange_contract get_verifying_key -f ${_ec1_} -s _exchange_verifying_key_
+
+token_object_contract escrow -w -f ${_to1_contract_} -s _escrow_attestation_ -a ${_exchange_verifying_key_} -c 1
+exchange_contract initialize -w -f ${_ec1_} \
+    -a ${_escrow_attestation_} -i ${_green_vetting_id_} -t ${_green_type_id_} -c 1
+
+echo ${INFO} offered asset ${ENDC}
+exchange_contract examine_offered_asset -f ${_ec1_} -s _offered_asset_
+echo ${_offered_asset_}
+
+echo ${INFO} requested asset ${ENDC}
+exchange_contract examine_requested_asset -f ${_ec1_} -s _requested_asset_
+echo ${_requested_asset_}
+
+echo cancel the exchange
+exchange_contract cancel_exchange -w -f ${_ec1_} -s _cancel_attestation_
+token_object_contract release -w -f ${_to1_contract_} -a ${_cancel_attestation_}
+
+## =================================================================
+echo ${HEADER} create an exchange contract, test escrow and claim ${ENDC}
+## =================================================================
+identity -n token_holder2
+
+contract create -c exchange-contract --source ${contracts}/_exchange -f ${_ec2_}
+exchange_contract get_verifying_key -f ${_ec2_} -s _exchange_verifying_key_
+
+token_object_contract escrow -w -f ${_to2_contract_} -s _escrow_attestation_ -a ${_exchange_verifying_key_} -c 1
+exchange_contract initialize -w -f ${_ec2_} \
+    -a ${_escrow_attestation_} -i ${_green_vetting_id_} -t ${_green_type_id_} -c 1
+
+identity -n user1
+issuer_contract escrow -w -f ${_green_issuer_contract_} -s _user1_escrow_attestation_ -a ${_exchange_verifying_key_} -c 1
+exchange_contract exchange -w -f ${_ec2_} -a ${_user1_escrow_attestation_}
+exchange_contract claim_offered_asset -f ${_ec2_} -s _offered_asset_
+token_object_contract claim -w -f ${_to2_contract_} -a ${_offered_asset_}
+
+## make sure that user1 can invoke the capability operation
+token_object_contract echo -w -f ${_to2_contract_} -s _capability_ -m "test message3"
+guardian_contract process_capability -w -f ${_dg_contract_} -s _result_ -c ${_capability_}
+if --not -e ${_result_} "\"test message3\""
+   echo failed to perform the operation correctly
+   exit -v -1
+fi
+
+identity -n token_holder2
+exchange_contract claim_exchanged_asset -f ${_ec2_} -s _exchanged_asset_
+issuer_contract claim -w -f ${_green_issuer_contract_} -a ${_exchanged_asset_}
+
+## =================================================================
+echo ${BOLD} token1 test complete ${ENDC}
+## =================================================================

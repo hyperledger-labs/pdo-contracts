@@ -1,0 +1,63 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2022 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s data -v .
+set --conditional -s save -v .
+script -f ${home}/contracts/exchange/scripts/init.psh
+
+set --conditional -s to_class -v token_object
+set --conditional -s to_code -v ${contracts}/_${to_class}
+
+set --conditional -s to_file -v ${save}/token_object.pdo
+set --conditional -s ti_file -v ${save}/token_issuer.pdo
+set --conditional -s dg_file -v ${save}/guardian.pdo
+
+set --conditional -s ti_identity -v token_issuer
+
+## just some shorter representations of the contract files
+set -s _to_ -v ${to_file}
+set -s _ti_ -v ${ti_file}
+set -s _dg_ -v ${dg_file}
+
+## =================================================================
+echo ${HEADER} create token ${_to_} for issuer ${_ti_} ${ENDC}
+## =================================================================
+
+identity -n ${ti_identity}
+contract create -c ${to_class} --source ${to_code} -f ${_to_}
+
+## get the attestation information used to validate the token object
+token_object_contract get_contract_metadata -f ${_to_} -s _to_md_
+token_object_contract get_contract_code_metadata -f ${_to_} -s _to_code_md_
+contract info -f ${_to_} -s _to_id_ --field contract-id
+ledger contract-info -s _to_info_ -i ${_to_id_}
+
+token_issuer_contract add_endpoint -w -f ${_ti_} -i ${_to_id_} -c "${_to_code_md_}" -m "${_to_md_}" -l "${_to_info_}"
+token_issuer_contract mint_token_object -w -f ${_ti_} -i ${_to_id_}
+
+contract info -f ${_ti_} -s _ti_id_ --field contract-id
+ledger current-state -s _sig1_ -i ${_ti_id_} -p signature
+token_issuer_contract provision_token_object -f ${_ti_} -s _dg_package_ -i ${_to_id_} -l ${_sig1_}
+
+## get the information from the token issuer to make the token object an issuer
+parse -e ${_to_md_} -p "verifying_key" -s _to_verifying_key_
+token_issuer_contract approve_issuer -w -f ${_ti_} -i ${_to_verifying_key_}
+token_issuer_contract get_issuer_authority -w -f ${_ti_} -s _authority_ -i ${_to_verifying_key_}
+
+## get the initialization package for the guardian
+ledger ledger-key -s _ledger_key_
+guardian_contract provision_token_object -w -f ${_dg_} -s _to_package_ -p "${_dg_package_}"
+token_object_contract initialize -w -f ${_to_} -a ${_authority_} -i "${_to_package_}" -l ${_ledger_key_}

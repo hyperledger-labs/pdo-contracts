@@ -1,0 +1,91 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2018 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s _exchange_contract_ -v ${save}/test2_exchange.pdo
+
+identity -n user1
+
+script -f ${_path_}/create_issuer.psh -m _test_ exchange2 -m _color_ red
+set -s _red_issuer_contract_ -v ${issuer_contract}
+issuer_contract get_verifying_key -f ${_red_issuer_contract_} -s _red_issuer_id_
+issuer_contract get_asset_type_identifier -f ${_red_issuer_contract_} -s _red_type_id_
+
+script -f ${_path_}/create_issuer.psh -m _test_ exchange2 -m _color_ blue
+set -s _blue_issuer_contract_ -v ${issuer_contract}
+issuer_contract get_verifying_key -f ${_blue_issuer_contract_} -s _blue_issuer_id_
+issuer_contract get_asset_type_identifier -f ${_blue_issuer_contract_} -s _blue_type_id_
+
+## =================================================================
+echo ${HEADER} create an exchange contract and test exchange ${ENDC}
+## =================================================================
+
+identity -n user1
+contract create -c exchange-contract --source ${contracts}/_exchange -f ${_exchange_contract_}
+exchange_contract get_verifying_key -f ${_exchange_contract_} -s _exchange_verifying_key_
+
+identity -n user1
+issuer_contract get_balance -f ${_blue_issuer_contract_} -s _user1_blue_initial_balance_
+issuer_contract get_balance -f ${_red_issuer_contract_} -s _user1_red_initial_balance_
+issuer_contract escrow -w -f ${_blue_issuer_contract_} -s _user1_escrow_attestation_ -a ${_exchange_verifying_key_}
+
+## we already tested that the vetting id works for the issuer key, this
+## invocation tests that the issuer id also works
+exchange_contract initialize -w -f ${_exchange_contract_} \
+    -i ${_red_issuer_id_} -t ${_red_type_id_} -c 10 -a ${_user1_escrow_attestation_}
+
+identity -n user2
+issuer_contract get_balance -f ${_blue_issuer_contract_} -s _user2_blue_initial_balance_
+issuer_contract get_balance -f ${_red_issuer_contract_} -s _user2_red_initial_balance_
+issuer_contract escrow -w -f ${_red_issuer_contract_} -s _user2_escrow_attestation_ -a ${_exchange_verifying_key_}
+exchange_contract exchange -w -f ${_exchange_contract_} -a ${_user2_escrow_attestation_}
+
+identity -n user1
+exchange_contract claim_exchanged_asset -f ${_exchange_contract_} -s _exchanged_asset_
+echo ${BOLD} exchanged asset ${ENDC}
+echo -r ${_exchanged_asset_}
+
+identity -n user2
+exchange_contract claim_offered_asset -f ${_exchange_contract_} -s _offered_asset_
+echo ${BOLD} offered asset ${ENDC}
+echo -r ${_offered_asset_}
+
+identity -n user1
+issuer_contract claim -w -f ${_red_issuer_contract_} -a ${_exchanged_asset_}
+
+identity -n user2
+issuer_contract claim -w -f ${_blue_issuer_contract_} -a ${_offered_asset_}
+
+identity -n user1
+issuer_contract get_balance -f ${_blue_issuer_contract_} -s _user1_blue_final_balance_
+issuer_contract get_balance -f ${_red_issuer_contract_} -s _user1_red_final_balance_
+
+identity -n user2
+issuer_contract get_balance -f ${_blue_issuer_contract_} -s _user2_blue_final_balance_
+issuer_contract get_balance -f ${_red_issuer_contract_} -s _user2_red_final_balance_
+
+echo ${BOLD} Red Balances ${ENDC}
+echo user1 initial red balance = ${_user1_red_initial_balance_}
+echo user2 initial red balance = ${_user2_red_initial_balance_}
+echo user1 final red balance = ${_user1_red_final_balance_}
+echo user2 final red balance = ${_user2_red_final_balance_}
+
+echo ${BOLD} Blue Balances ${ENDC}
+echo user1 initial blue balance = ${_user1_blue_initial_balance_}
+echo user2 initial blue balance = ${_user2_blue_initial_balance_}
+echo user2 final blue balance = ${_user2_blue_final_balance_}
+echo user1 final blue balance = ${_user1_blue_final_balance_}
+
+echo ${BOLD} exchange2 test complete ${ENDC}

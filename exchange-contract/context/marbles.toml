@@ -1,0 +1,20 @@
+# -----------------------------------------------------------------
+# ${color} marble
+# -----------------------------------------------------------------
+[marbles.${color}.asset_type]
+identity = "${color}_type"
+source = "@{ContractFamily.Exchange.asset_type.source}"
+name = "${color} marble"
+description = "${color} marble asset type"
+link = "http://"
+
+[marbles.${color}.vetting]
+identity = "${color}_vetting"
+source = "@{ContractFamily.Exchange.vetting.source}"
+asset_type_context = "@{..asset_type}"
+
+[marbles.${color}.issuer]
+identity = "${color}_issuer"
+source = "${ContractFamily.Exchange.issuer.source}"
+asset_type_context = "@{..asset_type}"
+vetting_context = "@{..vetting}"
