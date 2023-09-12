@@ -1,79 +1,92 @@
-# README
+<!---
+Licensed under Creative Commons Attribution 4.0 International License
+https://creativecommons.org/licenses/by/4.0/
+--->
 
-This repository contains a prototype implementation of protocols that could be used for enabling Non Fungible Tokens (NFTs) for confidential assets. The protocols and software are for reference purposes only and not intended for production usage.
+**The protocols and software are for reference purposes only and not intended for production usage.**
 
-## Problem Statement
+# Exchange Contract Family
 
-Today Non-fungible tokens (NFTs) are created and traded for artifacts such as images, artworks, etc. where the NFT owner typically gets full rights to view/use the “raw bytes” of the artifact (e.g., download the image/artwork as is). Popular NFT smart contracts currently used such as ERC729 or ERC1155 (in Ethereum) offer little support to enable trustworthy trading of “policy-based usage of the artifact” without revealing the asset itself to the NFT owner. In the context of high-value confidential assets such as machine learning models or datasets that could be used to build the model itself, what we would like to be able to do is use NFTs not just to trade “raw-bytes of at the asset” but use NFTs to trade “policy-based usage-rights” to the high-value asset. 
+The Exchange contract family is a suite of contracts that demonstrate many of the capabilities of the private data objects technologies.
 
-In order create an NFT today, the asset author carries out three steps (see figure below): 1. Upload the asset into an asset store. 2. Create/Deploy an NFT smart contract in Ethereum (Ethereum NFTs, n.d.), Solana (Solana NFTs, n.d.), etc. The NFT smart contract at its core contains the URI to the asset, as well as specifies who owns the NFT. 3.  List the NFT for sale in an NFT marketplace such as OpenSea (OpenSea, n.d.) or OceanMarketplace (Ocean Protocol, n.d.).  A prospective buyer of the NFT initiates the buy-process via the Marketplace, which behind the scenes interacts with the NFT smart contract to ensure that Bob pays Alice, and the NFT ownership (as recorded in the NFT smart contract) changes from Alice to Bob.
+Three basic contracts define the elements of the Exchange contract family: the asset type contract, the vetting organization contract, and the issuer contract. Three additional contracts extend the Exchange contract family for trading potentially confidential assets using non-fungible tokens.
 
-<p align="center">
-  <img src=./doc/nft_current_arch.png width="700">
-</p>
+## Contracts for Traditional Assets
 
-We note the following inefficiencies about the above architecture that limits its usability for creating NFTs for high-value confidential assets:
+An *asset type* contract object defines a unique, shared identifier for a type of digital asset and a schema for the representation for assets of that type. For example, we might define an asset type contract object for blue marbles. Since the identifier for the contract object is unique, it provides a shared, unique identifier that can be used to refer to assets that are blue marbles.
 
-- There is only a very weak binding between the NFT smart contract and the asset.  This is because, ownership of the NFT does not imply ownership of the asset held in the asset store. In other words, what the NFT owner gets to do with the asset is completely dependent on the implementation of the asset store. The NFT owner is constantly under the threat of facing a DoS attack, where the asset gets removed from the asset-store despite owning the NFT. 
+A *vetting organization* contract object manages a list of contract objects authorized to issue assets of a particular type. While actual vetting of an issuer occurs outside the contract object, the object provides a means of recording the decision to authorize an issuer. In this way, the vetting organization contract object provides a root of trust for issuers of a particular asset type. Continuing the blue marble example, the Blue Marble Players Association might create a vetting organization object to record the identities of local chapters that may issue blue marble holdings to their members.
 
-- The architecture does not have any provision for the NFT smart contract to specify a policy around how the asset should be used, while at the time be able to communicate with the asset-store to ensure that the policy gets enforced.
+The *issuer* contract object maintains a balance sheet that captures ownership of assets of a particular type. The issuer contract allows the creator of the contract object to issue assets (that is, assign ownership of assets to a particular individual). However, once the initial issuance occurs, confidentiality of transactions and balances is maintained; in this case, even the creator of the issuer contract object is not granted the right to examine the quantity of assets owned by an individual after the initial issuance. Local chapters of the Blue Marble Players Association each
+create an issuer contract object to assign ownership of marbles to their members. Once the initial issuance is complppete, members can trade marbles, transfer ownership, or exchange different kinds of marbles in complete confidentiality. And, for those who trust the Blue Marble Players Association, those transactions can span local chapters.
 
-- The NFT smart contract, being public in nature, cannot be used to either store any confidential information (such as a decryption key to the asset), or execute a compute-logic that contains confidential information. 
+While the issuer contract object supports simple ownership transfer, more complex multi-party exchanges are managed through additional contracts. For example, an exchange contract mediates a fair exchange of different kinds of marbles (e.g. Alice trades her red marbles for Bob's blue marbles). More complex exchanges like a blind auction can be implemented as well.
 
-In this repo, we propose systems and protocols that address the above inefficiencies so that description/enforcement of asset-usage policies can be implemented as part of the NFT smart contract itself, thereby widely enhancing the scope of what can be done with NFTs.
+## Contracts for Confidential, Non-Fungible Assets
 
-## Solution Overview
+One blue marble is generally indistinguishable from another; that is, blue marbles are considered "fungible". In contrast, each red sports car is a unique thing with a distinct title of ownership; that is, red sports cards are considered "non-fungible". In order to represent non-fungible assets like a red sports car, the Exchange contract family defines a special kind of issuer, called a *token issuer*. Like the issuers for fungible tokens, the token issuer has an asset type and vetting organization. A token issuer contract object "mints" a fixed number of *tokens* (another kind of contract object) that correspond to unique instances of the asset type. To make this more concrete, the asset type might refer to red sports cars (a generic kind of car), the token issuer is like a manufacturer that creates specific instances (tokens) of the red sports car. Each token represents a specific red sports car.
 
-Instead of implementing the NFT smart contract in a public blockchain, we propose to implement it in a Trusted Execution Environment (TEE)-enabled blockchain. Specifically, we focus on Intel SGX as our choice of TEE. The NFT smart contract is used to only implement ownership, but also implement/evaluate policy to be followed while using the confidential asset. The smart contract after policy evaluation generates asset-usage capabilities that get processed by capability execution engines implemented inside asset stores. The NFT smart contract shares confidential information with the asset store only after verifying its trustworthiness (per policies implemented inside the smart contract). In this regard, we also permit the possibiliy where the asset use environment itself is safe-guarded by TEEs. In order to implement the idea above, the NFT blockchain architecture shall be split into two pieces: a public Layer 1 blockchain such as Ethereum/Solana to act as the payment Layer, and a TEE-anchored Layer 2 blockchain, bridged to Layer 1, within which the NFT smart contract as described above is implemented. Receipt of payment from layer 1 is used to initiate transfer of ownership in layer 2. A pictorial overview of the proposed architecture is shown below.
+The red sports car analogy works well for traditional sense of ownership (where ownership implies "possession"). However, the Exchange contract family extends the notion of ownership to imply a right to use an asset for a specific purpose. In this case, the asset itself (the red sports car), is wrapped by a *guardian* contract and the token issuer mints tokens that grant the right to use the guarded asset. Pushing the analogy well beyond reason, we might think of the token, in this case, as the right to drive the car for a specific time period.
 
-<p align="center">
-  <img src=./doc/nft_proposed_arch.png width="700">
-</p>
+While the implementation of the token issuer, token, and guardian contract are relatively simplistic, they provide a basis for defining and enforcing a rich set of policies. Other contract families can use these basic building blocks for many applications like the right to use digital images for specific purposes or the right to query a classification model.
 
-## Contibutions of this Repository
+## Create an Issuer for Fungible Assets
 
-We make the following contributions via this repository with regards to the problem statment and solution overview presented above.
+The following examples assume that we want to support the exchange of red marbles and blue
+marbles. We assume the following identities:
 
-### 1. Token-Guardian Protocol:
+* Blue Marbles Player Association (BMPA) -- an oversight organization that tracks blue marble banks
+* Blue Marble Chapter (BMC) -- a local chapter of the BMPA with a large store of blue marbles
+* Red Marbles Player Association (RMPA) -- an oversight organization that tracks red marble banks
+* Red Marble Chapter (RMC) --a local chapter of the RMPA with a large store of red marbles
+* Alice -- owns a number of blue marbles in in BMC
+* Bob -- owners a number of red marbles in RMC
 
-We describe protocols that could be used to implement the layer 2 NFT token object (see picture above) as well its interactions with the guardian service. The protocol is not restricted to a specific use-case, meaning we do not specify the nature of the confidential asset, and the nature of the capability execution engine located within the Guardian Service. This protocol does not make specific assumptions on Layer 1, the L1/L2 bridge and the marketplace. In other words, the protocol focuses on the following sub-system of the picture above, and consists only the Layer 2 and the Guardian service. Note that in the picture below, in addition to the NFT token object smart contract, we also have a Token Issuer Smart Contract which acts as a pont of entry for a prospective end-points (Alice in above picture) that wants to deploy a NFT smart contract. The protocol describes the steps for system initialization, creating (minting) the NFT token object, transfering token ownership and finally, invoking operations on the confidential asset subject to policies specified via the NFT token object. Please see [Token Guardian Protocol](./doc/Token_Guardian_Protocol_Description.pdf) for a more detailed description of the various steps involved in the protocol. 
+### Setup
 
-<p align="center">
-  <img src=./doc/token_guardian_arch.png width="700">
-</p>
+The asset type and vetting organization contract objects allow for the establishment of a trust anchor to verify the integrity of exchange operations. For each of the asset types, we need to set up the asset type, the vetting organization, and one or more issuers. We'll walk through the sequence of steps necessary for blue marbles; the same step is used to establish the trust anchors for the red marbles.
 
-### 2. Protoype Implementation of the Token-Guardian Protocol:
+1. The BMPA creates an asset type contract object for the blue marbles. The asset type contract object defines a unique identifier (the current implementation uses the identity of the contract object itself). In addition, information about the type (e.g. name, description, or a scheme for data associated with assets of that type) can be provided.
 
-We provide a prototype implementations for the token issuer and token object smart contracts necessary for the token guardian protocol. We chose [Hyperledger labs Private Data Objects](https://github.com/hyperledger-labs/private-data-objects) as our choice of Layer 2 TEE-anchored smart contract framework. PDO smart contracts written in C++, compiled into WASM byte-code and executed within the PDO Wawaka interpreter, where the interpreter itself is loaded and run within an Intel-SGX enclave. Please see [Hyperledger labs Private Data Objects](https://github.com/hyperledger-labs/private-data-objects) for details about deployment and security guarantees for Intel-SGX protected PDO smart contracts. 
+2. The BMPA creates a vetting organization contract object where it can record record and report on authorizations for organizations that issue blue marbles. When initializing the contract object, the player association provides the type of asset that will be issued by authorized  organizations.
 
-For prototyping purposes, the interaction between token creator (Alice) and token purchaser (Bob) for ownership exchange is modeled via a fair-exchange protocol in which Alice exchanges ownerships of the token object for an asset of Bob that is tracked via an issuer (PDO) contract. The fair-exchange protocol has been orignally described at [Fair exchange Protocol](https://github.com/hyperledger-labs/private-data-objects/blob/v0.1.0/contracts/exchange/docs/exchange.md). This repo contains an implementation of the fair-exchange protocol that could be deployed using the wawaka PDO-interpreter, and acts as a foundation for creating the token object and token issuer smart contracts. 
- 
-### 3. Protoype Use Cases:
+3. Each local chapter that will issue blue marbles creates an issuer contract object. For now, we'll just create the issuer contract object for the BMC chapter. When it is created, the BMC contract object holds no authority to issue assets; that is, the issuer contract refuses to issue assets until the issuer has been authorized. It must receive that authority from the BMPA. Out of band, the BMPA verifies the integrity of BMP and records in the BMPA vetting organization contract object authorization for the BMP issuer contract object to issue blue marble assets. Once the authorization is complete, the BMC can retrieve a representation of the authorization from the BMPA contract object (the structure of the authorization will be described later). That authorization is then stored in the BMC issuer contract object.
 
-We provide implementation of two use cases to illustrate the token guardian protocol:
+4. Once the authority from the BMPA has been stored, the BMP may issue blue marble assets to its members. The current implementation of the issuer contract does not limit the amount of assets that can be issued; it would be a relatively straightforward extension for the BMPA authorization to include a maximum number of assets that could be issued; a constraint that would be enforced by the BMC issuer contract.
 
-- In the first use case, the guardian service is also a PDO smart contracts, the asset is a confidential image and the token owner gets the right to perform certain operations (and get results) on the confidential image. The SW for this use case can be found at [Digital Asset](https://github.com/intel-sandbox/mbowman.pdo_da_contracts)
+### Simple Fair Exchange
 
-- In the second use case, the guardian service is implemented as a web server, the aset is an bird classification machine leanring model, and the token owner gets the right to perform inference using the machine learning model. The SW for this use case can be found at [Bird Classification](https://github.com/intel-sandbox/mbowman.pdo_classification_contracts)
+The fair exchange contract enables a simple, bi-lateral exchange of assets that are managed by different issuers. For example, Alice and Bob (out of band) decide to exchange 100 red marbles for 100 blue marbles. A fair exchange contract coordinates the exchange of ownership to guarantee that both sides receive their assets (or neither does).
 
-# Installation Instructions
+![](docs/exchange_flow.png)
+*Figure 1. Simple Fair Exchange Transaction Flow*
 
-Please follow the instructions below to install the SW in bare metal on a single-node Ubuntu 20.04 system .
+Figure 1 shows the flow of transactions that take place in a fair exchange. Each of these steps is described below.
 
-## Install PDO
+1. Alice creates an exchange contract object.
 
-Please follow instructions at https://github.com/hyperledger-labs/private-data-objects/blob/main/docs/host_install.md 
-to install PDO, and deploy PDO TP on the host node. We assume SGX_MODE= SIM, PDO_INTERPRETER=wawaka and PDO_LEDGER_TYPE=ccf.
+2. Alice initializes the exchange contract object with the requested number and type of asset (i.e. the identifier from the red marble asset type contract object). While it is not shown in the figure, Alice also provides the identity of a vetting organization that she trusts to authorize red marble issuers. In this case, Alice uses the verifying key for the RMPA object.
 
-## Install Exchange Contracts
+3. In preparation for offering her blue marbles for exchange, Alice escrows her holding in the BMC naming the exchange contract object as the escrow agent. Escrowing the blue marbles ensures that Alice will not use those marbles in another transaction until the exchange contract object allows it.
 
-```bash
-source $PDO_SOURCE_ROOT/build/_dev/bin/activate
-git clone git@github.com:intel-sandbox/mbowman.pdo_exchange_contracts.git
-cd mbowman.pdo_exchange_contracts/
-make
-make install
-```
+4. Alice records the blue marbles offered for exchange in the exchange contract object. To do this, she requests a proof of escrow from the BMC. The proof contains three things: details about the asset (i.e. 100 blue marbles), proof that a vetting organization authorized the issuer to issue blue marbles, and the escrow claim. The escrow proof is set in the context of a particular instance of the state of the BMC contract object. That is, the proof of escrow holds if and only if the current state of the BMC (which captures that Alice's holding has been escrowed) has been committed to the ledger. This requirement is captured by transaction dependencies that are enforced by the Coordination and Commit transaction processor in Sawtooth. Figure 2 shows the dependencies between state update transactions that must be enforced by the TP.
 
-Set the env variable `EXCHANGE_SOURCE_ROOT` to point to the `mbowman.pdo_exchange_contracts` folder cloned above.
+5. Once Alice finishes, Bob can examine the exchange object and see that Alice is offering 100 blue marbles in exchange for 100 red marbles. Further, Bob can look at the authorization for Alice's offer to convince himself that the Alice's issuer is appropriately vetted. Once satisfied, Bob goes through the same process as Alice: he escrows his holding of red marbles, naming the exchange contract object as the escrow agent.
 
+6. Bob requests a proof of escrow from the RMC and submits it as the response to Alice's request. The contract in the exchange object verifies the type and quantity of the asset and also that Alice trusts Bob's issuer (that is, that the RMC was vetted by the RMPA). Assuming Bob's response is accepted, the exchange contract object enters a "completed" state where no further changes are accepted.
+
+7. To complete the exchange, Bob and Alice independently request a claim from the exchange object that tells the issuers to transfer ownership of assets. The claim contains information about the old and new owners, and the identity of the exchange object (which must match the escrow state of the assets). As with the escrow proof, the claim is situated in the context of a particular state commit. That is, the claim is not valid unless the completed state of the exchange object is committed to the ledger.
+
+![](docs/dependencies.png)
+*Figure 2. Fair Exchange Transaction Dependencies*
+
+## Contract Details
+
+* [Common Types](docs/common_types.md)
+* [Asset Type Contract](docs/asset_type.md)
+* [Vetting Organization Contract](docs/vetting.md)
+* [Issuer Contract](docs/issuer.md)
+* [Token Issuer Contract](docs/token_issuer.md)
+* [Token Contract](docs/token.md)
+* [Guardian Contract](docs/guardian.md)
+* [Fair Exchange Contract](docs/exchange.md)
