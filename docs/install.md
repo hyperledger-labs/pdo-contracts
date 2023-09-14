@@ -80,5 +80,5 @@ Assuming that your PDO services are correctly configured and running
 on ${SERVICE_HOST}, you can test the installation with the following:
 
 ```
-TEST_SERVICE_HOST=${SERVICE_HOST} make test
+TEST_SERVICE_HOST=${SERVICE_HOST} make -C ${PDO_CONTRACTS_ROOT} test
 ```

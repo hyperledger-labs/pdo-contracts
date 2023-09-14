@@ -35,7 +35,7 @@ directory or change the parameters for the Jupyter server.
 * Create a directory for the exhange notebooks and contract object instances:
 ```bash
 mkdir $PDO_HOME/notebooks
-mkdir $PDO_HOME/notebooks/instances
+mkdir $PDO_HOME/notebooks/instances $PDO_HOME/notebooks/factories $PDO_HOME/notebooks/templates
 ```
 * Copy the Exchange notebook templates to the directory you created:
 ```bash
@@ -44,7 +44,7 @@ cp $EXCHANGE_SOURCE_ROOT/doc/notebooks/templates/*.ipynb $PDO_HOME/notebooks/tem
 ```
 * Start the Jupyter notebook server:
 ```bash
-cd $PDO_HOME/notebook
+cd $PDO_HOME/notebooks
 jupyter lab --no-browser --port=8888
 ```
 
