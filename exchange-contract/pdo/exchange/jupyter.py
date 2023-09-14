@@ -79,7 +79,7 @@ __default_configuration__ = {
     'source_dir' : [],                    # directories to search for contract files
     'key_dir' : [],                       # directories to search for key files
     'service_db' : None,                  # name of the enclave service database
-    'service_groups' : [],                # list of service group files
+    'service_groups' : [ '${etc}/${host}_groups.toml' ],                # list of service group files
     'config' : [],                        # list of configuration files
     'client_identity' : None,             # initial identity
     'client_key_file' : None,             # key file associated with the identity
@@ -88,16 +88,14 @@ __default_configuration__ = {
     'loglevel' : None,
 }
 
-configuration = types.SimpleNamespace(**__default_configuration__)
-
 def initialize_environment(identity, **kwargs) :
-    global configuration
-
+    configuration = types.SimpleNamespace(**__default_configuration__)
     configuration.client_identity = identity
     configuration.client_key_file = '{}_private.pem'.format(identity)
 
     # the simple version of this list(kwargs.items()) seems to generate an
     # extra level of list when put into a namespace object
+    configuration.bind = []
     for (k, v) in kwargs.items() :
         configuration.bind += [(k, v)]
 
