@@ -1,0 +1,52 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2018 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s data -v .
+set --conditional -s save -v .
+script -f ${home}/contracts/exchange/scripts/init.psh
+
+if --null "${color}"
+   echo must specify color: '-m color <color>'
+   exit -1
+fi
+
+if -e "${_identity_}" "__unknown__"
+   identity -n ${color}_type
+fi
+
+set --conditional -s _name_ -v "${color} marbles"
+set --conditional -s _description_ -v "${color} marble description"
+set --conditional -s _link_ -v "http://"
+set --conditional -s _type_contract_ -v ${save}/${color}_type.pdo
+
+## =================================================================
+echo create the asset type for ${color} marbles
+## =================================================================
+trap_error
+
+contract create -c asset_type --source ${contracts}/_asset_type -f ${_type_contract_}
+if -o ${_error_code_} 0
+   echo ${ERROR} [ERROR ${_error_code_}] failed to create the asset type; ${_error_message_}
+   exit -v ${_error_code_}
+fi
+
+asset_type_contract initialize -w -f ${_type_contract_} -n "${_name_}" -d "${_description_}" -l "${_link_}"
+if -o ${_error_code_} 0
+   echo ${ERROR} [ERROR ${_error_code_}] failed to initialize the asset type; ${_error_message_}
+   exit -v ${_error_code_}
+fi
+
+exit

@@ -1,0 +1,57 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2018 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s data -v .
+set --conditional -s save -v .
+script -f ${home}/contracts/exchange/scripts/init.psh
+
+if --null ${color}
+   echo must specify color: '-m color <color>'
+   exit
+fi
+
+if -e "${_identity_}" "__unknown__"
+   identity -n ${color}_issuer
+fi
+
+set --conditional -s _issuer_contract_ -v ${save}/${color}_issuer.pdo
+set --conditional -s _vetting_contract_ -v ${save}/${color}_vetting.pdo
+
+## =================================================================
+echo initialize ${color} marble issuer with vetting authority
+## =================================================================
+trap_error
+
+issuer_contract get_verifying_key -f ${_issuer_contract_} -s _issuer_verifying_key_
+if -o ${_error_code_} 0
+   echo ${ERROR} [ERROR ${_error_code_}] failed to get issuer contract verifying key; ${_error_message_}
+   exit -v ${_error_code_}
+fi
+
+vetting_contract get_issuer_authority -f ${_vetting_contract_} -s _auth_ -i ${_issuer_verifying_key_}
+if -o ${_error_code_} 0
+   echo ${ERROR} [ERROR ${_error_code_}] failed to get issuer authority; ${_error_message_}
+   exit -v ${_error_code_}
+fi
+
+## record the authorization provided by the vetting organization
+issuer_contract initialize -w -f ${_issuer_contract_} -a ${_auth_}
+if -o ${_error_code_} 0
+   echo ${ERROR} [ERROR ${_error_code_}] failed to initialize issuer contract; ${_error_message_}
+   exit -v ${_error_code_}
+fi
+
+exit

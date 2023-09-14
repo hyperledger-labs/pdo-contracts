@@ -1,0 +1,15 @@
+# -----------------------------------------------------------------
+# order book
+# -----------------------------------------------------------------
+[order.${order}]
+module = "pdo.exchange.plugins.exchange"
+identity = "${user}"
+source = "${ContractFamily.Exchange.exchange.source}"
+
+[order.${order}.offer]
+issuer_context = "@{context.${offer_issuer}}"
+count = ${offer_count}
+
+[order.${order}.request]
+issuer_context = "@{context.${request_issuer}}"
+count = ${request_count}

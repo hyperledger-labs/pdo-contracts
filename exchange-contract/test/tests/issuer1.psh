@@ -1,0 +1,101 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2018 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+## -----------------------------------------------------------------
+echo ${HEADER} basic issuer tests ${ENDC}
+## -----------------------------------------------------------------
+
+set --conditional -s _issuer_identity_ -v green_issuer
+set --conditional -s _issuer_contract_ -v ${save}/green_issuer.pdo
+set --conditional -s _vetting_contract_ -v ${save}/green_vetting.pdo
+set --conditional -s _type_contract_ -v ${save}/green_type.pdo
+
+identity -n ${_issuer_identity_}
+issuer_contract get_verifying_key -f ${_issuer_contract_} -s _issuer_verifying_key_
+
+asset_type_contract get_asset_type_identifier -f ${_type_contract_} -s _at_type_id_
+issuer_contract get_asset_type_identifier -f ${_issuer_contract_} -s _issuer_type_id_
+if --not -e ${_at_type_id_} ${_issuer_type_id_}
+   echo ${ERROR} type identifier mismatch ${ENDC}
+   exit -v -1
+fi
+
+vetting_contract get_issuer_authority -f ${_vetting_contract_} -s _vetting_authority_ -i ${_issuer_verifying_key_}
+issuer_contract get_authority -f ${_issuer_contract_} -s _issuer_authority_
+
+issuer_contract issue -w -f ${_issuer_contract_} -o ${user1_key} -c 51
+issuer_contract issue -w -f ${_issuer_contract_} -o ${user2_key} -c 52
+issuer_contract issue -w -f ${_issuer_contract_} -o ${user3_key} -c 53
+issuer_contract issue -w -f ${_issuer_contract_} -o ${user4_key} -c 54
+issuer_contract issue -w -f ${_issuer_contract_} -o ${user5_key} -c 55
+
+identity -n user1
+issuer_contract get_balance -f ${_issuer_contract_} -s _user1_balance_
+if --not -e ${_user1_balance_} 51
+   echo ${ERROR} balance does not match, ${_user1_balance_} ${ENDC}
+   exit -v -1
+fi
+echo user1 balance matched
+
+identity -n user2
+issuer_contract get_balance -f ${_issuer_contract_} -s _user2_balance_
+if --not -e ${_user2_balance_} 52
+   echo ${ERROR} balance does not match, ${_user2_balance_} ${ENDC}
+   exit -v -1
+fi
+echo user2 balance matched
+
+identity -n user3
+issuer_contract get_balance -f ${_issuer_contract_} -s _user3_balance_
+if --not -e ${_user3_balance_} 53
+   echo ${ERROR} balance does not match, ${_user3_balance_} ${ENDC}
+   exit -v -1
+fi
+echo user3 balance matched
+
+identity -n user4
+issuer_contract get_balance -f ${_issuer_contract_} -s _user4_balance_
+if --not -e ${_user4_balance_} 54
+   echo ${ERROR} balance does not match, ${_user4_balance_} ${ENDC}
+   exit -v -1
+fi
+echo user4 balance matched
+
+identity -n user5
+issuer_contract get_balance -f ${_issuer_contract_} -s _user5_balance_
+if --not -e ${_user5_balance_} 55
+   echo ${ERROR} balance does not match, ${_user5_balance_} ${ENDC}
+   exit -v -1
+fi
+echo user5 balance matched
+
+identity -n user1
+issuer_contract transfer -w -f ${_issuer_contract_} -n ${user2_key} -c 50
+issuer_contract get_balance -f ${_issuer_contract_} -s _user1_balance_
+if --not -e ${_user1_balance_} 1
+   echo ${ERROR} transfer source balance does not match, ${_user1_balance_} not 1 ${ENDC}
+   exit -v -1
+fi
+
+identity -n user2
+issuer_contract get_balance -f ${_issuer_contract_} -s _user2_balance_
+if --not -e ${_user2_balance_} 102
+   echo ${ERROR} transfer destination balance does not match, ${_user2_balance_} not 102 ${ENDC}
+   exit -v -1
+fi
+
+echo transfer balance matched
+echo ${BOLD} issuer1 test complete ${ENDC}

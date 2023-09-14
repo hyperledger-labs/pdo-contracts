@@ -1,0 +1,11 @@
+# -----------------------------------------------------------------
+# Exchange family contract source
+# -----------------------------------------------------------------
+[ContractFamily.Exchange]
+asset_type = { source = "${home}/contracts/exchange/_asset_type.b64" }
+data_guardian = { source = "${home}/contracts/exchange/_data_guardian.b64" }
+exchange = { source = "${home}/contracts/exchange/_exchange.b64" }
+issuer = { source = "${home}/contracts/exchange/_issuer.b64" }
+token_issuer = { source = "${home}/contracts/exchange/_token_issuer.b64" }
+token_object = { source = "${home}/contracts/exchange/_token_object.b64" }
+vetting = { source = "${home}/contracts/exchange/_vetting_organization.b64" }

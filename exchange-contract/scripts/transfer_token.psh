@@ -1,0 +1,55 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2022 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+## Shell variables used:
+##    home -- the root directory where PDO is installed, set by shell
+##    *bird_file -- name of the file with an image to classify
+##    *identity -- owner of the token
+##    *token -- contract object for the token
+##    guardian_url -- URL for the guardian service
+
+set --conditional -s home -v .
+script -f ${home}/contracts/exchange/scripts/init.psh
+
+## =================================================================
+## set up the necessary variables
+## =================================================================
+set --conditional -s current_owner -v ""
+if -n "${current_owner}"
+   echo missing require parameter: current_owner
+   exit -v -1
+fi
+
+set --conditional -s new_owner -v ""
+if -n "${new_owner}"
+   echo missing require parameter: new_owner
+   exit -v -1
+fi
+set -s new_owner_key -i ${new_owner}
+
+set --conditional -s token -v ""
+if -n "${token}"
+   echo missing require parameter: token
+   exit -v -1
+fi
+
+## =================================================================
+## variables are all set up, run the classification
+## =================================================================
+identity -n ${current_owner}
+token_object_contract transfer  -w -f ${token} -c 1 -n ${new_owner_key}
+
+exit -v 0

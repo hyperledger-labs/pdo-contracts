@@ -1,0 +1,81 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2018 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s _test_ -v escrow1
+set --conditional -s _exchange1_contract_ -v ${save}/${_test_}_exchange1.pdo
+set --conditional -s _exchange2_contract_ -v ${save}/${_test_}_exchange2.pdo
+set --conditional -s _exchange3_contract_ -v ${save}/${_test_}_exchange3.pdo
+
+identity -n user1
+
+script -f ${_path_}/create_issuer.psh -m _test_ escrow1 -m _color_ red
+set -s _red_issuer_contract_ -v ${issuer_contract}
+
+script -f ${_path_}/create_issuer.psh -m _test_ escrow1 -m _color_ blue
+set -s _blue_issuer_contract_ -v ${issuer_contract}
+
+script -f ${_path_}/create_issuer.psh -m _test_ escrow1 -m _color_ white
+set -s _white_issuer_contract_ -v ${issuer_contract}
+
+## =================================================================
+echo ${HEADER} create an exchange contract and test partial escrow ${ENDC}
+## =================================================================
+
+identity -n user1
+contract create -c exchange-contract --source ${contracts}/_exchange -f ${_exchange1_contract_}
+exchange_contract get_verifying_key -f ${_exchange1_contract_} -s _exchange1_verifying_key_
+
+contract create -c exchange-contract --source ${contracts}/_exchange -f ${_exchange2_contract_}
+exchange_contract get_verifying_key -f ${_exchange2_contract_} -s _exchange2_verifying_key_
+
+contract create -c exchange-contract --source ${contracts}/_exchange -f ${_exchange3_contract_}
+exchange_contract get_verifying_key -f ${_exchange3_contract_} -s _exchange3_verifying_key_
+
+## escrow the first batch
+issuer_contract escrow -w -f ${_white_issuer_contract_} -s _user1_escrow1_attestation_ \
+    -c 10 -a ${_exchange1_verifying_key_}
+issuer_contract get_balance -f ${_white_issuer_contract_} -s _user1_balance_
+
+if --not -e ${_user1_balance_} 41
+   echo ${ERROR} balance does not match, ${_user1_balance_} ${ENDC}
+   exit -v -1
+fi
+echo user1 balance matched
+
+## escrow the second batch
+issuer_contract escrow -w -f ${_white_issuer_contract_} -s _user1_escrow2_attestation_ \
+    -c 10 -a ${_exchange2_verifying_key_}
+issuer_contract get_balance -f ${_white_issuer_contract_} -s _user1_balance_
+
+if --not -e ${_user1_balance_} 31
+   echo ${ERROR} balance does not match, ${_user1_balance_} ${ENDC}
+   exit -v -1
+fi
+echo user1 balance matched
+
+## attempt to escrow another batch to the first, this should fail
+trap_error
+echo check double escrow
+issuer_contract escrow -w -f ${_white_issuer_contract_} -s _user1_escrow2_attestation_ \
+    -c 10 -a ${_exchange2_verifying_key_}
+if -e ${_error_code_} 0
+   echo ${ERROR} failed to catch double escrow ${ENDC}
+   exit -v -1
+fi
+echo successfully caught double escrow attempt
+untrap_error
+
+echo ${BOLD} escrow1 test complete ${ENDC}

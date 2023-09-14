@@ -1,0 +1,80 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2018 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+set --conditional -s _exchange_contract_ -v ${save}/test1_exchange.pdo
+
+set --conditional -s _issuer_contract_ -v ${save}/green_issuer.pdo
+set --conditional -s _vetting_contract_ -v ${save}/green_vetting.pdo
+set --conditional -s _type_contract_ -v ${save}/green_type.pdo
+
+identity -n user1
+
+## =================================================================
+echo ${HEADER} create an exchange contract and test basic functions ${ENDC}
+## =================================================================
+vetting_contract get_asset_type_identifier -f ${_vetting_contract_} -s _type_id_
+vetting_contract get_verifying_key -f ${_vetting_contract_} -s _vetting_id_
+
+contract create -c exchange-contract --source ${contracts}/_exchange -f ${_exchange_contract_}
+exchange_contract get_verifying_key -f ${_exchange_contract_} -s _exchange_verifying_key_
+
+## =================================================================
+echo ${HEADER} check escrow ${ENDC}
+## =================================================================
+issuer_contract escrow -w -f ${_issuer_contract_} -s _user1_escrow_attestation_ -a ${_exchange_verifying_key_}
+
+## verify that the asset was actually escrowed to the exchange contract
+issuer_contract get_entry -f ${_issuer_contract_} -s _user1_entry_
+echo ${INFO} user1 escrow entry ${ENDC}
+echo ${_user1_entry_}
+parse -e ${_user1_entry_} -p "asset['count']" -s _count_
+if --not -e ${_count_} 0
+   echo ${ERROR} failed to escrow asset, ${_active_status_} ${ENDC}
+   exit -v -1
+fi
+
+parse -e ${_user1_entry_} -p "escrow_list[0]['escrow_agent_identity']" -s _escrow_identity_
+if --not -e "${_escrow_identity_}" "${_exchange_verifying_key_}"
+   echo ${ERROR} failed to escrow asset to the exchange identity ${ENDC}
+   exit -v -1
+fi
+
+## initialize the exchange with the escrowed asset
+exchange_contract initialize -w -f ${_exchange_contract_} \
+    -i ${_vetting_id_} -t ${_type_id_} -c 10 -a ${_user1_escrow_attestation_}
+
+## take a look at the offered and requested assets in the exchange
+echo ${INFO} offered asset ${ENDC}
+exchange_contract examine_offered_asset -s _offered_asset_ -f ${_exchange_contract_}
+echo ${_offered_asset_}
+
+echo ${INFO} requested asset ${ENDC}
+exchange_contract examine_requested_asset -s _requested_asset_ -f ${_exchange_contract_}
+echo ${_requested_asset_}
+
+echo cancel the exchange
+exchange_contract cancel_exchange -w -f ${_exchange_contract_} -s _user1_cancel_attestation_
+issuer_contract release -w -f ${_issuer_contract_} -a ${_user1_cancel_attestation_}
+
+## verify that the asset has in fact been release from escrow
+issuer_contract get_entry -f ${_issuer_contract_} -s _user1_entry_
+parse -e ${_user1_entry_} -p "asset['count']" -s _count_
+if --not -o 0 ${_count_}
+   echo ${ERROR} failed to release escrowed asset, ${_count_} ${ENDC}
+   exit -v -1
+fi
+
+echo ${BOLD} exchange1 test complete ${ENDC}
