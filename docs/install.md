@@ -3,7 +3,7 @@ Licensed under Creative Commons Attribution 4.0 International License
 https://creativecommons.org/licenses/by/4.0/
 --->
 
-# Hyperledger Private Data Objects, Sample Contracts #
+# Installation Guide #
 
 The following instructions assume that the PDO contracts source is available in the directory pointed to by the environment variable `PDO_CONTRACTS_ROOT` and will be installed to the directory pointed to by the environment variable `PDO_INSTALL_ROOT`.
 

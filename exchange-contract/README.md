@@ -44,7 +44,7 @@ marbles. We assume the following identities:
 
 ### Setup
 
-The asset type and vetting organization contract objects allow for the establishment of a trust anchor to verify the integrity of exchange operations. For each of the asset types, we need to set up the asset type, the vetting organization, and one or more issuers. We'll walk through the sequence of steps necessary for blue marbles; the same step is used to establish the trust anchors for the red marbles.
+The asset type and vetting organization contract objects allow for the establishment of a trust anchor to verify the integrity of exchange operations. That is, so long as we agree the type and vetting organization are trustworthy, then operations on assets derived from and approved by those organizations will be trustworthy as well. For each of the asset types, we need to set up the asset type, the vetting organization, and one or more issuers. We'll walk through the sequence of steps necessary for blue marbles; the same step is used to establish the trust anchors for the red marbles.
 
 1. The BMPA creates an asset type contract object for the blue marbles. The asset type contract object defines a unique identifier (the current implementation uses the identity of the contract object itself). In addition, information about the type (e.g. name, description, or a scheme for data associated with assets of that type) can be provided.
 
