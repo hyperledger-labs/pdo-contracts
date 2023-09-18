@@ -13,12 +13,18 @@
 # limitations under the License.
 
 INCLUDE(exchange_common.cmake)
-
 LIST(APPEND WASM_LIBRARIES ${EXCHANGE_LIB})
 LIST(APPEND WASM_INCLUDES ${EXCHANGE_INCLUDES})
 
-SET(CONTRACT_INSTALL_DIRECTORY "${PDO_HOME}/contracts/exchange")
+# -----------------------------------------------------------------
+ADD_LIBRARY(${EXCHANGE_LIB} STATIC ${EXCHANGE_SOURCES})
+TARGET_INCLUDE_DIRECTORIES(${EXCHANGE_LIB} PUBLIC ${EXCHANGE_INCLUDES})
 
+SET_PROPERTY(TARGET ${EXCHANGE_LIB} APPEND_STRING PROPERTY COMPILE_OPTIONS "${WASM_BUILD_OPTIONS}")
+SET_PROPERTY(TARGET ${EXCHANGE_LIB} APPEND_STRING PROPERTY LINK_OPTIONS "${WASM_LINK_OPTIONS}")
+SET_TARGET_PROPERTIES(${EXCHANGE_LIB} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
+# -----------------------------------------------------------------
 BUILD_CONTRACT(asset_type contracts/asset_type.cpp)
 BUILD_CONTRACT(vetting_organization contracts/vetting_organization.cpp)
 BUILD_CONTRACT(issuer contracts/issuer.cpp)
@@ -28,9 +34,11 @@ BUILD_CONTRACT(data_guardian contracts/data_guardian.cpp)
 BUILD_CONTRACT(token_issuer contracts/token_issuer.cpp)
 BUILD_CONTRACT(token_object contracts/token_object.cpp)
 
+# -----------------------------------------------------------------
 INCLUDE(Python)
 BUILD_WHEEL(exchange)
 
+# -----------------------------------------------------------------
 INCLUDE(Test)
 ADD_SHELL_TEST(exchange script SCRIPT test/script_test.sh)
 ADD_SHELL_TEST(exchange functional SCRIPT test/run_tests.sh)
