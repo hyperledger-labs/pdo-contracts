@@ -12,23 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+IF(NOT DEFINED EXCHANGE_INCLUDES)
+  MESSAGE(FATAL_ERROR "EXCHANGE_INCLUDES is not defined")
+ENDIF()
+
 # ---------------------------------------------
 # Set up the include list
 # ---------------------------------------------
-SET (EXCHANGE_INCLUDES ${WASM_INCLUDES})
-LIST(APPEND EXCHANGE_INCLUDES ${CMAKE_CURRENT_LIST_DIR})
+SET (DIGITAL_ASSET__INCLUDES ${WASM_INCLUDES})
+LIST(APPEND DIGITAL_ASSET_INCLUDES ${EXCHANGE_INCLUDES})
+LIST(APPEND DIGITAL_ASSET_INCLUDES ${CMAKE_CURRENT_LIST_DIR})
 
 # ---------------------------------------------
 # Set up the default source list
 # ---------------------------------------------
-FILE(GLOB EXCHANGE_COMMON_SOURCE ${CMAKE_CURRENT_LIST_DIR}/exchange/common/*.cpp)
-FILE(GLOB EXCHANGE_CONTRACT_SOURCE ${CMAKE_CURRENT_LIST_DIR}/exchange/contracts/*.cpp)
+FILE(GLOB DIGITAL_ASSET_COMMON_SOURCE ${CMAKE_CURRENT_LIST_DIR}/digital_asset/common/*.cpp)
+FILE(GLOB DIGITAL_ASSET_CONTRACT_SOURCE ${CMAKE_CURRENT_LIST_DIR}/digital_asset/contracts/*.cpp)
 
-SET (EXCHANGE_SOURCES)
-LIST(APPEND EXCHANGE_SOURCES ${EXCHANGE_COMMON_SOURCE})
-LIST(APPEND EXCHANGE_SOURCES ${EXCHANGE_CONTRACT_SOURCE})
+SET (DIGITAL_ASSET_SOURCES)
+LIST(APPEND DIGITAL_ASSET_SOURCES ${DIGITAL_ASSET_COMMON_SOURCE})
+LIST(APPEND DIGITAL_ASSET_SOURCES ${DIGITAL_ASSET_CONTRACT_SOURCE})
 
 # ---------------------------------------------
 # Build the wawaka contract common library
 # ---------------------------------------------
-SET(EXCHANGE_LIB ww_exchange)
+SET(DIGITAL_ASSET_LIB ww_digital_asset)

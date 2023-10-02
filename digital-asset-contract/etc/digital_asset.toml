@@ -1,0 +1,6 @@
+# -----------------------------------------------------------------
+# Exchange family contract source
+# -----------------------------------------------------------------
+[ContractFamily.DigitalAsset]
+data_guardian = { source = "${home}/contracts/digital_asset/_da_guardian.b64" }
+token_object = { source = "${home}/contracts/digital_asset/_da_token_object.b64" }

@@ -1,0 +1,10 @@
+MANIFEST.in
+pdo/__init__.py
+pdo/digital_asset/__init__.py
+pdo/digital_asset/resources/__init__.py
+pdo/digital_asset/resources/resources.py
+pdo/digital_asset/scripts/__init__.py
+pdo/digital_asset/scripts/scripts.py
+pdo/digital_asset/plugins/__init__.py
+pdo/digital_asset/plugins/guardian.py
+pdo/digital_asset/plugins/token_object.py

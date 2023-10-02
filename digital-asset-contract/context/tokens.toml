@@ -1,0 +1,41 @@
+# -----------------------------------------------------------------
+# token ${token}
+# -----------------------------------------------------------------
+[token.${token}.asset_type]
+module = "pdo.exchange.plugins.asset_type"
+identity = "token_type"
+source = "${ContractFamily.Exchange.asset_type.source}"
+name = "${token}"
+description = "asset type for ${token} token objects"
+link = "http://"
+
+[token.${token}.vetting]
+module = "pdo.exchange.plugins.vetting"
+identity = "token_vetting"
+source = "${ContractFamily.Exchange.vetting.source}"
+asset_type_context = "@{..asset_type}"
+
+[token.${token}.guardian]
+module = "pdo.digital_asset.plugins.guardian"
+identity = "${..token_issuer.identity}"
+source = "${ContractFamily.DigitalAsset.data_guardian.source}"
+token_issuer_context = "@{..token_issuer}"
+image_file = "${image_file}"
+image_border = 1
+
+[token.${token}.token_issuer]
+module = "pdo.exchange.plugins.token_issuer"
+identity = "token_issuer"
+source = "${ContractFamily.Exchange.token_issuer.source}"
+token_object_context = "@{..token_object}"
+vetting_context = "@{..vetting}"
+guardian_context = "@{..guardian}"
+description = "issuer for token ${token}"
+count = 5
+
+[token.${token}.token_object]
+module = "pdo.digital_asset.plugins.token_object"
+identity = "${..token_issuer.identity}"
+source = "${ContractFamily.DigitalAsset.token_object.source}"
+token_issuer_context = "@{..token_issuer}"
+data_guardian_context = "@{..guardian}"

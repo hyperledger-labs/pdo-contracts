@@ -12,33 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-INCLUDE(exchange_common.cmake)
+
+# This is necessary to get at the definitions necessary
+# for the std::string class
+INCLUDE(exchange_common)
 LIST(APPEND WASM_LIBRARIES ${EXCHANGE_LIB})
 LIST(APPEND WASM_INCLUDES ${EXCHANGE_INCLUDES})
 
-# -----------------------------------------------------------------
-ADD_LIBRARY(${EXCHANGE_LIB} STATIC ${EXCHANGE_SOURCES})
-TARGET_INCLUDE_DIRECTORIES(${EXCHANGE_LIB} PUBLIC ${EXCHANGE_INCLUDES})
-
-SET_PROPERTY(TARGET ${EXCHANGE_LIB} APPEND_STRING PROPERTY COMPILE_OPTIONS "${WASM_BUILD_OPTIONS}")
-SET_PROPERTY(TARGET ${EXCHANGE_LIB} APPEND_STRING PROPERTY LINK_OPTIONS "${WASM_LINK_OPTIONS}")
-SET_TARGET_PROPERTIES(${EXCHANGE_LIB} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+INCLUDE(da_common)
+LIST(APPEND WASM_LIBRARIES ${DIGITAL_ASSET_LIB})
+LIST(APPEND WASM_INCLUDES ${DIGITAL_ASSET_INCLUDES})
 
 # -----------------------------------------------------------------
-BUILD_CONTRACT(asset_type contracts/asset_type.cpp)
-BUILD_CONTRACT(vetting_organization contracts/vetting_organization.cpp)
-BUILD_CONTRACT(issuer contracts/issuer.cpp)
-BUILD_CONTRACT(exchange contracts/exchange.cpp)
+ADD_LIBRARY(${DIGITAL_ASSET_LIB} STATIC ${DIGITAL_ASSET_SOURCES})
+TARGET_INCLUDE_DIRECTORIES(${DIGITAL_ASSET_LIB} PUBLIC ${DIGITAL_ASSET_INCLUDES})
 
-BUILD_CONTRACT(data_guardian contracts/data_guardian.cpp)
-BUILD_CONTRACT(token_issuer contracts/token_issuer.cpp)
-BUILD_CONTRACT(token_object contracts/token_object.cpp)
+SET_PROPERTY(TARGET ${DIGITAL_ASSET_LIB} APPEND_STRING PROPERTY COMPILE_OPTIONS "${WASM_BUILD_OPTIONS}")
+SET_PROPERTY(TARGET ${DIGITAL_ASSET_LIB} APPEND_STRING PROPERTY LINK_OPTIONS "${WASM_LINK_OPTIONS}")
+SET_TARGET_PROPERTIES(${DIGITAL_ASSET_LIB} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
+# -----------------------------------------------------------------
+BUILD_CONTRACT(da_guardian contracts/guardian.cpp)
+BUILD_CONTRACT(da_token_object contracts/token_object.cpp)
 
 # -----------------------------------------------------------------
 INCLUDE(Python)
-BUILD_WHEEL(exchange)
+BUILD_WHEEL(digital_asset)
 
 # -----------------------------------------------------------------
 INCLUDE(Test)
-ADD_SHELL_TEST(exchange script SCRIPT test/script_test.sh)
-ADD_SHELL_TEST(exchange functional SCRIPT test/run_tests.sh)
+ADD_SHELL_TEST(digital-asset script SCRIPT test/script_test.sh)
+ADD_SHELL_TEST(digital-asset functional SCRIPT test/run_tests.sh)
