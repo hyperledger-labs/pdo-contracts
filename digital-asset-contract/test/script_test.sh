@@ -22,7 +22,7 @@
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
-source ${PDO_SOURCE_ROOT}/bin/lib/common.sh
+source ${PDO_HOME}/bin/lib/common.sh
 check_python_version
 
 if ! command -v pdo-shell &> /dev/null ; then
@@ -74,10 +74,13 @@ while true ; do
 done
 
 F_SERVICE_GROUPS_FILE=${SOURCE_ROOT}/test/${F_SERVICE_HOST}_groups.toml
+F_SERVICE_DB_FILE=${SOURCE_ROOT}/test/${F_SERVICE_HOST}_db
 
 _COMMON_=("--logfile ${F_LOGFILE}" "--loglevel ${F_LOGLEVEL}")
-_COMMON_+=("--ledger ${F_LEDGER_URL}" "-m service_host ${F_SERVICE_HOST}")
+_COMMON_+=("--ledger ${F_LEDGER_URL}")
+_COMMON_+=("--bind service_host ${F_SERVICE_HOST}")
 _COMMON_+=("--service-groups ${F_SERVICE_GROUPS_FILE}")
+_COMMON_+=("--service-db ${F_SERVICE_DB_FILE}")
 _COMMON_+=("--context-file ${F_CONTEXT_FILE}")
 OPTS=${_COMMON_[@]}
 
@@ -113,8 +116,8 @@ fi
 # -----------------------------------------------------------------
 function cleanup {
     rm -f ${F_SERVICE_GROUPS_FILE}
-    # rm -f ${F_CONTEXT_FILE}
-    rm -f ${F_KEY_FILES}
+    rm -f ${F_SERVICE_DB_FILE} ${F_SERVICE_DB_FILE}-lock
+    rm -f ${F_CONTEXT_FILE}
     for key_file in ${F_KEY_FILES[@]} ; do
         rm -f ${key_file}
     done
@@ -122,40 +125,42 @@ function cleanup {
 
 trap cleanup EXIT
 
-cd "${SOURCE_ROOT}"
-
 # -----------------------------------------------------------------
 # reset the eservice database file for the test and create the groups
 # -----------------------------------------------------------------
 yell create the service groups database for host ${F_SERVICE_HOST}
 try ${PDO_HOME}/bin/pdo-create-service-groups.psh \
-    --service_host ${F_SERVICE_HOST} --group_file ${F_SERVICE_GROUPS_FILE}
+    --service-db ${F_SERVICE_DB_FILE} \
+    --bind service_host ${F_SERVICE_HOST} \
+    --bind group_file ${F_SERVICE_GROUPS_FILE}
 
 # -----------------------------------------------------------------
 # setup the contexts that will be used later for the tests
 # -----------------------------------------------------------------
+cd "${SOURCE_ROOT}"
+
 rm -f ${F_CONTEXT_FILE}
 
 yell create the context for the marbles and tokens and objects
 try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
-	   -m token da_test_100 -m image_file ${SOURCE_ROOT}/test/images/test-100x100.bmp
+    --bind token da_test_100 --bind image_file ${SOURCE_ROOT}/test/images/test-100x100.bmp
 try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
-	   -m token da_test_10 -m image_file ${SOURCE_ROOT}/test/images/test-10x10.bmp
+	   --bind token da_test_10 --bind image_file ${SOURCE_ROOT}/test/images/test-10x10.bmp
 try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
-	   -m token da_test_5 -m image_file ${SOURCE_ROOT}/test/images/test-5x5.bmp
+	   --bind token da_test_5 --bind image_file ${SOURCE_ROOT}/test/images/test-5x5.bmp
 try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
-	   -m token da_test_almaden -m image_file ${SOURCE_ROOT}/test/images/almaden.bmp
+	   --bind token da_test_almaden --bind image_file ${SOURCE_ROOT}/test/images/almaden.bmp
 
 # we need some marbles to use for the exchange transactions
-try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/marbles.toml -m color blue
-try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/marbles.toml -m color red
-try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/marbles.toml -m color green
+try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/marbles.toml --bind color blue
+try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/marbles.toml --bind color red
+try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/marbles.toml --bind color green
 
 # and we need the order context
 try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/order.toml \
-           -m order token1 -m user token_holder1 \
-           -m offer_count 1 -m offer_issuer token.da_test_100.token_object.token_1 \
-           -m request_count 20 -m request_issuer marbles.green.issuer
+           --bind order token1 --bind user token_holder1 \
+           --bind offer_count 1 --bind offer_issuer token.da_test_100.token_object.token_1 \
+           --bind request_count 20 --bind request_issuer marbles.green.issuer
 
 # -----------------------------------------------------------------
 # start the tests
