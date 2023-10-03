@@ -22,7 +22,7 @@
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
-source ${PDO_SOURCE_ROOT}/bin/lib/common.sh
+source ${PDO_HOME}/bin/lib/common.sh
 check_python_version
 
 if ! command -v pdo-shell &> /dev/null ; then
@@ -38,6 +38,7 @@ if [ "${PDO_LEDGER_TYPE}" == "ccf" ]; then
     fi
 fi
 
+# -----------------------------------------------------------------
 # Process command line arguments
 # -----------------------------------------------------------------
 SCRIPTDIR="$(dirname $(readlink --canonicalize ${BASH_SOURCE}))"
@@ -49,6 +50,7 @@ F_LEDGER_URL=${PDO_LEDGER_URL}
 F_LOGLEVEL=${PDO_LOG_LEVEL:-info}
 F_LOGFILE=${PDO_LOG_FILE:-__screen__}
 F_CONTEXT_FILE=${SOURCE_ROOT}/test/test_context.toml
+F_CONTEXT_TEMPLATES=${PDO_HOME}/contracts/exchange/context
 
 F_USAGE='--host service-host | --ledger url | --loglevel [debug|info|warn] | --logfile file'
 SHORT_OPTS='h:l:'
@@ -71,10 +73,13 @@ while true ; do
 done
 
 F_SERVICE_GROUPS_FILE=${SOURCE_ROOT}/test/${F_SERVICE_HOST}_groups.toml
+F_SERVICE_DB_FILE=${SOURCE_ROOT}/test/${F_SERVICE_HOST}_db
 
 _COMMON_=("--logfile ${F_LOGFILE}" "--loglevel ${F_LOGLEVEL}")
-_COMMON_+=("--ledger ${F_LEDGER_URL}" "-m service_host ${F_SERVICE_HOST}")
+_COMMON_+=("--ledger ${F_LEDGER_URL}")
+_COMMON_+=("--bind service_host ${F_SERVICE_HOST}")
 _COMMON_+=("--service-groups ${F_SERVICE_GROUPS_FILE}")
+_COMMON_+=("--service-db ${F_SERVICE_DB_FILE}")
 _COMMON_+=("--context-file ${F_CONTEXT_FILE}")
 OPTS=${_COMMON_[@]}
 
@@ -110,8 +115,8 @@ fi
 # -----------------------------------------------------------------
 function cleanup {
     rm -f ${F_SERVICE_GROUPS_FILE}
+    rm -f ${F_SERVICE_DB_FILE} ${F_SERVICE_DB_FILE}-lock
     rm -f ${F_CONTEXT_FILE}
-    rm -f ${F_KEY_FILES}
     for key_file in ${F_KEY_FILES[@]} ; do
         rm -f ${key_file}
     done
@@ -122,13 +127,29 @@ trap cleanup EXIT
 # -----------------------------------------------------------------
 # reset the eservice database file for the test and create the groups
 # -----------------------------------------------------------------
-yell create the service groups database for host ${F_SERVICE_HOST}
+yell create the service and groups database for host ${F_SERVICE_HOST}
 try ${PDO_HOME}/bin/pdo-create-service-groups.psh \
-    --service_host ${F_SERVICE_HOST} --group_file ${F_SERVICE_GROUPS_FILE}
+    --service-db ${F_SERVICE_DB_FILE} \
+    --bind service_host ${F_SERVICE_HOST} \
+    --bind group_file ${F_SERVICE_GROUPS_FILE}
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
 cd "${SOURCE_ROOT}"
 
 rm -f ${F_CONTEXT_FILE}
+
+yell create the context for the marbles and tokens and objects
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
+    --bind token da_test_100 --bind image_file ${SOURCE_ROOT}/test/images/test-100x100.bmp
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
+    --bind token da_test_10 --bind image_file ${SOURCE_ROOT}/test/images/test-10x10.bmp
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
+    --bind token da_test_5 --bind image_file ${SOURCE_ROOT}/test/images/test-5x5.bmp
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
+    --bind token da_test_almaden --bind image_file ${SOURCE_ROOT}/test/images/almaden.bmp
+
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
+cd "${SOURCE_ROOT}"
 try ${SCRIPTDIR}/functional_test.psh ${OPTS}

@@ -42,14 +42,14 @@ fi
 # Process command line arguments
 # -----------------------------------------------------------------
 SCRIPTDIR="$(dirname $(readlink --canonicalize ${BASH_SOURCE}))"
-EXCHANGE_ROOT="$(realpath ${SCRIPTDIR}/..)"
+SOURCE_ROOT="$(realpath ${SCRIPTDIR}/..)"
 
 F_SCRIPT=$(basename ${BASH_SOURCE[-1]} )
 F_SERVICE_HOST=${PDO_HOSTNAME}
 F_LEDGER_URL=${PDO_LEDGER_URL}
 F_LOGLEVEL=${PDO_LOG_LEVEL:-info}
 F_LOGFILE=${PDO_LOG_FILE:-__screen__}
-F_CONTEXT_FILE=${EXCHANGE_ROOT}/test/test_context.toml
+F_CONTEXT_FILE=${SOURCE_ROOT}/test/test_context.toml
 F_CONTEXT_TEMPLATES=${PDO_HOME}/contracts/exchange/context
 
 F_USAGE='--host service-host | --ledger url | --loglevel [debug|info|warn] | --logfile file'
@@ -72,11 +72,14 @@ while true ; do
     esac
 done
 
-F_SERVICE_GROUPS_FILE=${EXCHANGE_ROOT}/test/${F_SERVICE_HOST}_groups.toml
+F_SERVICE_GROUPS_FILE=${SOURCE_ROOT}/test/${F_SERVICE_HOST}_groups.toml
+F_SERVICE_DB_FILE=${SOURCE_ROOT}/test/${F_SERVICE_HOST}_db
 
 _COMMON_=("--logfile ${F_LOGFILE}" "--loglevel ${F_LOGLEVEL}")
-_COMMON_+=("--ledger ${F_LEDGER_URL}" "-m service_host ${F_SERVICE_HOST}")
+_COMMON_+=("--ledger ${F_LEDGER_URL}")
+_COMMON_+=("--bind service_host ${F_SERVICE_HOST}")
 _COMMON_+=("--service-groups ${F_SERVICE_GROUPS_FILE}")
+_COMMON_+=("--service-db ${F_SERVICE_DB_FILE}")
 _COMMON_+=("--context-file ${F_CONTEXT_FILE}")
 OPTS=${_COMMON_[@]}
 
@@ -112,6 +115,7 @@ fi
 # -----------------------------------------------------------------
 function cleanup {
     rm -f ${F_SERVICE_GROUPS_FILE}
+    rm -f ${F_SERVICE_DB_FILE} ${F_SERVICE_DB_FILE}-lock
     rm -f ${F_CONTEXT_FILE}
     for key_file in ${F_KEY_FILES[@]} ; do
         rm -f ${key_file}
@@ -123,32 +127,36 @@ trap cleanup EXIT
 # -----------------------------------------------------------------
 # reset the eservice database file for the test and create the groups
 # -----------------------------------------------------------------
-yell create the service groups database for host ${F_SERVICE_HOST}
+yell create the service and groups database for host ${F_SERVICE_HOST}
 try ${PDO_HOME}/bin/pdo-create-service-groups.psh \
-    --service_host ${F_SERVICE_HOST} --group_file ${F_SERVICE_GROUPS_FILE}
+    --service-db ${F_SERVICE_DB_FILE} \
+    --bind service_host ${F_SERVICE_HOST} \
+    --bind group_file ${F_SERVICE_GROUPS_FILE}
 
 # -----------------------------------------------------------------
+# setup the contexts that will be used later for the tests
 # -----------------------------------------------------------------
-cd "${EXCHANGE_ROOT}"
+cd "${SOURCE_ROOT}"
 
 rm -f ${F_CONTEXT_FILE}
 
-try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/marbles.toml -m color blue
-try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/marbles.toml -m color red
-try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/marbles.toml -m color green
-try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/tokens.toml -m token test1
-try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/tokens.toml -m token test2
-try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/tokens.toml -m token test3
+yell create the context for the marbles and tokens
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/marbles.toml --bind color blue
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/marbles.toml --bind color red
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/marbles.toml --bind color green
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/tokens.toml --bind token test1
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/tokens.toml --bind token test2
+try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/tokens.toml --bind token test3
 try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/order.toml  \
-           -m order marble1 -m user user1 \
-           -m offer_count 10 -m offer_issuer marbles.blue.issuer \
-           -m request_count 20 -m request_issuer marbles.green.issuer
+           --bind order marble1 --bind user user1 \
+           --bind offer_count 10 --bind offer_issuer marbles.blue.issuer \
+           --bind request_count 20 --bind request_issuer marbles.green.issuer
 try pdo-context load ${OPTS} --import-file ${F_CONTEXT_FILE} ${F_CONTEXT_TEMPLATES}/order.toml \
-           -m order token1 -m user user1 \
-           -m offer_count 1 -m offer_issuer token.test1.token_object.token_1 \
-           -m request_count 20 -m request_issuer marbles.green.issuer
+           --bind order token1 --bind user user1 \
+           --bind offer_count 1 --bind offer_issuer token.test1.token_object.token_1 \
+           --bind request_count 20 --bind request_issuer marbles.green.issuer
 
 # -----------------------------------------------------------------
-# start the tests
 # -----------------------------------------------------------------
+cd "${SOURCE_ROOT}"
 try ${SCRIPTDIR}/functional_test.psh ${OPTS}
