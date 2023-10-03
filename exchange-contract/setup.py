@@ -17,6 +17,7 @@
 import os
 import sys
 import subprocess
+import warnings
 
 # this should only be run with python3
 import sys
@@ -27,17 +28,30 @@ if sys.version_info[0] < 3:
 from setuptools import setup, find_packages, find_namespace_packages
 
 # -----------------------------------------------------------------
+# Versions are tied to tags on the repository; to compute correctly
+# it is necessary to be within the repository itself hence the need
+# to set the cwd for the bin/get_version command.
 # -----------------------------------------------------------------
 root_dir = os.path.dirname(os.path.realpath(__file__))
-# version = subprocess.check_output(
-#     os.path.join(root_dir, 'bin/get_version')).decode('ascii').strip()
-version = '0.0.0'
+try :
+    pdo_contracts_version = subprocess.check_output(
+        'bin/get_version', cwd=os.path.join(root_dir, os.pardir)).decode('ascii').strip()
+except Exception as e :
+    warnings.warn('Failed to get pdo_contracts version, using the default')
+    pdo_contracts_version = '0.0.0'
+
+try :
+    pdo_client_version = subprocess.check_output(
+        'bin/get_version', cwd=os.path.join(root_dir, os.pardir, 'private-data-objects')).decode('ascii').strip()
+except Exception as e :
+    warnings.warn('Failed to get pdo_client version, using the default')
+    pdo_client_version = '0.0.0'
 
 ## -----------------------------------------------------------------
 ## -----------------------------------------------------------------
 setup(
     name='pdo_exchange',
-    version=version,
+    version=pdo_contracts_version,
     description='Support functions PDO exchange contracts',
     author='Mic Bowman, Intel Labs',
     author_email='mic.bowman@intel.com',
@@ -63,9 +77,9 @@ setup(
     include_package_data=True,
     install_requires = [
         'colorama',
-        'pdo-client>=0.2.49',
-        'pdo-common-library>=0.2.49',
-        'pdo-sservice>=0.2.49',
+        'pdo-client>=' + pdo_client_version,
+        'pdo-common-library>=' + pdo_client_version,
+        'pdo-sservice>=' + pdo_client_version,
     ],
     entry_points = {
         'console_scripts' : [
