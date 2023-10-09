@@ -7,7 +7,19 @@ https://creativecommons.org/licenses/by/4.0/
 
 The following instructions assume that the PDO contracts source is available in the directory pointed to by the environment variable `PDO_CONTRACTS_ROOT` and will be installed to the directory pointed to by the environment variable `PDO_INSTALL_ROOT`.
 
-## Process Overview
+## Install Pre-Built Packages
+
+To install from pre-built packages requires that you have installed the PDO client into a virtual environment in the directory `${PDO_INSTALL_ROOT}`. Once that is done, you can install the pre-built packages with the following commands:
+
+```
+$ ${PDO_INSTALL_ROOT}/bin/pip3 install ${EXCHANGE_PACKAGE} ${DIGITAL_ASSET_PACKAGE}
+$ ${PDO_INSTALL_ROOT}/bin/pdo-install-plugin-resources --module pdo.exchange --family exchange
+$ ${PDO_INSTALL_ROOT}/bin/pdo-install-plugin-resources --module pdo.digital_asset --family digital_asset
+```
+
+Note that the build process described below will create the Python packages in the directory `${PDO_CONTRACTS_ROOT}/build/dist`.
+
+## Build and Install Process Overview
 
 - Install required build dependencies
 - Install the WASM development toolchain

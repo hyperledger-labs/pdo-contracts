@@ -87,23 +87,7 @@ PDO initialization handles configuration of the PDO modules, this
 section handles configuration of the specific contract object and its
 relationship to other contract objects.
 
-## Factories ##
+## Getting Started
 
-The factory notebooks are intended as the starting point for creating
-new contract objects. When you run one of the factory notebooks it
-will create one or more new notebooks in the `instances` directory
-tree. And, when complete, will provide a link to the notebook that was
-created.
-
-* `issuer.ipynb` -- create contracts for setting up a new asset issuer
-* `token-issuer.ipynb` -- create contracts for setting up a new token
-
-## Templates ##
-
-Templates provide the skeletons for the various contract objects. In
-general, you would not open a template directly. Instead, use on the
-factories to create the token objects from the templates.
-
-* `issuer.ipynb` -- template for an asset issuer
-* `token.ipynb` -- template for a token
-* `token-issuer.ipynb` -- template for a token issuer
+The easiest way to get started is to use the Jupyter file browser to
+open `index.ipynb`. Render all of the markdown cells.

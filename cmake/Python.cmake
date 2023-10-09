@@ -38,7 +38,8 @@ FUNCTION(BUILD_WHEEL contract)
 
   STRING(JOIN "\n" INSTALL_COMMAND
     "MESSAGE(\"INSTALL ${contract}\")"
-    "EXECUTE_PROCESS(COMMAND ${PIP} install --upgrade ${WHEEL_FILE})"
+    "EXECUTE_PROCESS(COMMAND ${PIP} uninstall --yes ${WHEEL_FILE})"
+    "EXECUTE_PROCESS(COMMAND ${PIP} install ${WHEEL_FILE})"
     "EXECUTE_PROCESS(COMMAND ${RESOURCE_INSTALLER} --module pdo.${contract} --family ${contract})")
 
   INSTALL(CODE ${INSTALL_COMMAND})
