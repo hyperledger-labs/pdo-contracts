@@ -335,7 +335,7 @@ class cmd_create_order(pcommand.contract_command_base) :
                 user_verifying_key = myfile.read()
 
         # lastly make sure the count is set
-        request_count = int(request_count) if request_count is not None else context.get('request.count', 1)
+        request_count = int(request_count) if request_count is not None else int(context.get('request.count', 1))
 
         # --------------------------------------------------
         # process information about the offer
@@ -344,6 +344,9 @@ class cmd_create_order(pcommand.contract_command_base) :
             offer_issuer_context = Context(state, offer_issuer)
         else :
             offer_issuer_context = context.get_context('offer.issuer_context')
+            if offer_issuer_context is None :
+                raise ValueError('missing required parameter offer_issuer')
+
         offer_issuer_save_file = pcontract_cmd.get_contract_from_context(state, offer_issuer_context)
         if offer_issuer_save_file is None :
             raise ValueError("issuer contract has not been created")
@@ -351,7 +354,7 @@ class cmd_create_order(pcommand.contract_command_base) :
         offer_issuer_session = pbuilder.SessionParameters(save_file=offer_issuer_save_file)
 
         # make sure there is a count
-        offer_count = int(offer_count) if offer_count is not None else context.get('offer.count', 1)
+        offer_count = int(offer_count) if offer_count is not None else int(context.get('offer.count', 1))
 
         # --------------------------------------------------
         # now create the exchange contract
