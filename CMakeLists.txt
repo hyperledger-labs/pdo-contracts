@@ -31,3 +31,4 @@ ENABLE_TESTING()
 
 ADD_SUBDIRECTORY(exchange-contract)
 ADD_SUBDIRECTORY(digital-asset-contract)
+ADD_SUBDIRECTORY(inference-contract)
