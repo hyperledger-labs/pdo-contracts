@@ -5,13 +5,15 @@ https://creativecommons.org/licenses/by/4.0/
 
 # Issuer Contract #
 
-The issuer contract maintains a balance sheet that captures ownership of assets. The issuer contract
-is granted authority to issue assets by a [vetting organization](vetting.md). That authority is
-captured in the contract and passed to assertions of asset ownership.
+The issuer contract maintains a balance sheet that captures ownership
+of assets. The issuer contract is granted authority to issue assets by
+a [vetting organization](vetting.md). That authority is captured in
+the contract and passed to assertions of asset ownership.
 
-The issuer contract restricts participants to see only their own asset balances. Further, the
-creator of the issuer contract may issue assets to a participant, but the contract does not grant
-the right to see the balances after the initial issuance.
+The issuer contract restricts participants to see only their own asset
+balances. Further, the creator of the issuer contract may issue assets
+to a participant, but the contract does not grant the right to see the
+balances after the initial issuance.
 
 ## State Update Methods ##
 
@@ -23,21 +25,27 @@ the right to see the balances after the initial issuance.
 
 ## More on Escrow ##
 
-Typically, the owner of an asset can both check the balance of assets owned and transfer some or all
-of that balance to another party. However, when an asset is escrowed to an agent, the owner loses
-some rights to perform operations on the asset. For example, the owner may continue to check on the
-number of assets owned, but cannot transfer ownership of the asset to another party. For an asset
-that has been escrowed, the agent takes responsibility to ensure that ownership of assets is done
-under controlled circumstances.
+Typically, the owner of an asset can both check the balance of assets
+owned and transfer some or all of that balance to another
+party. However, when an asset is escrowed to an agent, the owner loses
+some rights to perform operations on the asset. For example, the owner
+may continue to check on the number of assets owned, but cannot
+transfer ownership of the asset to another party. For an asset that
+has been escrowed, the agent takes responsibility to ensure that
+ownership of assets is done under controlled circumstances.
 
-The escrow agent is simply a signing authority. It can be a person, a service, or another contract
-object. For the purpose of building a fair exchange protocol, the assets are escrowed to the fair
-exchange contract object which then arbitrates the transfer of ownership for both parties.
+The escrow agent is simply a signing authority. It can be a person, a
+service, or another contract object. For the purpose of building a
+fair exchange protocol, the assets are escrowed to the fair exchange
+contract object which then arbitrates the transfer of ownership for
+both parties.
 
-The issuer contract class defines two methods for processing requests from an escrow agent. The
-`disburse` method cancels an escrow. That is, the asset owner regains all rights to the asset. The
-`claim` method transfers ownership of assets. In each case, the escrow agent provides the invoking
-participant with a proof (in the form of a signed statement), that the operation can be performed.
+The issuer contract class defines two methods for processing requests
+from an escrow agent. The `disburse` method cancels an escrow. That
+is, the asset owner regains all rights to the asset. The `claim`
+method transfers ownership of assets. In each case, the escrow agent
+provides the invoking participant with a proof (in the form of a
+signed statement), that the operation can be performed.
 
 ## Interface Specification ##
 

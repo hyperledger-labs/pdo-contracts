@@ -5,11 +5,13 @@ https://creativecommons.org/licenses/by/4.0/
 
 # Asset Type Contract #
 
-The asset type contract provides an identity for asset types that is anchored in the
-blockchain. In the current design, there is no particular meaning intrinsically ascribed to the
-identity; it simply provides a means to say two things are the same or two things are different.
-That being said, this could be extended in the future into a more robust asset class
-representation or even use this as a means of certifying issuers of a particular asset class.
+The asset type contract provides an identity for asset types that is
+anchored in the blockchain. In the current design, there is no
+particular meaning intrinsically ascribed to the identity; it simply
+provides a means to say two things are the same or two things are
+different.  That being said, this could be extended in the future into
+a more robust asset class representation or even use this as a means
+of certifying issuers of a particular asset class.
 
 ## State Update Methods ##
 

@@ -7,9 +7,10 @@ https://creativecommons.org/licenses/by/4.0/
 
 The vetting organization contract is a relatively simple contract that
 provides a root for building trust chains of issuers for a particular
-asset type. The expectation is that the actual vetting of asset issuers
-happens interactively. The vetting organization contract provides a
-means of recording decisions to grant authority to asset issuers.
+asset type. The expectation is that the actual vetting of asset
+issuers happens interactively. The vetting organization contract
+provides a means of recording decisions to grant authority to asset
+issuers.
 
 ## State Update Methods ##
 
