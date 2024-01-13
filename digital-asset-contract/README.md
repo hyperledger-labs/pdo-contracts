@@ -7,4 +7,6 @@ https://creativecommons.org/licenses/by/4.0/
 
 # Digital Asset Contract Family
 
-This directory contains the implementation of a Private Data Objects contract family that implements a basic digital asset for bitmap images.
+This directory contains the implementation of a Private Data Objects
+contract family that implements a basic digital asset for bitmap
+images.

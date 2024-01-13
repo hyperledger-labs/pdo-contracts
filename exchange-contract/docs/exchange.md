@@ -5,11 +5,13 @@ https://creativecommons.org/licenses/by/4.0/
 
 # Fair Exchange Contract #
 
-The fair exchange contract handles the bi-lateral transfer of asset ownership between ledgers. For
-example, Alice gives three blue marbles to Bob in exchange for four red marbles. This transaction
-must atomically transfer ownership of assets in the blue marble asset ledger and the red marble
-asset ledger. There are several different interactions that would be reasonable for a fair exchange;
-this is just one implementation.
+The fair exchange contract handles the bi-lateral transfer of asset
+ownership between ledgers. For example, Alice gives three blue marbles
+to Bob in exchange for four red marbles. This transaction must
+atomically transfer ownership of assets in the blue marble asset
+ledger and the red marble asset ledger. There are several different
+interactions that would be reasonable for a fair exchange; this is
+just one implementation.
 
 ## State Update Methods ##
 
