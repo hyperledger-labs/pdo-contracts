@@ -87,34 +87,8 @@ _COMMON_+=("--service-db ${F_SERVICE_DB_FILE}")
 _COMMON_+=("--context-file ${F_CONTEXT_FILE}")
 OPTS=${_COMMON_[@]}
 
-# -----------------------------------------------------------------
-# Make sure the keys and eservice database are created and up to date
-# -----------------------------------------------------------------
 F_KEY_FILES=()
 KEYGEN=${PDO_SOURCE_ROOT}/build/__tools__/make-keys
-if [ ! -f ${PDO_HOME}/keys/red_type_private.pem ]; then
-    yell create keys for the contracts
-    for color in red green blue orange purple white ; do
-        ${KEYGEN} --keyfile ${PDO_HOME}/keys/${color}_type --format pem
-        ${KEYGEN} --keyfile ${PDO_HOME}/keys/${color}_vetting --format pem
-        ${KEYGEN} --keyfile ${PDO_HOME}/keys/${color}_issuer --format pem
-        F_KEY_FILES+=(${PDO_HOME}/keys/${color}_{type,vetting,issuer}_{private,public}.pem)
-    done
-
-    for color in green1 green2 green3; do
-        ${KEYGEN} --keyfile ${PDO_HOME}/keys/${color}_issuer --format pem
-        F_KEY_FILES+=(${PDO_HOME}/keys/${color}_issuer_{private,public}.pem)
-    done
-
-    ${KEYGEN} --keyfile ${PDO_HOME}/keys/token_type --format pem
-    ${KEYGEN} --keyfile ${PDO_HOME}/keys/token_vetting --format pem
-    ${KEYGEN} --keyfile ${PDO_HOME}/keys/token_issuer --format pem
-    F_KEY_FILES+=(${PDO_HOME}/keys/token_{type,vetting,issuer}_{private,public}.pem)
-    for count in 1 2 3 4 5 ; do
-        ${KEYGEN} --keyfile ${PDO_HOME}/keys/token_holder${count} --format pem
-        F_KEY_FILES+=(${PDO_HOME}/keys/token_holder${count}_{private,public}.pem)
-    done
-fi
 
 if [ ! -f ${PDO_HOME}/keys/guardian_service.pem ]; then
     yell create keys for the guardian service
@@ -160,66 +134,5 @@ try ${PDO_HOME}/contracts/inference/scripts/gs_start.sh -c -o ${PDO_HOME}/logs -
     --bind host ${F_GUARDIAN_HOST} \
     --bind service_host ${F_SERVICE_HOST}
 
-# -----------------------------------------------------------------
-# reset the eservice database file for the test and create the groups
-# -----------------------------------------------------------------
-yell create the service groups database for host ${F_SERVICE_HOST}
-try ${PDO_HOME}/bin/pdo-create-service-groups.psh \
-    --service-db ${F_SERVICE_DB_FILE} \
-    --bind service_host ${F_SERVICE_HOST} \
-    --bind group_file ${F_SERVICE_GROUPS_FILE}
-
-# -----------------------------------------------------------------
-# setup the contexts that will be used later for the tests, check this
-# -----------------------------------------------------------------
-cd "${SOURCE_ROOT}"
-
-rm -f ${CONTEXT_FILE}
-
-try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
-    --bind token test1 --bind url http://${F_GUARDIAN_HOST}:7900
-try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
-    --bind token test2 --bind url http://${F_GUARDIAN_HOST}:7900
-try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
-    --bind token test3 --bind url http://${F_GUARDIAN_HOST}:7900
-
-# we need some marbles to use for the exchange transactions
-try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/marbles.toml --bind color blue
-try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/marbles.toml --bind color red
-try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/marbles.toml --bind color green
-
-# and we need the order context
-try pdo-context load ${OPTS} --import-file ${F_EXCHANGE_TEMPLATES}/order.toml \
-           --bind order token1 --bind user token_holder1 \
-           --bind offer_count 1 --bind offer_issuer token.test1.token_object.token_1 \
-           --bind request_count 20 --bind request_issuer marbles.green.issuer
-
-
-# -----------------------------------------------------------------
-# start the tests
-# -----------------------------------------------------------------
-
-yell create a token issuer and mint the tokens
-try ex_token_issuer create ${OPTS} --contract token.test1.token_issuer
-try inference_token mint_tokens ${OPTS} --contract token.test1.token_object
-
-yell do inference on images
-try inference_token do_inference ${OPTS}  --contract token.test1.token_object.token_1 --image "zebra_wiki.jpg"
-
-yell transfer the tokens to the token holders
-for i in 1 2 3 4 5 ; do
-    try inference_token transfer ${OPTS} \
-        --contract token.test1.token_object.token_${i} --new-owner token_holder${i}
-done
-
-yell test ownership
-inference_token do_inference ${OPTS}  --identity token_issuer \
-    --contract token.test1.token_object.token_1 --image "zebra_wiki.jpg"
-if [ $? == 0 ]; then
-    die should have failed with incorrect owner
-fi
-
-try inference_token do_inference ${OPTS} --identity token_holder1 \
-    --contract token.test1.token_object.token_1 --image "zebra_wiki.jpg"
-
+read -p "Guardian Service Frontend Running. Press any key to exit"
 exit
