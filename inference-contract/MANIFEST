@@ -30,6 +30,7 @@ MANIFEST.in
 ./pdo/inference/scripts/__init__.py
 ./pdo/inference/scripts/guardianCLI.py
 ./pdo/inference/scripts/scripts.py
+./pdo/inference/jupyter.py
 ./scripts/gs_stop.sh
 ./scripts/gs_start.sh
 ./scripts/gs_status.sh
