@@ -1,0 +1,6 @@
+# -----------------------------------------------------------------
+# Exchange family contract source
+# -----------------------------------------------------------------
+[ContractFamily.Identity]
+assertion = { source = "${home}/contracts/identity/_assertion.b64" }
+identity = { source = "${home}/contracts/identity/_identity.b64" }
