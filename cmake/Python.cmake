@@ -28,7 +28,7 @@ FUNCTION(BUILD_WHEEL contract)
   # adding the build and egg-info directories to the output means that
   # they will be cleaned up with the global clean target
   ADD_CUSTOM_COMMAND(
-    OUTPUT ${WHEEL_FILE} ${SOURCE}/build ${SOURCE}/pdo_exchange.egg-info
+    OUTPUT ${WHEEL_FILE} ${SOURCE}/build ${SOURCE}/pdo_${contract}.egg-info
     COMMAND ${PYTHON}
     ARGS -m build --wheel --outdir ${WHEEL_PATH}
     WORKING_DIRECTORY ${SOURCE}
