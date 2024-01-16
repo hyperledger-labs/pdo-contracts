@@ -5,9 +5,28 @@ https://creativecommons.org/licenses/by/4.0/
 
 # Installation Guide #
 
-The following instructions assume that the PDO contracts source is available in the directory pointed to by the environment variable `PDO_CONTRACTS_ROOT` and will be installed to the directory pointed to by the environment variable `PDO_INSTALL_ROOT`.
+The following instructions assume that the PDO contracts source is available in
+the directory pointed to by the environment variable `PDO_CONTRACTS_ROOT` and
+will be installed to the directory pointed to by the environment variable
+`PDO_INSTALL_ROOT`.
 
-## Process Overview
+## Install Pre-Built Packages
+
+To install from pre-built packages requires that you have installed the PDO
+client into a virtual environment in the directory `${PDO_INSTALL_ROOT}`. Once
+that is done, you can install the pre-built packages with the following
+commands:
+
+```
+$ ${PDO_INSTALL_ROOT}/bin/pip3 install ${EXCHANGE_PACKAGE} ${DIGITAL_ASSET_PACKAGE}
+$ ${PDO_INSTALL_ROOT}/bin/pdo-install-plugin-resources --module pdo.exchange --family exchange
+$ ${PDO_INSTALL_ROOT}/bin/pdo-install-plugin-resources --module pdo.digital_asset --family digital_asset
+```
+
+Note that the build process described below will create the Python packages in
+the directory `${PDO_CONTRACTS_ROOT}/build/dist`.
+
+## Build and Install Process Overview
 
 - Install required build dependencies
 - Install the WASM development toolchain
@@ -51,8 +70,9 @@ sudo dpkg --install /tmp/wasi-sdk_12.0_amd64.deb
 
 ## <a name="client">Build and Install the PDO Client Environment</a>
 
-Assuming you have installed and configured the pre-requisites in the default location, the following
-commands will build and install PDO into a Python virtual environment in the directory `${PDO_INSTALL_ROOT}`.
+Assuming you have installed and configured the pre-requisites in the default
+location, the following commands will build and install PDO into a Python
+virtual environment in the directory `${PDO_INSTALL_ROOT}`.
 
 ```
 make -C ${PDO_SOURCE_ROOT}/build client
@@ -69,7 +89,9 @@ More information about PDO client installation is found in the
 
 ## <a name="contracts">Build and Install the PDO Contracts Packages</a>
 
-Finally, build and install the Python packages associated with the PDO contract families. The packages will be built in the directory `${PDO_CONTRACTS_ROOT}/build/dist`.
+Finally, build and install the Python packages associated with the PDO contract
+families. The packages will be built in the directory
+`${PDO_CONTRACTS_ROOT}/build/dist`.
 
 ```
 make -C ${PDO_CONTRACTS_ROOT}
