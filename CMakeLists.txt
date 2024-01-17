@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.10 FATAL_ERROR)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.17 FATAL_ERROR)
 
 PROJECT(pdo-contracts)
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -27,8 +27,11 @@ INCLUDE(wawaka_common)
 LIST(APPEND WASM_LIBRARIES ${WW_COMMON_LIB})
 LIST(APPEND WASM_INCLUDES ${WW_COMMON_INCLUDES})
 
+SET(CONTRACT_FAMILIES exchange-contract digital-asset-contract inference-contract)
+INCLUDE(Local.cmake OPTIONAL)
+
 ENABLE_TESTING()
 
-ADD_SUBDIRECTORY(exchange-contract)
-ADD_SUBDIRECTORY(digital-asset-contract)
-ADD_SUBDIRECTORY(inference-contract)
+FOREACH(FAMILY IN ITEMS ${CONTRACT_FAMILIES})
+  ADD_SUBDIRECTORY(${FAMILY})
+ENDFOREACH()
