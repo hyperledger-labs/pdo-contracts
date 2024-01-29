@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.17 FATAL_ERROR)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.16 FATAL_ERROR)
 
 PROJECT(pdo-contracts)
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
