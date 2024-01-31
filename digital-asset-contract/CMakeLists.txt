@@ -37,7 +37,7 @@ BUILD_CONTRACT(da_token_object contracts/token_object.cpp)
 
 # -----------------------------------------------------------------
 INCLUDE(Python)
-BUILD_WHEEL(digital_asset)
+BUILD_WHEEL(digital_asset da_guardian da_token_object)
 
 # -----------------------------------------------------------------
 INCLUDE(Test)

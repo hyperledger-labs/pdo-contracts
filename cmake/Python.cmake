@@ -25,6 +25,11 @@ FUNCTION(BUILD_WHEEL contract)
   SET(WHEEL_FILE "${WHEEL_PATH}/pdo_${contract}-${PDO_CONTRACT_VERSION}-py3-none-any.whl")
   FILE(STRINGS "${SOURCE}/MANIFEST" MANIFEST)
 
+  SET(MultiValueArgs CONTRACT_TARGETS)
+  CMAKE_PARSE_ARGUMENTS(BC "" "" "${MultiValueArgs}" ${ARGN})
+
+  SET(BC_CONTRACT_TARGETS ${BC_CONTRACT_TARGETS} ${BC_UNPARSED_ARGUMENTS})
+
   # adding the build and egg-info directories to the output means that
   # they will be cleaned up with the global clean target
   ADD_CUSTOM_COMMAND(
@@ -32,7 +37,7 @@ FUNCTION(BUILD_WHEEL contract)
     COMMAND ${PYTHON}
     ARGS -m build --wheel --outdir ${WHEEL_PATH}
     WORKING_DIRECTORY ${SOURCE}
-    DEPENDS ${MANIFEST})
+    DEPENDS ${MANIFEST} ${BC_CONTRACT_TARGETS})
 
   ADD_CUSTOM_TARGET(${contract}-package ALL DEPENDS ${WHEEL_FILE})
 

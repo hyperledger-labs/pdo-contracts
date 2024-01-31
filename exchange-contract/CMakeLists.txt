@@ -36,7 +36,7 @@ BUILD_CONTRACT(token_object contracts/token_object.cpp)
 
 # -----------------------------------------------------------------
 INCLUDE(Python)
-BUILD_WHEEL(exchange)
+BUILD_WHEEL(exchange asset_type vetting_organization issuer exchange data_guardian token_issuer token_object)
 
 # -----------------------------------------------------------------
 INCLUDE(Test)

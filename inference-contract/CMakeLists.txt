@@ -34,7 +34,7 @@ BUILD_CONTRACT(inference_token_object contracts/token_object.cpp)
 
 # -----------------------------------------------------------------
 INCLUDE(Python)
-BUILD_WHEEL(inference)
+BUILD_WHEEL(inference inference_token_object)
 
 # -----------------------------------------------------------------
 INCLUDE(Test)
