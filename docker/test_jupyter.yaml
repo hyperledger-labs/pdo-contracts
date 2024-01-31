@@ -1,0 +1,60 @@
+# Copyright 2024 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ------------------------------------------------------------------------------
+version: "3.4"
+
+# This file creates a complete environment for testing the contracts
+# through the jupyter notebook interface.
+
+# Note that we do not need to specify PDO_HOSTNAME or PDO_LEDGER_URL
+# (or the corresponding --inteface or --ledger switches) for the test
+# scripts because they are hard coded in run_*_tests.sh for each of the
+# containers.
+
+services:
+  ccf_container:
+    image: pdo_ccf:${PDO_VERSION:-latest}
+    container_name: ccf_container
+    network_mode: "host"
+    volumes:
+      - ./xfer/:/project/pdo/xfer/
+    entrypoint: /project/pdo/tools/start_ccf.sh -m build -i localhost --start
+
+  services_container:
+    image: pdo_services:${PDO_VERSION:-latest}
+    container_name: services_container
+    depends_on: [ ccf_container ]
+    network_mode: "host"
+    volumes:
+      - ./xfer/:/project/pdo/xfer/
+    entrypoint: /project/pdo/tools/start_services.sh -m build -c 5 -i localhost -l http://127.0.0.1:6600
+
+  openvino_container:
+    image: openvino/model_server:latest
+    container_name: openvino_container
+    network_mode: "host"
+    volumes:
+      - ./models/:/models/
+    command: --model_path /models/ --model_name resnet --port 9000 --shape auto
+
+  contracts_container:
+    image: pdo_contracts:${CONTRACTS_VERSION}
+    container_name: jupyter_container
+    depends_on:
+      - services_container
+      - openvino_container
+    network_mode: "host"
+    volumes:
+      - ./xfer/:/project/pdo/xfer/
+    entrypoint: /project/pdo/tools/run_jupyter_tests.sh -l http://127.0.0.1:6600 -s localhost
