@@ -173,7 +173,7 @@ clean_contracts :
 # this would set in a make.loc
 TEST_COMPOSE_ARGS += -f test.yaml
 
-build_test : contracts models build_contracts versions
+build_test : contracts models build_contracts
 
 test : clean_config clean_contracts build_test
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
