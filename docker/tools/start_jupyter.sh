@@ -79,8 +79,8 @@ if [ "${F_MODE,,}" == "build" ]; then
 elif [ "${F_MODE,,}" == "copy" ]; then
     yell copy the configuration from xfer/client/etc and xfer/client/keys
     mkdir -p ${PDO_HOME}/etc ${PDO_HOME}/keys
-    cp ${XFER_DIR}/client/etc/* ${PDO_HOME}/etc/
-    cp ${XFER_DIR}/client/keys/* ${PDO_HOME}/keys/
+    cp -R ${XFER_DIR}/client/etc/* ${PDO_HOME}/etc/
+    cp -R ${XFER_DIR}/client/keys/* ${PDO_HOME}/keys/
 elif [ "${F_MODE,,}" == "skip" ]; then
     yell start with existing configuration
 else
