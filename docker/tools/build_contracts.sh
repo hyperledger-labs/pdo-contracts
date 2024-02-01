@@ -43,3 +43,8 @@ yell build the the contracts
 # -----------------------------------------------------------------
 try make -C /project/pdo/contracts contracts
 try make -C /project/pdo/contracts install
+
+# -----------------------------------------------------------------
+yell add some contract specific functions to the PDO install
+# -----------------------------------------------------------------
+mkdir -p ${PDO_INSTALL_ROOT}/opt/pdo/etc/context

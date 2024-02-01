@@ -101,6 +101,9 @@ if [ ${F_MODE} == 'build' ]; then
     mkdir -p ${NOTEBOOK_ROOT}/instances
     mkdir -p ${NOTEBOOK_ROOT}/templates
 
+    if [ -f /project/pdo/contracts/exchange-contract/docs/notebooks/index.ipynb ] ; then
+        cp /project/pdo/contracts/exchange-contract/docs/notebooks/index.ipynb ${NOTEBOOK_ROOT}
+    fi
     cp /project/pdo/contracts/exchange-contract/docs/notebooks/factories/*.ipynb ${NOTEBOOK_ROOT}/factories
     cp /project/pdo/contracts/exchange-contract/docs/notebooks/templates/*.ipynb ${NOTEBOOK_ROOT}/templates
 fi
