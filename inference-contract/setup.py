@@ -86,7 +86,6 @@ setup(
         'lmdb',
         'toml',
         'twisted',
-        'Pillow==8.4.0',
         'jsonschema>=3.0.1',
         'futures==3.1.1',
         'opencv-python>=4.6.0',
