@@ -27,6 +27,8 @@ IF (NOT DEFINED ENV{PDO_INSTALL_ROOT})
 ENDIF()
 SET(PDO_INSTALL_ROOT $ENV{PDO_INSTALL_ROOT})
 
+SET(PDO_JUPYTER_ROOT ${PDO_INSTALL_ROOT}/opt/pdo/notebooks)
+
 # Get the current version using the get_version
 # utility; note that this will provide 0.0.0 as
 # the version if something goes wrong (like running

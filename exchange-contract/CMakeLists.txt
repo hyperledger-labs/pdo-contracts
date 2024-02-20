@@ -42,3 +42,12 @@ BUILD_WHEEL(exchange asset_type vetting_organization issuer exchange data_guardi
 INCLUDE(Test)
 ADD_SHELL_TEST(exchange script SCRIPT test/script_test.sh)
 ADD_SHELL_TEST(exchange functional SCRIPT test/run_tests.sh)
+
+# -----------------------------------------------------------------
+# install the jupyter notebooks, note that the trailing slash here
+# is significant and should not be removed; it prevents the notebooks
+# directory being prepended to the copied name
+# -----------------------------------------------------------------
+INSTALL(DIRECTORY docs/notebooks/
+  DESTINATION "${PDO_JUPYTER_ROOT}/exchange"
+  FILES_MATCHING PATTERN "*.ipynb")

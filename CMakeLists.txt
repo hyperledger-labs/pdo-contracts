@@ -39,3 +39,12 @@ ENABLE_TESTING()
 FOREACH(FAMILY IN ITEMS ${CONTRACT_FAMILIES})
   ADD_SUBDIRECTORY(${FAMILY})
 ENDFOREACH()
+
+# -----------------------------------------------------------------
+# install the jupyter notebooks, note that the trailing slash here
+# is significant and should not be removed; it prevents the notebooks
+# directory being prepended to the copied name
+# -----------------------------------------------------------------
+INSTALL(DIRECTORY docs/notebooks/
+  DESTINATION "${PDO_JUPYTER_ROOT}/"
+  FILES_MATCHING PATTERN "*.ipynb")

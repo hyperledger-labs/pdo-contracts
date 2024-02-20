@@ -48,6 +48,17 @@ services:
       - ./models/:/models/
     command: --model_path /models/ --model_name resnet --port 9000 --shape auto --grpc_bind_address 127.0.0.1
 
+  guardian_container:
+    image: pdo_contracts:${CONTRACTS_VERSION}
+    container_name: guardian_container
+    depends_on:
+      - services_container
+      - openvino_container
+    network_mode: "host"
+    volumes:
+      - ./xfer/:/project/pdo/xfer/
+    entrypoint: /project/pdo/tools/run_guardian_tests.sh -i localhost -l http://127.0.0.1:6600
+
   contracts_container:
     image: pdo_contracts:${CONTRACTS_VERSION}
     container_name: jupyter_container
@@ -57,4 +68,4 @@ services:
     network_mode: "host"
     volumes:
       - ./xfer/:/project/pdo/xfer/
-    entrypoint: /project/pdo/tools/run_jupyter_tests.sh -l http://127.0.0.1:6600 -s localhost
+    entrypoint: /project/pdo/tools/run_jupyter_tests.sh -i localhost -l http://127.0.0.1:6600
