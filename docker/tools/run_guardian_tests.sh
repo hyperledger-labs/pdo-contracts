@@ -22,11 +22,13 @@ source ${PDO_HOME}/bin/lib/common.sh
 # Process command line arguments
 # -----------------------------------------------------------------
 F_LEDGER_URL=
+F_LOGLEVEL=info
+F_MODE=build
 F_INTERFACE=localhost
 
-F_USAGE='-i|--interface [hostname] -1|--ledger [url]'
-SHORT_OPTS='i:l:'
-LONG_OPTS='interface:,ledger:'
+F_USAGE='-i|--interface [hostname] -1|--ledger [url] --loglevel [debug|info|warn] -m|--mode [build|copy|skip]'
+SHORT_OPTS='i:l:m:'
+LONG_OPTS='interface:,ledger:,loglevel:,mode:'
 
 TEMP=$(getopt -o ${SHORT_OPTS} --long ${LONG_OPTS} -n "${SCRIPT_NAME}" -- "$@")
 if [ $? != 0 ] ; then echo "Usage: ${SCRIPT_NAME} ${F_USAGE}" >&2 ; exit 1 ; fi
@@ -36,6 +38,8 @@ while true ; do
     case "$1" in
         -i|--interface) F_INTERFACE="$2" ; shift 2 ;;
         -l|--ledger) F_LEDGER_URL="$2" ; shift 2 ;;
+        -m|--mode) F_MODE="$2" ; shift 2 ;;
+        --loglevel) F_LOGLEVEL="--loglevel $2" ; shift 2 ;;
         --help) echo "Usage: ${SCRIPT_NAME} ${F_USAGE}"; exit 0 ;;
     	--) shift ; break ;;
     	*) echo "Internal error!" ; exit 1 ;;
@@ -60,7 +64,6 @@ check_pdo_runtime_env
 # -----------------------------------------------------------------
 yell copy ledger keys
 # -----------------------------------------------------------------
-
 # need to wait for the ledger to get going so we can grab the
 # keys and copy them into the correct location, in theory the
 # healthcheck in the docker-compose configuration file should
@@ -86,18 +89,28 @@ done
 try cp ${XFER_DIR}/services/etc/site.toml ${PDO_HOME}/etc/site.toml
 
 # -----------------------------------------------------------------
-# Handle the configuration of the services
-# -----------------------------------------------------------------
-yell configure client for ledger $PDO_LEDGER_URL
-try ${PDO_INSTALL_ROOT}/bin/pdo-configure-users -t ${PDO_SOURCE_ROOT}/build/template -o ${PDO_HOME} \
-    --key-count 10 --key-base user
+function cleanup {
+    yell "shutdown guardian and storage service"
+    ${PDO_HOME}/contracts/inference/scripts/gs_stop.sh
+    ${PDO_HOME}/contracts/inference/scripts/ss_stop.sh
+}
+
+trap cleanup EXIT
 
 # -----------------------------------------------------------------
-yell start the jupyter server
+# Start the guardian service and the storage service
 # -----------------------------------------------------------------
-. ${PDO_INSTALL_ROOT}/bin/activate
+try ${PDO_HOME}/contracts/inference/scripts/ss_start.sh -c -o ${PDO_HOME}/logs -- \
+    --loglevel ${F_LOGLEVEL} \
+    --config guardian_service.toml \
+    --config-dir ${PDO_HOME}/etc/contracts \
+    --identity guardian_sservice
 
-export PDO_JUPYTER_ROOT=${PDO_INSTALL_ROOT}/opt/pdo/notebooks
+try ${PDO_HOME}/contracts/inference/scripts/gs_start.sh -c -o ${PDO_HOME}/logs -- \
+    --loglevel ${F_LOGLEVEL} \
+    --config guardian_service.toml \
+    --config-dir ${PDO_HOME}/etc/contracts \
+    --identity guardian_service \
+    --bind host ${F_INTERFACE}
 
-cd ${PDO_JUPYTER_ROOT}
-jupyter lab --no-browser --port=8888 --ServerApp.ip=${F_INTERFACE}
+sleep infinity

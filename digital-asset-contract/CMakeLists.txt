@@ -43,3 +43,12 @@ BUILD_WHEEL(digital_asset da_guardian da_token_object)
 INCLUDE(Test)
 ADD_SHELL_TEST(digital-asset script SCRIPT test/script_test.sh)
 ADD_SHELL_TEST(digital-asset functional SCRIPT test/run_tests.sh)
+
+# -----------------------------------------------------------------
+# install the jupyter notebooks, note that the trailing slash here
+# is significant and should not be removed; it prevents the notebooks
+# directory being prepended to the copied name
+# -----------------------------------------------------------------
+INSTALL(DIRECTORY docs/notebooks/
+  DESTINATION "${PDO_JUPYTER_ROOT}/digital-asset"
+  FILES_MATCHING PATTERN "*.ipynb")

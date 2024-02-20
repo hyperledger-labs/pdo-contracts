@@ -39,3 +39,12 @@ BUILD_WHEEL(inference inference_token_object)
 # -----------------------------------------------------------------
 INCLUDE(Test)
 ADD_SHELL_TEST(inference script SCRIPT test/script_test.sh)
+
+# -----------------------------------------------------------------
+# install the jupyter notebooks, note that the trailing slash here
+# is significant and should not be removed; it prevents the notebooks
+# directory being prepended to the copied name
+# -----------------------------------------------------------------
+INSTALL(DIRECTORY docs/notebooks/
+  DESTINATION "${PDO_JUPYTER_ROOT}/inference"
+  FILES_MATCHING PATTERN "*.ipynb")
