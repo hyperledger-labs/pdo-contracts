@@ -54,12 +54,15 @@ PDO_VERSION ?= $$(									\
 		echo "latest";								\
 	fi )
 
+PDO_REPSITORY ?= ''
+
 # DOCKER BUILD
 DOCKER_USERNAME = $(LOGNAME)
 DOCKER_BUILDARGS += --build-arg UID=$(CONTRACTS_USER_UID)
 DOCKER_BUILDARGS += --build-arg GID=$(CONTRACTS_GROUP_UID)
 DOCKER_BUILDARGS += --build-arg CONTRACTS_VERSION=$(CONTRACTS_VERSION)
 DOCKER_BUILDARGS += --build-arg PDO_VERSION=$(PDO_VERSION)
+DOCKER_BUILDARGS += --build-arg PDO_REPOSITORY=$(PDO_REPOSITORY)
 DOCKER_ARGS = $(DOCKER_BUILDARGS)
 
 # for the most part this is just used to force rebuild when the
