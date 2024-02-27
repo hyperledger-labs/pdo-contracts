@@ -34,8 +34,9 @@
 
 # PURPOSE: develop and test contracts with clean
 
+ARG PDO_REPOSITORY
 ARG PDO_VERSION
-FROM pdo_client:${PDO_VERSION}
+FROM ${PDO_REPOSITORY}pdo_client:${PDO_VERSION}
 
 # -----------------------------------------------------------------
 # Install the necessary dependencies

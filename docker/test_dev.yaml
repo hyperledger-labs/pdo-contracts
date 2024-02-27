@@ -14,9 +14,6 @@
 # ------------------------------------------------------------------------------
 version: "3.4"
 
-# This file creates a complete environment for testing the contracts
-# through the jupyter notebook interface.
-
 # Note that we do not need to specify PDO_HOSTNAME or PDO_LEDGER_URL
 # (or the corresponding --inteface or --ledger switches) for the test
 # scripts because they are hard coded in run_*_tests.sh for each of the
@@ -47,25 +44,3 @@ services:
     volumes:
       - ./models/:/models/
     command: --model_path /models/ --model_name resnet --port 9000 --shape auto --grpc_bind_address 127.0.0.1
-
-  guardian_container:
-    image: pdo_contracts:${CONTRACTS_VERSION}
-    container_name: guardian_container
-    depends_on:
-      - services_container
-      - openvino_container
-    network_mode: "host"
-    volumes:
-      - ./xfer/:/project/pdo/xfer/
-    entrypoint: /project/pdo/tools/run_guardian_tests.sh -i localhost -l http://127.0.0.1:6600
-
-  contracts_container:
-    image: pdo_contracts:${CONTRACTS_VERSION}
-    container_name: jupyter_container
-    depends_on:
-      - services_container
-      - openvino_container
-    network_mode: "host"
-    volumes:
-      - ./xfer/:/project/pdo/xfer/
-    entrypoint: /project/pdo/tools/run_jupyter_tests.sh -i localhost -l http://127.0.0.1:6600
