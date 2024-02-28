@@ -5,6 +5,8 @@ context/order.toml
 context/tokens.toml
 etc/exchange.toml
 pdo/__init__.py
+pdo/contracts/__init__.py
+pdo/contracts/jupyter.py
 pdo/exchange/__init__.py
 pdo/exchange/jupyter.py
 pdo/exchange/plugins/__init__.py
