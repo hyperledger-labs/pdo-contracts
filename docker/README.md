@@ -10,13 +10,13 @@ container with the PDO contracts. For the most part, this directory
 could be copied to any host (even without PDO otherwise installed) to
 build, configure, and execute PDO contracts code.  Also note that the
 makefile assumes you have already built all containers from the
-`private-data-objects` repository.  If not, just run `make repository;
-make -C repository/private-data-objects/docker`.  For clarity the
-scripts in the directory are intended to serve two purposes. The first
-is to provide the basic instructions for building images for running
-the various contract families in the PDO contracts repository. The
-images may be used for a variety of uses including demonstration,
-testing and interacting with PDO contracts.
+`private-data-objects` repository.
+
+For clarity the scripts in the directory are intended to serve two
+purposes. The first is to provide the basic instructions for building
+images for running the various contract families in the PDO contracts
+repository. The images may be used for a variety of uses including
+demonstration, testing and interacting with PDO contracts.
 
 The second purpose is to provide a means for clean, reproducible
 testing of the contracts and the Jupyter notebooks. Fully automated
@@ -56,6 +56,14 @@ Four configuration variables should be set as necessary:
 * `CONTRACTS_GROUP_UID` -- the GID for the group assigned to the user
   created in the container; the default is the GID for the current
   user.
+* `PDO_VERSION` -- the version identifier for PDO images; this
+  defaults to `latest`.
+* `PDO_REPOSITORY` -- the docker repository from which PDO docker images
+  may be retrieved; this defaults to `""` so that local images will be
+  used by default.
+* `CONTRACTS_VERSION` -- the version that will be used to tag the PDO
+  contracts images that are create; this defaults to the current version
+  number for the PDO contracts source.
 
 The test targets in the `Makefile` pre-configure all network services
 to run on `localhost` interface.
