@@ -63,4 +63,23 @@ clean :
 	@ find . -iname '*.pyc' -delete
 	@ find . -iname '__pycache__' -delete
 
+# this target requires a little explanation... when the private-data-objects
+# submodule is updated, it will generally lack a branch name (git checkout
+# results in a detached HEAD state). in order to build from the submodule
+# we need the submodule to belong to a branch; in this case we are just going
+# to create a branch that is named by the current pdo-contracts version.
+# PDO_SOURCE_ROOT must be set to the submodule directory to build correctly.
+pdo_docker :
+	PDO_SOURCE_ROOT=$(SOURCE_ROOT)/private-data-objects \
+		cd $(SOURCE_ROOT)/private-data-objects && git checkout -B pdo-contracts-${VERSION}
+	PDO_SOURCE_ROOT=$(SOURCE_ROOT)/private-data-objects \
+		make -C private-data-objects/docker all
+
+pdo_contracts_docker :
+	make -C docker all
+
+docker_test : pdo_docker pdo_contracts_docker
+	make -C docker test
+
 .PHONY : all clean contracts install uninstall test
+.PHONY : pdo_docker pdo_contracts_docker docker_test

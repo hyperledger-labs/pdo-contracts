@@ -65,6 +65,7 @@ services:
     depends_on:
       - services_container
       - openvino_container
+      - guardian_container
     network_mode: "host"
     volumes:
       - ./xfer/:/project/pdo/xfer/
