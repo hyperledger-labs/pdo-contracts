@@ -28,6 +28,7 @@ CONTRACTS_GROUP_UID ?= $(shell id -g)
 # does not work very well if the path contains spaces in the name; in
 # fact lots of things break very badly; set this explicitly
 DOCKER_DIR ?= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+CONTRACTS_SOURCE_ROOT = $(abspath $(DOCKER_DIR)/..)
 
 # CONTRACTS_REPO --
 #   The URL or path to the git repository, the default uses the current repository
@@ -37,7 +38,7 @@ DOCKER_DIR ?= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 #   The branch that will be used for the containers, the default is the current
 #   branch, a reasonable alternative would be to use the 'main' branch from the
 #   public PDO contracts repository
-CONTRACTS_REPO ?= $(abspath $(DOCKER_DIR)/..)
+CONTRACTS_REPO ?= $(CONTRACTS_SOURCE_ROOT)
 CONTRACTS_BRANCH ?= $$(git -C $(CONTRACTS_REPO) rev-parse --abbrev-ref HEAD)
 
 CONTRACTS_VERSION ?= $$(					\
@@ -84,6 +85,24 @@ build_contracts : repository models
 
 clean_contracts :
 	- docker rmi -f pdo_contracts:$(CONTRACTS_VERSION)
+
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
+# this target requires a little explanation... when the private-data-objects
+# submodule is updated, it will generally lack a branch name (git checkout
+# results in a detached HEAD state). in order to build from the submodule
+# we need the submodule to belong to a branch; in this case we are just going
+# to create a branch that is named by the current pdo-contracts version.
+# PDO_SOURCE_ROOT must be set to the submodule directory to build correctly.
+
+build_pdo_images : repository
+	PDO_SOURCE_ROOT=$(DOCKER_DIR)/repository/private-data-objects \
+		cd $(DOCKER_DIR)/repository/private-data-objects && git checkout -B pdo-contracts-${CONTRACTS_VERSION}
+	PDO_SOURCE_ROOT=$(DOCKER_DIR)/repository/private-data-objects \
+		make -C $(DOCKER_DIR)/repository/private-data-objects/docker all
+	PDO_SOURCE_ROOT=$(DOCKER_DIR)/repository/private-data-objects \
+		make -C $(DOCKER_DIR)/repository/private-data-objects/docker clean_repository
+
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
