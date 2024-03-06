@@ -50,4 +50,4 @@ ADD_SHELL_TEST(exchange functional SCRIPT test/run_tests.sh)
 # -----------------------------------------------------------------
 INSTALL(DIRECTORY docs/notebooks/
   DESTINATION "${PDO_JUPYTER_ROOT}/exchange"
-  FILES_MATCHING PATTERN "*.ipynb")
+  FILES_MATCHING PATTERN "*.ipynb" PATTERN "*.png")

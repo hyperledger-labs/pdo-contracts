@@ -84,9 +84,7 @@ declare max_tries=10
 until $(${F_SERVICE_CMD} $@ --test 2> /dev/null > /dev/null) ; do
     sleep 1
     tries=$((tries+1))
-    yell CHECK $tries = $max_tries
     if [ $tries = $max_tries ] ; then
-        yell guardian service failed to start
-        exit -1
+        die guardian service failed to start
     fi
 done
