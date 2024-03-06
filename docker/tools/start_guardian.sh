@@ -80,6 +80,12 @@ function cleanup {
 trap cleanup EXIT
 
 # -----------------------------------------------------------------
+yell create the keys for the guardian and storage services
+# -----------------------------------------------------------------
+try ${PDO_INSTALL_ROOT}/bin/pdo-configure-users -t ${PDO_SOURCE_ROOT}/build/template -o ${PDO_HOME} \
+    --key-count 0 --key-names guardian_service guardian_sservice
+
+# -----------------------------------------------------------------
 # Start the guardian service and the storage service
 # -----------------------------------------------------------------
 try ${PDO_HOME}/contracts/inference/scripts/ss_start.sh -c -o ${PDO_HOME}/logs -- \

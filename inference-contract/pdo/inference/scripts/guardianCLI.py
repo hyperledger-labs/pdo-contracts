@@ -78,6 +78,40 @@ def __shutdown__(*args) :
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
+def TestService(config) :
+    """Test for the existance of a guardian service with the current configuration
+    """
+
+    from pdo.service_client.generic import MessageException
+    from pdo.inference.common.guardian_service import GuardianServiceClient
+
+    try :
+        http_port = config['GuardianService']['HttpPort']
+        http_host = config['GuardianService']['Host']
+        service_url = 'http://{}:{}'.format(http_host, http_port)
+    except KeyError as ke :
+        logger.error('missing configuration for %s', str(ke))
+        sys.exit(-1)
+
+    try :
+        service_client = GuardianServiceClient(service_url)
+    except MessageException as m :
+        # if the error is a message exception then the message stays as info
+        # since the point of this routine is to test and this means the test
+        # failed
+        logger.info('failed to contact guardian service; {}'.format(str(m)))
+        sys.exit(-1)
+    except Exception as e :
+        # if the exception is something more serious, then show the error
+        # message
+        logger.error('failed to contact guardian service; {}'.format(str(e)))
+        sys.exit(-1)
+
+    logger.info('guardian service running; {}'.format(service_url))
+    sys.exit(0)
+
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
 def StartService(config, capability_keystore, endpoint_registry) :
     try :
         http_port = config['GuardianService']['HttpPort']
@@ -204,6 +238,8 @@ def Main() :
     parser.add_argument('--http', help='Port on which to run the http server', type=int)
     parser.add_argument('--block-store', help='Name of the file where blocks are stored', type=str)
 
+    parser.add_argument('--test', help='Test for guardian service', action='store_true')
+
     options = parser.parse_args()
 
     # first process the options necessary to load the default configuration
@@ -266,7 +302,10 @@ def Main() :
         config['GuardianService']['HttpPort'] = options.http
 
     # GO!
-    LocalMain(config)
+    if options.test :
+        TestService(config)
+    else :
+        LocalMain(config)
 
 ## -----------------------------------------------------------------
 ## Entry points
