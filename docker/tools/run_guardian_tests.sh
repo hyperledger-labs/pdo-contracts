@@ -91,6 +91,9 @@ try cp ${XFER_DIR}/services/etc/site.toml ${PDO_HOME}/etc/site.toml
 # -----------------------------------------------------------------
 function cleanup {
     yell "shutdown guardian and storage service"
+    ${PDO_HOME}/contracts/inference/scripts/gs_status.sh
+    ${PDO_HOME}/contracts/inference/scripts/ss_status.sh
+
     ${PDO_HOME}/contracts/inference/scripts/gs_stop.sh
     ${PDO_HOME}/contracts/inference/scripts/ss_stop.sh
 }
@@ -98,14 +101,22 @@ function cleanup {
 trap cleanup EXIT
 
 # -----------------------------------------------------------------
+yell create the keys for the guardian and storage services
+# -----------------------------------------------------------------
+try ${PDO_INSTALL_ROOT}/bin/pdo-configure-users -t ${PDO_SOURCE_ROOT}/build/template -o ${PDO_HOME} \
+    --key-count 0 --key-names guardian_service guardian_sservice
+
+# -----------------------------------------------------------------
 # Start the guardian service and the storage service
 # -----------------------------------------------------------------
+yell "start the storage service"
 try ${PDO_HOME}/contracts/inference/scripts/ss_start.sh -c -o ${PDO_HOME}/logs -- \
     --loglevel ${F_LOGLEVEL} \
     --config guardian_service.toml \
     --config-dir ${PDO_HOME}/etc/contracts \
     --identity guardian_sservice
 
+yell "start the guardian service"
 try ${PDO_HOME}/contracts/inference/scripts/gs_start.sh -c -o ${PDO_HOME}/logs -- \
     --loglevel ${F_LOGLEVEL} \
     --config guardian_service.toml \

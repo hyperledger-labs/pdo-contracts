@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """
-Client for the guardian service frontend 
+Client for the guardian service frontend
 """
 
 import json
@@ -50,7 +50,7 @@ class GuardianServiceClient(GenericServiceClient) :
 
         self.storage_service_url = service_info['storage_service_url']
         self.storage_service_client = StorageServiceClient(self.storage_service_url)
-        # ensure the local storage service used by the guardian service is running before starting the 
+        # ensure the local storage service used by the guardian service is running before starting the
         # guardian service.
         self._attach_storage_service_(self.storage_service_client)
 

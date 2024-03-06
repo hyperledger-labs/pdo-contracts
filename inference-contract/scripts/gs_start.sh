@@ -56,7 +56,7 @@ if [ -n "$PLIST" ] ; then
 fi
 
 # start service asynchronously
-echo start ${F_SERVICE_NAME}
+yell start ${F_SERVICE_NAME}
 
 if [ "${F_CLEAN}" == "yes" ]; then
     rm -f ${PDO_HOME}/logs/${F_SERVICE_NAME}.log
@@ -75,3 +75,18 @@ fi
 
 ${F_SERVICE_CMD} $@ 2> $EFILE > $OFILE &
 echo $! > ${PDO_HOME}/logs/${F_SERVICE_NAME}.pid
+
+# verify that the service has started before continuing, we'll
+# wait for 10 seconds plus or minus
+declare tries=0
+declare max_tries=10
+
+until $(${F_SERVICE_CMD} $@ --test 2> /dev/null > /dev/null) ; do
+    sleep 1
+    tries=$((tries+1))
+    yell CHECK $tries = $max_tries
+    if [ $tries = $max_tries ] ; then
+        yell guardian service failed to start
+        exit -1
+    fi
+done
