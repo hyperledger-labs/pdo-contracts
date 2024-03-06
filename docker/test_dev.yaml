@@ -14,10 +14,11 @@
 # ------------------------------------------------------------------------------
 version: "3.4"
 
-# Note that we do not need to specify PDO_HOSTNAME or PDO_LEDGER_URL
-# (or the corresponding --inteface or --ledger switches) for the test
-# scripts because they are hard coded in run_*_tests.sh for each of the
-# containers.
+# This compose file provides a means of starting the basic services
+# necessary for developing the contracts image. These can be started
+# once while using docker-run to start the contracts image that
+# connects. Note that the configuration files (specifically the CCF
+# ledger key) must not be cleaned.
 
 services:
   ccf_container:

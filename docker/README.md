@@ -10,7 +10,8 @@ container with the PDO contracts. For the most part, this directory
 could be copied to any host (even without PDO otherwise installed) to
 build, configure, and execute PDO contracts code.  Also note that the
 makefile assumes you have already built all containers from the
-`private-data-objects` repository.
+`private-data-objects` repository. You can use the `build_pdo_images`
+target to build those from the current `private-data-objects` version.
 
 For clarity the scripts in the directory are intended to serve two
 purposes. The first is to provide the basic instructions for building
