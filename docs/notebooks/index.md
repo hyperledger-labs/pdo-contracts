@@ -37,7 +37,7 @@ There are a number of configuration options for interacting with PDO contracts. 
 
 The Exchange contract family is a suite of contracts that demonstrate many of the capabilities of the private data objects technologies. Three basic contracts define the elements of the Exchange contract family: the asset type contract, the vetting organization contract, and the issuer contract. Three additional contracts extend the Exchange contract family for trading potentially confidential assets using non-fungible tokens.
 
-[Exchange Contract Family](exchange/index.ipynb)
+To experiment with these contracts, explore the [Exchange Contract Family notebook](exchange/index.ipynb)
 
 
 
@@ -53,7 +53,7 @@ The Digital Assets contract family implements a basic digital asset for bitmap i
 
 The Inference contract family provides contracts for creating a confidentiality preserving policy-wrapper around the usage of a machine learning (ML) model. At its core, the implementation uses a token contract to  specify and enforce policies to be followed while using the ML model for inferecing operations. 
 
-
+At this point in time, there are no corresponding notebooks available yet. However, you can explore these contracts using the standard pdo command-line tools. The corresponding contract code is in the `inference-contract` sub-directory.
 ```python
 
 ```
