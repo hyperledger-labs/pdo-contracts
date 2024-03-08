@@ -1,3 +1,8 @@
+<!---
+Licensed under Creative Commons Attribution 4.0 International License
+https://creativecommons.org/licenses/by/4.0/
+--->
+
 # Using Jupyter Labs for Exchange Contracts #
 
 This directory contains several sample Jupyter notebooks that can be
@@ -17,6 +22,8 @@ virutal environment and that the Exchange contract family has been installed.
 * Activate the virtual environment: `source $PDO_INSTALL_ROOT/bin/activate`
 * Install the Jupyter notebook package: `pip install notebook`
 * Install [Papermill](https://papermill.readthedocs.io/en/latest/): `pip install papermill`
+* Install [Jupytext](https://jupytext.readthedocs.io/en/latest/): `pip install jupytext`
+* Install [IPYWidgets](https://ipywidgets.readthedocs.io/en/stable/): `pip install ipywidgets`
 
 Note that you will need to reinstall Jupyter and papermill any time
 you rebuild the Python virtual environment.
@@ -26,25 +33,29 @@ you rebuild the Python virtual environment.
 Please consult the Jupyter documentation for information about
 configuration of the Jupyter server.
 
-Assuming that Jupyter and Papermill in the PDO virtual environment, a
-basic server can be run with the Exchange contract family. Feel free
-to adjust the instructions below to put your notebooks in a different
-directory or change the parameters for the Jupyter server.
+Notebook files will automatically be installed to the directory
+`${PDO_HOME}/notebooks`.  The files may be copied to another directory
+if you prefer. Feel free to adjust the instructions below to put your
+notebooks in a different directory or change the parameters for the
+Jupyter server.
 
-* Activate the virtual environment: `source $PDO_INSTALL_ROOT/bin/activate`
-* Create a directory for the exhange notebooks and contract object instances:
+Assuming that Jupyter and Papermill are installed in the PDO virtual
+environment, the Jupyter server can be started as follows:
+
+* Activate the virtual environment:
 ```bash
-mkdir $PDO_HOME/notebooks
-mkdir $PDO_HOME/notebooks/instances $PDO_HOME/notebooks/factories $PDO_HOME/notebooks/templates
+source $PDO_INSTALL_ROOT/bin/activate
 ```
-* Copy the Exchange notebook templates to the directory you created:
+
+* Set the environment variable `PDO_JUPYTER_ROOT` to the directory
+  where the notebooks were installed:
 ```bash
-cp $EXCHANGE_SOURCE_ROOT/doc/notebooks/factories/*.ipynb $PDO_HOME/notebooks/factories
-cp $EXCHANGE_SOURCE_ROOT/doc/notebooks/templates/*.ipynb $PDO_HOME/notebooks/templates
+export PDO_JUPYTER_ROOT=${PDO_HOME}/notebooks
 ```
+
 * Start the Jupyter notebook server:
 ```bash
-cd $PDO_HOME/notebooks
+cd ${PDO_JUPYTER_ROOT}
 jupyter lab --no-browser --port=8888
 ```
 
@@ -58,7 +69,7 @@ The templates provided generally share five common sections:
 * Operate on the Contract
 * View Contract Metadata
 
-To initialize the interpreter, the notebook loads the Exchange Juptyer
+To initialize the interpreter, the notebook loads the Juptyer
 helper module. This module imports all of the relevant PDO and
 Exchange modules to simplify access for code in the notebook. It also
 defines several procedures that are useful for initializing and
