@@ -45,6 +45,13 @@ ENDFOREACH()
 # is significant and should not be removed; it prevents the notebooks
 # directory being prepended to the copied name
 # -----------------------------------------------------------------
+INCLUDE(Jupyter)
+FILE(GLOB_RECURSE NOTEBOOK_SOURCES docs/notebooks/*.py docs/notebooks/*.md)
+
+CONVERT_JUPYTEXT(ROOT_NOTEBOOKS ${NOTEBOOK_SOURCES})
+
+ADD_CUSTOM_TARGET(root-notebooks ALL DEPENDS ${ROOT_NOTEBOOKS})
+
 INSTALL(DIRECTORY docs/notebooks/
   DESTINATION "${PDO_JUPYTER_ROOT}/"
-  FILES_MATCHING PATTERN "*.ipynb")
+  FILES_MATCHING PATTERN "*.ipynb" PATTERN "*.png")
