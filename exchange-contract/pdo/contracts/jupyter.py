@@ -34,6 +34,8 @@ import pdo.client.commands.context as pcontext_cmd
 import pdo.client.commands.contract as pcontract_cmd
 import pdo.client.commands.collection as pcollection_cmd
 
+import pdo.contracts.keys as keys
+
 _logger = logging.getLogger(__name__)
 
 logging.getLogger('papermill.translators').setLevel(logging.ERROR)
