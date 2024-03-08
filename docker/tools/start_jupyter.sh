@@ -24,10 +24,11 @@ source ${PDO_HOME}/bin/lib/common.sh
 F_LEDGER_URL=
 F_MODE=build
 F_INTERFACE=localhost
+F_PORT=8888
 
-F_USAGE='-i|--interface [hostname] -1|--ledger [url] -m|--mode [build|copy|skip]'
-SHORT_OPTS='i:l:m:'
-LONG_OPTS='interface:,ledger:,mode:'
+F_USAGE='-i|--interface [hostname] -1|--ledger [url] -m|--mode [build|copy|skip] -p|--port [port]'
+SHORT_OPTS='i:l:m:p:'
+LONG_OPTS='interface:,ledger:,mode:,port:'
 
 TEMP=$(getopt -o ${SHORT_OPTS} --long ${LONG_OPTS} -n "${SCRIPT_NAME}" -- "$@")
 if [ $? != 0 ] ; then echo "Usage: ${SCRIPT_NAME} ${F_USAGE}" >&2 ; exit 1 ; fi
@@ -38,6 +39,7 @@ while true ; do
         -i|--interface) F_INTERFACE="$2" ; shift 2 ;;
         -l|--ledger) F_LEDGER_URL="$2" ; shift 2 ;;
         -m|--mode) F_MODE="$2" ; shift 2 ;;
+        -p|--port) F_PORT="$2" ; shift 2 ;;
         --help) echo "Usage: ${SCRIPT_NAME} ${F_USAGE}"; exit 0 ;;
     	--) shift ; break ;;
     	*) echo "Internal error!" ; exit 1 ;;
@@ -94,4 +96,4 @@ yell start the jupyter server
 export PDO_JUPYTER_ROOT=${PDO_INSTALL_ROOT}/opt/pdo/notebooks
 
 cd ${PDO_JUPYTER_ROOT}
-jupyter lab --no-browser --port=8888 --ServerApp.ip=${F_INTERFACE}
+jupyter lab --no-browser --port=${F_PORT} --ServerApp.ip=${F_INTERFACE}
