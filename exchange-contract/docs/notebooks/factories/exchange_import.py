@@ -12,7 +12,8 @@
 #     name: python3
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
+# *WORK IN PROGRESS*
 # # Exchange Import Factory
 #
 # Use this notebook to import an exchange of assets from two issuers.
@@ -35,22 +36,22 @@ pc_jupyter.load_ipython_extension(get_ipython())
 #
 # Note that the notebook assumes that there is a key file for the identity of the form: `${keys}/${identity}_private.pem`.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 identity = input('Identity to use with the exchange: ')
 exchange_import_file = input('Name of the exchange import file: ')
 exchange_context_file = input('Name of the file to use for the context: ')
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ## Create the Exchange Notebook
 #
 # Create a new exchange notebook with the specific issuers identified.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 parameters = {
     'identity' : identity,
     'exchange_import_file' : exchange_import_file,
     'exchange_context_file' : exchange_context_file,
 }
 
-instance_file = pc_jupyter.instantiate_notebook_from_template('exchange', 'exchange_import', parameters)   
+instance_file = pc_jupyter.instantiate_notebook_from_template('exchange', 'exchange_import', parameters)
 ip_display.display(ip_display.Markdown('[Exchange]({})'.format(instance_file)))

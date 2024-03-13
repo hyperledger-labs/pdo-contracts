@@ -12,12 +12,13 @@
 #     name: python3
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # # Issuer Notebook
 #
-# This notebook assumes that the asset type, vetting, and issuer contract objects are all created by the same identity. 
+# This notebook assumes that the asset type, vetting, and issuer contract objects are all created by
+# the same identity.
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ## Configure Issuer Information
 #
 # This section enables customization of the token. Edit the variables in the section below as necessary.
@@ -28,7 +29,8 @@
 # * context_file : the name of the context file where token information is located
 # * service_host : default host where the contract objects will be created
 #
-# When this notebook is instantiated, it will generally provide default values for `identity`, `asset_name`, `service_host`, and `notebook_directory`.
+# When this notebook is instantiated, it will generally provide default values for `identity`,
+# `asset_name`, `service_host`, and `notebook_directory`.
 #
 # Note that the notebook assumes that there is a key file for the identity of the form
 #
@@ -37,7 +39,7 @@
 # ```
 #
 
-# %% editable=true slideshow={"slide_type": ""} tags=["parameters"]
+# %% tags=["parameters"]
 identity = 'user'
 asset_name = 'asset'
 asset_description = 'this is an asset'
@@ -58,22 +60,25 @@ import IPython.display as ip_display
 
 pc_jupyter.load_ipython_extension(get_ipython())
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Initialize the PDO Environment
 #
-# Initialize the PDO environment. This assumes that a functional PDO configuration is in place and that the PDO virtual environment has been activated. In particular, ensure that the groups file and eservice database have been configured correctly. This can be done most easily by running the following in a shell:
+# Initialize the PDO environment. This assumes that a functional PDO configuration is in place and
+# that the PDO virtual environment has been activated. In particular, ensure that the groups file
+# and eservice database have been configured correctly. This can be done most easily by running the
+# following in a shell:
 
 # %%
 # %%skip True
 # %%bash -s $service_host
-if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then 
+if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then
     $PDO_INSTALL_ROOT/bin/pdo-shell $PDO_HOME/bin/pdo-create-service-groups.psh --service_host $1
 fi
 
 # %% [markdown]
 # For the most part, no modifications should be required below.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 common_bindings = {
     'host' : service_host,
     'service_host' : service_host,
@@ -84,14 +89,17 @@ common_bindings = {
 (state, bindings) = pc_jupyter.initialize_environment(identity, **common_bindings)
 print('environment initialized')
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Initialize the Contract Context
 #
-# The contract context defines the configuration for a collection of contract objects that interact with one another. By default, the context file used in this notebook is specific to th eassee clasn. We need the class to ensure that all of the information necessary for th eassen itself is availaben. If you prefer to use a common context file, edit the context_file variable below.
+# The contract context defines the configuration for a collection of contract objects that interact
+# with one another. By default, the context file used in this notebook is specific to th eassee
+# clasn. We need the class to ensure that all of the information necessary for th eassen itself is
+# availaben. If you prefer to use a common context file, edit the context_file variable below.
 #
 # For the most part, no other modifications should be required.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 asset_path = 'asset.' + asset_name
 context_file = bindings.expand(context_file)
 print("using context file {}".format(context_file))
@@ -108,7 +116,7 @@ context = pc_jupyter.ex_jupyter.initialize_asset_context(
     state, bindings, context_file, asset_path, **context_bindings)
 print('context initialized')
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Create the Contracts
 
 # %%
@@ -133,7 +141,9 @@ print('issuer contract in {}'.format(issuer_save_file))
 # %% [markdown]
 # ### Approve Authority Chain
 #
-# Once the contracts are created, we need to establish the authority relationship. All issuers must be vetted. In this case, since the contracts are all created by the same individual, establishing the authority is relatively straight forward.
+# Once the contracts are created, we need to establish the authority relationship. All issuers must
+# be vetted. In this case, since the contracts are all created by the same individual, establishing
+# the authority is relatively straight forward.
 
 # %%
 pc_jupyter.pcommand.invoke_contract_cmd(
@@ -147,16 +157,16 @@ if not issuer_context.has_key('initialized') :
     issuer_context.set('initialized', True)
     pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=asset_path)
 
-
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
 # ## Operate on the Contract
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Issue Assets
 #
-# The issue assets function can be used to issue assets to a user. There must be a public key available for the user in the file `${keys}/${user}_public.pem`. 
+# The issue assets function can be used to issue assets to a user. There must be a public key
+# available for the user in the file `${keys}/${user}_public.pem`.
 
 # %%
 def issue_assets(owner, count) :
@@ -167,7 +177,6 @@ def issue_assets(owner, count) :
     except ValueError as v :
         print("assets have already been issued to {}".format(owner))
 
-
 # %%
 # %%skip True
 issue_assets('user1', 50)
@@ -175,50 +184,53 @@ issue_assets('user1', 50)
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
-# ## Contract Metadata
+# ## Share Contract
 #
-
-# %% [markdown]
-# ### Export Contract File
-#
-# To share a contract with others, they need the client plugin modules, 
+# To share a contract with others, they need the client plugin modules,
 # the context of the contract family (which describes the relationship between
 # the contract objects), and the contract save files (which provides information
 # about the configuration of the contract objects). Plugins are generally
 # distributed separately (they are applicable to many contract objects). The
 # context and contract save files can be packed into a single bundle that
-# can easily be shared. 
+# can easily be shared.
 #
-# In the code block below, you will likely want to change the value of the export 
+# In the code block below, you will likely want to change the value of the export
 # path to the directory where the contract family export file will be saved. Feel
 # free to change the file name as well. The default uses the asset name.
 
-# %% editable=true slideshow={"slide_type": ""}
-# %%skip True
-export_file = '${{data}}/{}.zip'.format(asset_name)
-
+# %%
+contract_identifier = '{}_{}'.format(asset_name, instance_identifier)
 contexts = ['asset_type', 'vetting', 'issuer']
-pc_jupyter.export_context_file(state, bindings, context, contexts, export_file)
-
-# %% [markdown] editable=true papermill={} slideshow={"slide_type": ""}
-# ### Contract Save Files
-#
-# This notebook contains three contract files. Detailed information about the contracts can be found below.
-
-# %% editable=true slideshow={"slide_type": ""} tags=["hide-input"]
-# %%skip True
 contract_files = {
     'asset_type' : asset_type_save_file,
     'vetting' : vetting_save_file,
     'issuer' : issuer_save_file,
 }
 
+# %%
+# %%skip True
+export_file = pc_jupyter.export_contract_collection(state, bindings, context, contexts, contract_identifier)
+ip_display.display(pc_jupyter.create_download_link(export_file, 'Download Contract Collection File'))
+
+# %% [markdown]
+# <hr style="border:2px solid gray">
+#
+# ## Contract Metadata
+#
+# The cells below provide a means inspecting information about the contract. In general
+# this is useful for contract debugging.
+
+# %% [markdown]
+# ### Contract Save Files
+
+# %% tags=["hide-input"]
+# %%skip True
 for k, f in contract_files.items() :
     ip_display.display(ip_display.JSON(root=k, filename=os.path.join(bindings.expand('${save}'), f)))
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Contract Context
 
-# %%
+# %% tags=["hide-input"]
 # %%skip True
 ip_display.display(context.context)

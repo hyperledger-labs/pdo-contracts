@@ -12,11 +12,11 @@
 #     name: python3
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # # Token Issuer Notebook
 #
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ## Configure Token Information
 #
 # This section enables customization of the token that will be minted. Edit the variables in the section below as necessary.
@@ -30,7 +30,7 @@
 #
 # Note that the notebook assumes that there is a key file for the identity of the form: `${keys}/${identity}_private.pem`.
 
-# %% editable=true slideshow={"slide_type": ""} tags=["parameters"]
+# %% tags=["parameters"]
 token_owner = 'user1'
 token_class = 'mytoken'
 token_description = 'this is my token'
@@ -44,26 +44,26 @@ instance_identifier = ''
 #
 # ## Initialize
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 import os
 import pdo.contracts.jupyter as pc_jupyter
 import IPython.display as ip_display
 
 pc_jupyter.load_ipython_extension(get_ipython())
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Initialize the PDO Environment
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration is in place and that the PDO virtual environment has been activated. In particular, ensure that the groups file and eservice database have been configured correctly. If you do not have a service groups configuration, you can create it for a single service host by running the following:
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 # %%skip True
 # %%bash -s $service_host
-if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then 
+if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then
     $PDO_INSTALL_ROOT/bin/pdo-shell $PDO_HOME/bin/pdo-create-service-groups.psh --service_host $1
 fi
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # For the most part, no modifications should be require below.
 
 # %%
@@ -136,7 +136,7 @@ pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=token_pa
 minted_token_contexts = []
 for token_index in range(1, len(minted_token_save_files)+1) :
     minted_token_contexts += [ token_object_context.get_context('token_{}'.format(token_index)) ]
-    
+
 print("{} tokens minted".format(len(minted_token_save_files)))
 
 # %% [markdown]
@@ -144,7 +144,7 @@ print("{} tokens minted".format(len(minted_token_save_files)))
 #
 # Create a token notebook for each of the minted tokens.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 # %%skip True
 
 parameters = {
@@ -161,54 +161,56 @@ for token_context in minted_token_contexts :
     instance_file = pc_jupyter.instantiate_notebook_from_template(token_class, 'token', parameters)
     ip_display.display(ip_display.Markdown('[Token {}]({})'.format(parameters['token_name'], instance_file)))
 
-
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
-# ## Contract Metadata
-
-# %% [markdown]
-# ### Export Contract File
+# ## Share Contract
 #
-# To share a contract with others, they need the client plugin modules, 
+# To share a contract with others, they need the client plugin modules,
 # the context of the contract family (which describes the relationship between
 # the contract objects), and the contract save files (which provides information
 # about the configuration of the contract objects). Plugins are generally
 # distributed separately (they are applicable to many contract objects). The
 # context and contract save files can be packed into a single bundle that
-# can easily be shared. 
+# can easily be shared.
 #
-# In the code block below, you will likely want to change the value of the export 
+# In the code block below, you will likely want to change the value of the export
 # path to the directory where the contract family export file will be saved. Feel
 # free to change the file name as well. The default uses the asset name.
 
 # %%
-# %%skip True
-export_file = '${{data}}/{}.zip'.format(token_class))
-
+contract_identifier = '{}_{}'.format(token_class, instance_identifier)
 contexts = ['asset_type', 'vetting', 'guardian', 'token_issuer', 'token_object']
-pc_jupyter.export_context_file(state, bindings, context, contexts, export_file)
-
-# %% [markdown]
-# ### Contract Save Files
-#
-# This notebook contains three contract files. Detailed information about the contracts can be found below.
-
-# %%
-# %%skip True
 contract_files = {
     'asset_type' : context.get('asset_type.save_file'),
     'vetting' : context.get('vetting.save_file'),
     'token_issuer' : token_issuer_context.get('save_file'),
 }
 
+# %%
+# %%skip True
+export_file = pc_jupyter.export_contract_collection(state, bindings, context, contexts, contract_identifier)
+ip_display.display(pc_jupyter.create_download_link(export_file, 'Download Contract Collection File'))
+
+# %% [markdown]
+# <hr style="border:2px solid gray">
+#
+# ## Contract Metadata
+#
+# The cells below provide a means inspecting information about the contract. In general
+# this is useful for contract debugging.
+
+# %% [markdown]
+# ### Contract Save Files
+
+# %% tags=["hide-input"]
+# %%skip True
 for k, f in contract_files.items() :
     ip_display.display(ip_display.JSON(root=k, filename=os.path.join(bindings.expand('${save}'), f)))
 
 # %% [markdown]
 # ### Contract Context
 
-# %%
+# %% tags=["hide-input"]
 # %%skip True
-# ip_display.display(ip_display.JSON(data=context.context, root='context'))
 ip_display.display(context.context)

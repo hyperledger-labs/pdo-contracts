@@ -24,6 +24,8 @@ import typing
 
 from zipfile import ZipFile
 
+import IPython.display as ip_display
+
 import pdo.client.builder as pbuilder
 import pdo.client.builder.command as pcommand
 import pdo.client.builder.context as pcontext
@@ -208,6 +210,31 @@ def instantiate_notebook_from_template(contract_collection_name : str, template_
     # references; this needs more investigation. For now, just return the
     # relative path
     return os.path.relpath(instance_file)
+
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
+def export_contract_collection(
+    state : pbuilder.state.State,
+    bindings : pbuilder.bindings.Bindings,
+    context : pbuilder.context.Context,
+    paths : typing.List[str],
+    identifier : str) :
+    """Create a contract collection file in the notebook download directory
+    """
+
+    data_directory = bindings.get('data', state.get(['Contract', 'DataDirectory']))
+    contract_cache = bindings.get('save', os.path.join(data_directory, '__contract_cache__'))
+    export_file = '{}.zip'.format(identifier)
+
+    pcollection_cmd.export_contract_collection(context, paths, contract_cache, export_file)
+    return export_file
+
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
+def create_download_link(filename : str, label : str = 'Download File') :
+    """Create HTML display that will download a file"""
+    content = '<a href={} download>{}</a>'.format(filename, label)
+    return ip_display.HTML(content)
 
 # -----------------------------------------------------------------
 # Load plugins from the contract families. Each contract family

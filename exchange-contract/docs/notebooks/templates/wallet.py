@@ -12,10 +12,11 @@
 #     name: python3
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
+# *WORK IN PROGRESS*
 # # Wallet Notebook
 #
-# This notebook is used to manage the assets issued to an indivdual by an issuer contract. The notebook assumes that the asset type, vetting, and issuer contract objects have been created. 
+# This notebook is used to manage the assets issued to an indivdual by an issuer contract. The notebook assumes that the asset type, vetting, and issuer contract objects have been created.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # <hr style="border:2px solid gray">
@@ -35,30 +36,30 @@
 # ${keys}/${identity}_private.pem
 # ```
 
-# %% editable=true slideshow={"slide_type": ""} tags=["parameters"]
+# %% tags=["parameters"]
 identity = 'user'
 asset_name = 'asset'
 context_file = '${etc}/${asset_name}_context.toml'
 instance_identifier = ''
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # <hr style="border:2px solid gray">
 #
 # ## Initialize
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 import os
 import pdo.contracts.jupyter as pc_jupyter
 import IPython.display as ip_display
 
 pc_jupyter.load_ipython_extension(get_ipython())
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Initialize the PDO Environment
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration is in place and that the PDO virtual environment has been activated. In particular, ensure that the groups file and eservice database have been configured correctly. This can be done most easily by running the following in a shell:
 
-# %% editable=true papermill={} slideshow={"slide_type": ""}
+# %%
 common_bindings = {
     'asset_name' : asset_name,
     'notebook' : notebook_directory,
@@ -67,26 +68,26 @@ common_bindings = {
 (state, bindings) = pc_jupyter.initialize_environment(identity, **common_bindings)
 print('environment initialized')
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Import the Contract
 #
-# If you received the contract as a contract export file, import it into your 
+# If you received the contract as a contract export file, import it into your
 # local configuration here. Adjust the name of the file to reflect where the
 # contract export file is located.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 # %%skip True
 import_file = '${{data}}/{}.zip'.format(asset_name)
 pc_jupyter.import_context(state, bindings, context_file, import_file)
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Import the Context
 #
 # The contract context defines the configuration for a collection of contract objects that interact with one another. By default, the context file used in this notebook is specific to the asset class. We need the class to ensure that all of the information necessary for the asset itself is availaben. If you prefer to use a common context file, edit the context_file variable below.
 #
 # For the most part, no other modifications should be required.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 asset_path = 'asset.' + asset_name
 context_file = bindings.expand(context_file)
 print('using context file {}'.format(context_file))
@@ -102,14 +103,14 @@ context = pc_jupyter.ex_jupyter.initialize_asset_context(
     state, bindings, context_file, asset_path, **context_bindings)
 print('context initialized')
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Configure the Contract Objects
 #
 # Set up the connections to each of the contract objects. Although most interactions
 # are with the issuer contract object, it may be necessary to verify the authority
 # of the other contracts as well.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 asset_type_context = pc_jupyter.pbuilder.Context(state, asset_path + '.asset_type')
 asset_type_save_file = asset_type_context.get('save_file')
 print('asset type contract in {}'.format(asset_type_save_file))
@@ -123,7 +124,7 @@ issuer_save_file = issuer_context.get('save_file')
 print('issuer contract in {}'.format(issuer_save_file))
 
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # <hr style="border:2px solid gray">
 #
 # ## Operate on the Issuer Contract
@@ -132,7 +133,7 @@ print('issuer contract in {}'.format(issuer_save_file))
 # * get_balance -- get the current number of assets associated with the given identity
 # * transfer -- transfer assets from one identity to another
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 def get_balance(owner) :
     pc_jupyter.pcommand.invoke_contract_cmd(
         pc_jupyter.ex_issuer.cmd_get_balance, state, issuer_context, identity=owner)
@@ -145,18 +146,18 @@ def transfer(count, new_owner, old_owner=identity) :
         pc_jupyter.ex_issuer.cmd_get_balance, state, issuer_context, identity=old_owner)
 
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Get the Account Balance
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 # %%skip True
 owner = input('identity to check [{}]'.format(identity)) or identity
 get_balance(owner)
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Transfer Assets
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 # %%skip True
 count = int(input('number of assets to transfer'))
 new_owner = input('identity of the recipient of the transfer')
@@ -169,4 +170,4 @@ transfer(count, new_owner, old_owner)
 #
 # Work in Progress
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%

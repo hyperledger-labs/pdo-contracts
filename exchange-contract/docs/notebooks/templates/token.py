@@ -32,7 +32,7 @@
 # ```
 #
 
-# %% editable=true slideshow={"slide_type": ""} tags=["parameters"]
+# %% tags=["parameters"]
 token_owner = 'user1'
 token_class = 'mytoken'
 token_name = 'token_1'
@@ -62,7 +62,7 @@ pc_jupyter.load_ipython_extension(get_ipython())
 #
 # For the most part, no modifications should be required below.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 common_bindings = {
     'host' : service_host,
     'service_host' : service_host,
@@ -74,14 +74,14 @@ common_bindings = {
 (state, bindings) = pc_jupyter.initialize_environment(token_owner, **common_bindings)
 print('environment initialized')
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Initialize the Contract Context
 #
 # The contract context defines the configuration for a collection of contract objects that interact with one another. By default, the context file used in this notebook is specific to the toke class used to mint the token. We need the class to ensure that all of the information necessary for the token itself is availablen. If you prefer to use a common context file, edit the context_file variable below.
 #
 # For the most part, no other modifications should be required.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 token_class_path = 'token.' + token_class
 context_file = bindings.expand(context_file)
 print("using context file {}".format(context_file))
@@ -94,7 +94,7 @@ print('context initialized')
 #
 # ## Operate on the Contract
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 token_context = pc_jupyter.pbuilder.Context(state, token_path)
 
 # %% [markdown]
@@ -109,46 +109,51 @@ echo_result = pc_jupyter.pcommand.invoke_contract_cmd(
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
-# ## Contract Metadata
-
-# %% [markdown]
-# ### Export Contract File
+# ## Share Contract
 #
-# To share a contract with others, they need the client plugin modules, 
+# To share a contract with others, they need the client plugin modules,
 # the context of the contract family (which describes the relationship between
 # the contract objects), and the contract save files (which provides information
 # about the configuration of the contract objects). Plugins are generally
 # distributed separately (they are applicable to many contract objects). The
 # context and contract save files can be packed into a single bundle that
-# can easily be shared. 
+# can easily be shared.
 #
-# In the code block below, you will likely want to change the value of the export 
+# In the code block below, you will likely want to change the value of the export
 # path to the directory where the contract family export file will be saved. Feel
 # free to change the file name as well. The default uses the asset name.
 
 # %%
-# %%skip True
-export_file = '${{data}}/{}.zip'.format(token_class)
-
+contract_identifier = '{}_{}'.format(token_class, instance_identifier)
 contexts = ['asset_type', 'vetting', 'guardian', 'token_issuer', 'token_object']
-pc_jupyter.export_context_file(state, bindings, context, contexts, export_file)
-
-# %% [markdown]
-# ### Contract Save Files
-
-# %%
-# %%skip True
 contract_files = {
     'token' : token_context.get('save_file'),
 }
 
+# %%
+# %%skip True
+export_file = pc_jupyter.export_contract_collection(state, bindings, context, contexts, contract_identifier)
+ip_display.display(pc_jupyter.create_download_link(export_file, 'Download Contract Collection File'))
+
+# %% [markdown]
+# <hr style="border:2px solid gray">
+#
+# ## Contract Metadata
+#
+# The cells below provide a means inspecting information about the contract. In general
+# this is useful for contract debugging.
+
+# %% [markdown]
+# ### Contract Save Files
+
+# %% tags=["hide-input"]
+# %%skip True
 for k, f in contract_files.items() :
     ip_display.display(ip_display.JSON(root=k, filename=os.path.join(bindings.expand('${save}'), f)))
 
 # %% [markdown]
 # ### Contract Context
 
-# %%
+# %% tags=["hide-input"]
 # %%skip True
-# ip_display.display(ip_display.JSON(data=context.context, root='context'))
 ip_display.display(context.context)
