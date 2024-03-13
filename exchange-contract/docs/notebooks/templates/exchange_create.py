@@ -12,7 +12,8 @@
 #     name: python3
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
+# *WORK IN PROGRESS*
 # # Create a New Exchange Contract
 #
 # This notebook is used to interact with an exchange contract object. The assumption is that you have imported the issuer contracts that will be involved in the exchange.
@@ -35,7 +36,7 @@
 # ${keys}/${identity}_private.pem
 # ```
 
-# %% editable=true papermill={} slideshow={"slide_type": ""} tags=["parameters"]
+# %% tags=["parameters"]
 identity = 'user'
 offer_context_file = '${etc}/context/offer_issuer.toml'
 offer_count = 1
@@ -45,19 +46,19 @@ exchange_context_file = '${etc}/context/exchange_${instance}.toml'
 instance_identifier = ''
 service_host = 'localhost'
 
-# %% [markdown] editable=true papermill={} slideshow={"slide_type": ""}
+# %% [markdown]
 # <hr style="border:2px solid gray">
 #
-# ## Initialize the Exchange Contract 
+# ## Initialize the Exchange Contract
 
-# %% editable=true papermill={} slideshow={"slide_type": ""}
+# %%
 import os
 import pdo.contracts.jupyter as pc_jupyter
 import IPython.display as ip_display
 
 pc_jupyter.load_ipython_extension(get_ipython())
 
-# %% [markdown] editable=true papermill={} slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Initialize the PDO Environment
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration is in place and that the PDO virtual environment has been activated. In particular, ensure that the groups file and eservice database have been configured correctly. This can be done most easily by running the following in a shell:
@@ -65,7 +66,7 @@ pc_jupyter.load_ipython_extension(get_ipython())
 # %%
 # %%skip True
 # %%bash -s $service_host
-if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then 
+if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then
     $PDO_INSTALL_ROOT/bin/pdo-shell $PDO_HOME/bin/pdo-create-service-groups.psh --service_host $1
 fi
 
@@ -74,7 +75,7 @@ fi
 #
 # For the most part, no modifications should be required.
 
-# %% editable=true papermill={} slideshow={"slide_type": ""}
+# %%
 common_bindings = {
     'host' : service_host,
     'service_host' : service_host,
@@ -101,7 +102,7 @@ pc_jupyter.import_context_file(state, bindings, offer_context_file, import_file)
 
 # %%
 # %%skip True
-import_file = input('Name of the import file for the request issuer contrat')
+import_file = input('Name of the import file for the request issuer contract')
 pc_jupyter.import_context_file(state, bindings, request_context_file, import_file)
 
 # %% [markdown]
@@ -124,9 +125,9 @@ pc_jupyter.pcontext.Context.LoadContextFile(
 # %% [markdown]
 # #### Create the Exchange Context
 #
-# Create the context for the exchange contract. In addition, we need to ensure that the identity used to interact with the issuer contracts is the same as the identity used for the exchange contract. For the most part, all settings should have been set above. 
+# Create the context for the exchange contract. In addition, we need to ensure that the identity used to interact with the issuer contracts is the same as the identity used for the exchange contract. For the most part, all settings should have been set above.
 
-# %% editable=true papermill={} slideshow={"slide_type": ""}
+# %%
 context_bindings = {
     'identity' : identity,
     'order.identity' : identity,
@@ -148,7 +149,7 @@ context = pc_jupyter.ex_jupyter.initialize_order_context(
 #
 # We are now ready to create the exchange contract. If the exchange contract save file already exists (implying that the contract already exists), then skip this step.
 
-# %% papermill={}
+# %%
 exchange_save_file = pc_jupyter.pcontract_cmd.get_contract_from_context(state, context.get_context('order'))
 if exchange_save_file is None :
     exchange_save_file = pc_jupyter.pcommand.invoke_contract_cmd(
@@ -210,37 +211,55 @@ ip_display.display(ip_display.JSON(offered_asset))
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
-# ## Contract Metadata
-
-# %% [markdown]
-# ### Export Contract File
+# ## Share Contract
 #
-# To share a contract with others, they need the client plugin modules, the context of the contract family (which describes the relationship between the contract objects), and the contract save files (which provides information about the configuration of the contract objects). Plugins are generally distributed separately (they are applicable to many contract objects). The context and contract save files can be packed into a single bundle that can easily be shared.
+# To share a contract with others, they need the client plugin modules,
+# the context of the contract family (which describes the relationship between
+# the contract objects), and the contract save files (which provides information
+# about the configuration of the contract objects). Plugins are generally
+# distributed separately (they are applicable to many contract objects). The
+# context and contract save files can be packed into a single bundle that
+# can easily be shared.
 #
-# In the code block below, you will likely want to change the value of the export path to the directory where the contract family export file will be saved. Feel free to change the file name as well. The default uses the asset name.
+# In the code block below, you will likely want to change the value of the export
+# path to the directory where the contract family export file will be saved. Feel
+# free to change the file name as well. The default uses the asset name.
 
 # %%
-# %%skip True
-export_file = '${data}/exchange_${instance}.zip'
+contract_identifier = 'exchange_{}'.format(instance_identifier)
 contexts = [
-    'offer.asset_type', 'offer.vetting', 'offer.issuer', 
+    'offer.asset_type', 'offer.vetting', 'offer.issuer',
     'request.asset_type', 'request.vetting', 'request.issuer',
     'order'
 ]
-pc_jupyter.export_context_file(state, bindings, context, contexts, export_file)
-
-# %% [markdown]
-# ### Contract Save Files
-#
-# This notebook contains one contract file. Detailed information can be found below.
+contract_files = {
+    'order' : exchange_save_file
+}
 
 # %%
 # %%skip True
-ip_display.display(ip_display.JSON(filename=exchange_save_file))
+export_file = pc_jupyter.export_contract_collection(state, bindings, context, contexts, contract_identifier)
+ip_display.display(pc_jupyter.create_download_link(export_file, 'Download Contract Collection File'))
+
+# %% [markdown]
+# <hr style="border:2px solid gray">
+#
+# ## Contract Metadata
+#
+# The cells below provide a means inspecting information about the contract. In general
+# this is useful for contract debugging.
+
+# %% [markdown]
+# ### Contract Save Files
+
+# %% tags=["hide-input"]
+# %%skip True
+for k, f in contract_files.items() :
+    ip_display.display(ip_display.JSON(root=k, filename=os.path.join(bindings.expand('${save}'), f)))
 
 # %% [markdown]
 # ### Contract Context
 
-# %%
+# %% tags=["hide-input"]
 # %%skip True
 ip_display.display(context.context)

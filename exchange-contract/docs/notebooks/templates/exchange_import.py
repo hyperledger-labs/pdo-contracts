@@ -12,12 +12,13 @@
 #     name: python3
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
+# *WORK IN PROGRESS*
 # # Exchange Import Notebook
 #
-# This notebook is used to interact with an exchange contract object. 
+# This notebook is used to interact with an exchange contract object.
 
-# %% [markdown] editable=true papermill={} slideshow={"slide_type": ""}
+# %% [markdown]
 # <hr style="border:2px solid gray">
 #
 # ## Configure Exchange Information
@@ -33,25 +34,25 @@
 # ${keys}/${identity}_private.pem
 # ```
 
-# %% editable=true papermill={} slideshow={"slide_type": ""} tags=["parameters"]
+# %% tags=["parameters"]
 identity = 'user'
 exchange_import_file = '${data}/exchange_${instance}.zip'
 exchange_context_file = '${etc}/context/exchange_${instance}.toml'
 instance_identifier = ''
 
-# %% [markdown] editable=true papermill={} slideshow={"slide_type": ""}
+# %% [markdown]
 # <hr style="border:2px solid gray">
 #
-# ## Initialize the Exchange Contract 
+# ## Initialize the Exchange Contract
 
-# %% editable=true papermill={} slideshow={"slide_type": ""}
+# %%
 import os
 import pdo.contracts.jupyter as pc_jupyter
 import IPython.display as ip_display
 
 pc_jupyter.load_ipython_extension(get_ipython())
 
-# %% [markdown] editable=true papermill={} slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Initialize the PDO Environment
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration is in place and that the PDO virtual environment has been activated. In particular, ensure that the groups file and eservice database have been configured correctly. This can be done most easily by running the following in a shell:
@@ -59,14 +60,14 @@ pc_jupyter.load_ipython_extension(get_ipython())
 # %%
 # %%skip True
 # %%bash -s $service_host
-if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then 
+if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then
     $PDO_INSTALL_ROOT/bin/pdo-shell $PDO_HOME/bin/pdo-create-service-groups.psh --service_host $1
 fi
 
 # %% [markdown]
 # For the most part, no modifications should be required below.
 
-# %% editable=true papermill={} slideshow={"slide_type": ""}
+# %%
 common_bindings = {
     'instance' : instance_identifier,
 }
@@ -77,14 +78,14 @@ print('environment initialized')
 exchange_context_file = bindings.expand(exchange_context_file)
 print('exchange context stored in {}'.format(exchange_context_file))
 
-# %% [markdown] editable=true papermill={} slideshow={"slide_type": ""}
+# %% [markdown]
 # ### Import the Exchange Contract
 #
-# If you received the exchange contract as a contract export file, import it into your 
+# If you received the exchange contract as a contract export file, import it into your
 # local configuration here. Adjust the name of the file to reflect where the
 # contract export file is located.
 
-# %% editable=true papermill={} slideshow={"slide_type": ""}
+# %%
 if not os.path.exists(exchange_context_file) :
     pc_jupyter.import_context_file(state, bindings, exchange_context_file, exchange_import_file)
 
@@ -103,7 +104,7 @@ context_bindings = {
 context = pc_jupyter.initialize_order_context(
     state, bindings, exchange_context_file, prefix=instance_identifier, **context_bindings)
 
-# %% papermill={}
+# %%
 exchange_save_file = pc_jupyter.pcontract_cmd.get_contract_from_context(state, context.get_context('order'))
 print('exchange contract in {}'.format(exchange_save_file))
 
@@ -174,7 +175,7 @@ ip_display.display(ip_display.JSON(offered_asset))
 # %%skip True
 export_file = '${data}/exchange_${instance}.zip'
 contexts = [
-    'offer.asset_type', 'offer.vetting', 'offer.issuer', 
+    'offer.asset_type', 'offer.vetting', 'offer.issuer',
     'request.asset_type', 'request.vetting', 'request.issuer',
     'order'
 ]

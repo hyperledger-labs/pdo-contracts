@@ -12,7 +12,7 @@
 #     name: python3
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # # Issuer Factory
 #
 # Use this notebook to create an issuer notebook that can be used to issue assets to users.
@@ -34,7 +34,7 @@ pc_jupyter.load_ipython_extension(get_ipython())
 #
 # Note that the notebook assumes that there is a key file for the identity of the form: `${keys}/${identity}_private.pem`.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 identity = input('Identity of the issuer: ')
 asset_name = input('Name of the asset:')
 asset_description = input('Description of the asset: ')
@@ -55,5 +55,5 @@ parameters = {
     'service_host' : service_host,
 }
 
-instance_file = pc_jupyter.instantiate_notebook_from_template(asset_name, 'issuer', parameters)   
+instance_file = pc_jupyter.instantiate_notebook_from_template(asset_name, 'issuer', parameters)
 ip_display.display(ip_display.Markdown('[Issuer]({})'.format(instance_file)))

@@ -12,7 +12,8 @@
 #     name: python3
 # ---
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
+# *WORK IN PROGRESS*
 # # Wallet Factory
 #
 # Use this notebook to create a wallet associated with a particular issuer.
@@ -31,28 +32,27 @@ pc_jupyter.load_ipython_extension(get_ipython())
 #
 # * identity : the identity of the token creator
 # * asset_name : the name of tokens that will be generated
-# * context_file : the 
+# * context_file : the
 #
 # Note that the notebook assumes that there is a key file for the identity of the form: `${keys}/${identity}_private.pem`.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 identity = input('Identity of the wallet owner: ')
 asset_name = input('Name of the asset:')
 context_file = input('Path to the contract context file')
 
-# %% [markdown] editable=true slideshow={"slide_type": ""}
+# %% [markdown]
 # ## Create the Wallet Notebook
 #
 # Create a new wallet notebook with the specific asset identified.
 
-# %% editable=true slideshow={"slide_type": ""}
+# %%
 parameters = {
     'identity' : identity,
     'asset_name' : asset_name,
     'context_file' : context_file,
 }
 
-instance_file = pc_jupyter.instantiate_notebook_from_template(asset_name, 'wallet', parameters)   
+instance_file = pc_jupyter.instantiate_notebook_from_template(asset_name, 'wallet', parameters)
 ip_display.display(ip_display.Markdown('[Wallet]({})'.format(instance_file)))
 # %%
-
