@@ -107,3 +107,19 @@ the inferencing operations.
 cd $PDO_CONTRACTS_SOURCE_ROOT/inference-contract/test/
 ./script_test.sh
 ```
+
+## Jupyter Notebooks for the Inference Contract ##
+
+We provide [Jupyter Notebooks](./docs/notebooks/README.md) that can be executed
+in an interactive manner to illustrate the functionality of the inference
+contract family. The notebooks assume that the pdo services,
+pdo ledger as well the asset guardian service are running prior to executing
+notebook commands. As noted earlier, the guardian backend is the OpenVINO
+model server; the `docker run` command provided above is used to deploy the
+backend. The frontend can be deployed (on bare-metal) using the following
+command:
+
+```bash
+cd $PDO_CONTRACTS_SOURCE_ROOT/inference-contract/test/
+./guardian_frontend.sh
+```

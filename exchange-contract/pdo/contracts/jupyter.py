@@ -246,6 +246,7 @@ def create_download_link(filename : str, label : str = 'Download File') :
 # -----------------------------------------------------------------
 _contract_families_ = {
     'exchange' : 'ex',
+    'inference' : 'ml',
 }
 
 for cf, cs in _contract_families_.items() :
