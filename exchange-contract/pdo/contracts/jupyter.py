@@ -37,6 +37,7 @@ import pdo.client.commands.contract as pcontract_cmd
 import pdo.client.commands.collection as pcollection_cmd
 
 import pdo.contracts.keys as keys
+import pdo.contracts.services as services
 
 _logger = logging.getLogger(__name__)
 
