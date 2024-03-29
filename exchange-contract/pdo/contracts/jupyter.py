@@ -36,6 +36,7 @@ import pdo.client.commands.context as pcontext_cmd
 import pdo.client.commands.contract as pcontract_cmd
 import pdo.client.commands.collection as pcollection_cmd
 
+import pdo.contracts.groups as groups
 import pdo.contracts.keys as keys
 import pdo.contracts.services as services
 
@@ -83,7 +84,7 @@ _default_configuration_ = {
     'source_dir' : [],                    # directories to search for contract files
     'key_dir' : [],                       # directories to search for key files
     'service_db' : None,                  # name of the enclave service database
-    'service_groups' : [],                # list of service group files
+    'groups_db' : None,                   # name of the service groups database
     'config' : [],                        # list of configuration files
     'client_identity' : None,             # initial identity
     'client_key_file' : None,             # key file associated with the identity
