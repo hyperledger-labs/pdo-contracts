@@ -14,6 +14,7 @@
 
 # %% [markdown]
 # # Key Management for PDO Contracts
+# ## WORK IN PROGRESS
 #
 # This notebook helps to manage keys for signing PDO contract transactions.
 
@@ -30,21 +31,35 @@ except NameError:
     (state, bindings) = pc_jupyter.initialize_environment('unknown')
 
 # %% [markdown]
-# ## Key Management
-
-# %%
-public_key_widget = pc_jupyter.keys.create_public_key_selection_widget(state,bindings)
-private_key_widget = pc_jupyter.keys.create_private_key_selection_widget(state,bindings)
-key_gen_widget = pc_jupyter.keys.create_generate_key_widget(state, bindings)
-
-ip_display.display(ipywidgets.VBox([public_key_widget, private_key_widget, key_gen_widget]))
-
-# %% [markdown]
 # ## List of Available Keys
-
+#
+# The following keys are available for use in PDO contracts applications.
+#
+# %% [markdown]
+# ### Public Keys
 # %%
-public_key_list_widget = pc_jupyter.keys.create_public_key_list_widget(state,bindings)
+public_key_list_widget = pc_jupyter.keys.PublicKeyListWidget(state, bindings)
 ip_display.display(public_key_list_widget)
 
-private_key_list_widget = pc_jupyter.keys.create_private_key_list_widget(state,bindings)
+# %% [markdown]
+# ### Private Keys
+# %%
+private_key_list_widget = pc_jupyter.keys.PrivateKeyListWidget(state, bindings)
 ip_display.display(private_key_list_widget)
+
+# %% [markdown]
+# ## Create a New Key
+#
+# Create a new private/public key pair.
+#
+# %%
+key_gen_widget = pc_jupyter.keys.GenerateKeyWidget(state, bindings)
+ip_display.display(key_gen_widget)
+
+# %% [markdown]
+# ## Upload Keys
+#
+# Upload a key.
+# %%
+key_upload_widget = pc_jupyter.keys.UploadKeyWidget(state, bindings)
+ip_display.display(key_upload_widget)
