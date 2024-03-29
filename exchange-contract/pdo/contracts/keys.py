@@ -27,8 +27,14 @@ __all__ = [
     'build_public_key_list',
     'build_private_key_list',
     'generate_key_pair',
-    'creat_public_key_selection_widget',
-    'creat_private_key_selection_widget',
+    'KeyListWidget',
+    'PublicKeyListWidget',
+    'PrivateKeyListWidget',
+    'KeySelectionWidget',
+    'PublicKeySelectionWidget',
+    'PrivateKeySelectionWidget',
+    'GenerateKeyWidget',
+    'UploadKeyWidget',
 ]
 
 # -----------------------------------------------------------------
@@ -92,84 +98,235 @@ def generate_key_pair(
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
-def create_public_key_list_widget(state : pbuilder.state.State, bindings : pbuilder.bindings.Bindings) :
-    public_key_map = build_public_key_map(state,bindings)
-    public_keys = list(public_key_map.keys())
-    public_keys.sort()
+class KeyListWidget(ipywidgets.VBox) :
+    """Define a widget class for displaying a list of available keys
+    """
 
-    result = "<h1>Public Keys</h1>\n"
-    result += "<table border=3 padding=3>\n"
-    result += "<tr><th style=text-align:left>Identity</th><th style=text-align:left>Key File</th></tr>\n"
-    for k in public_keys :
-        result += "<tr><td>{}</td><td>{}</td></tr>\n".format(k, public_key_map[k])
-    result += "</table>\n"
+    table_header = """
+<table border=3 cellpadding=5>
+<tr>
+<th style=text-align:left>Identity</th>
+<th style=text-align:left>Key File</th>
+</tr>
+"""
 
-    htmlbox = ipywidgets.HTML(value=result)
-    return htmlbox
+    table_footer = """
+</table>
+"""
 
-def create_public_key_selection_widget(state : pbuilder.state.State, bindings : pbuilder.bindings.Bindings) :
-    public_keys = build_public_key_list(state, bindings) or ['unknown']
+    def __init__(self,
+                 state : pbuilder.state.State,
+                 bindings : pbuilder.bindings.Bindings,
+                 keytype : str) :
 
-    dropdown = ipywidgets.Dropdown(options=public_keys, value=public_keys[0], description='Public Keys')
-    refresh_button = ipywidgets.Button(description="Refresh Keys")
+        assert keytype in ['public', 'private']
 
-    def on_button_click(b) :
-        public_keys = build_public_key_list(state, bindings) or ['unknown']
-        dropdown.options = public_keys
-        dropdown.value = public_keys[0]
+        self.state = state
+        self.bindings = bindings
+        self.keytype = keytype
 
-    refresh_button.on_click(on_button_click)
+        self.key_list = ipywidgets.HTML()
+        self.key_list.value = self.create_key_list(state, bindings)
 
-    return ipywidgets.HBox([dropdown, refresh_button])
+        self.refresh = ipywidgets.Button(description="Refresh Keys")
+        self.refresh.on_click(self.refresh_button_click)
+
+        super().__init__([self.key_list, self.refresh])
+
+    def create_key_list(self, state, bindings) :
+        """Create the HTML table for the keys list
+        """
+        if self.keytype == 'public' :
+            key_map = build_public_key_map(state, bindings)
+        else :
+            key_map = build_private_key_map(state, bindings)
+
+        keys = list(key_map.keys())
+        keys.sort()
+
+        result = self.table_header
+
+        for k in keys :
+            result += "<tr><td>{}</td><td>{}</td></tr>\n".format(k, key_map[k])
+
+        result += self.table_footer
+
+        return result
+
+    def refresh_button_click(self, b) :
+        """Recompute the key list and update the key_list widget
+        """
+        self.key_list.value = self.create_key_list(self.state, self.bindings)
+
+class PublicKeyListWidget(KeyListWidget) :
+    def __init__(self, state : pbuilder.state.State, bindings : pbuilder.bindings.Bindings) :
+        super().__init__(state, bindings, 'public')
+
+class PrivateKeyListWidget(KeyListWidget) :
+    def __init__(self, state : pbuilder.state.State, bindings : pbuilder.bindings.Bindings) :
+        super().__init__(state, bindings, 'private')
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
-def create_private_key_list_widget(state : pbuilder.state.State, bindings : pbuilder.bindings.Bindings) :
-    private_key_map = build_private_key_map(state,bindings)
-    private_keys = list(private_key_map.keys())
-    private_keys.sort()
+class KeySelectionWidget(ipywidgets.VBox) :
+    """Define a widget class for selecting a key
 
-    result = "<h1>Private Keys</h1>\n"
-    result += "<table border=3 padding=3>\n"
-    result += "<tr><th style=text-align:left>Identity</th><th style=text-align:left>Key File</th></tr>\n"
-    for k in private_keys :
-        result += "<tr><td>{}</td><td>{}</td></tr>\n".format(k, private_key_map[k])
-    result += "</table>\n"
+    This widget has four parts: the key list, a button to refresh
+    the list of keys, a button to submit the currently selected key
+    to a callback function, and a feedback area. The widget should be
+    created with a function to handle the selection.
+    """
+    def __init__(self,
+                 state : pbuilder.state.State,
+                 bindings : pbuilder.bindings.Bindings,
+                 keytype : str,
+                 button_label : str,
+                 button_callback) :
 
-    htmlbox = ipywidgets.HTML(value=result)
-    return htmlbox
+        assert keytype in ['public', 'private']
 
-def create_private_key_selection_widget(state : pbuilder.state.State, bindings : pbuilder.bindings.Bindings) :
-    private_keys = build_private_key_list(state, bindings) or ['unknown']
+        self.state = state
+        self.bindings = bindings
+        self.keytype = keytype
 
-    dropdown = ipywidgets.Dropdown(options=private_keys, value=private_keys[0], description='Private Keys')
-    refresh_button = ipywidgets.Button(description="Refresh Keys")
+        self.button_label = button_label
+        self.button_callback = button_callback
 
-    def on_button_click(b) :
-        private_keys = build_private_key_list(state, bindings) or ['unknown']
-        dropdown.options = private_keys
-        dropdown.value = private_keys[0]
+        self.submit = ipywidgets.Button(description=self.button_label)
+        self.submit.on_click(self.submit_button_click)
 
-    refresh_button.on_click(on_button_click)
+        keys = self.create_key_list(self.state, self.bindings)
+        self.dropdown = ipywidgets.Dropdown(options=keys, value=keys[0], description='Keys')
 
-    return ipywidgets.HBox([dropdown, refresh_button])
+        self.refresh = ipywidgets.Button(description="Refresh Keys")
+        self.refresh.on_click(self.refresh_button_click)
+
+        self.feedback = ipywidgets.Output()
+
+        super().__init__([ipywidgets.HBox([self.dropdown, self.refresh, self.submit]), self.feedback])
+
+    @property
+    def selection(self) :
+        return self.dropdown.value
+
+    def create_key_list(self, state, bindings) :
+        """Create a list of key names
+        """
+        if self.keytype == 'public' :
+            return build_public_key_list(state, bindings) or ['unknown']
+        else :
+            return build_private_key_list(state, bindings) or ['unknown']
+
+    def refresh_button_click(self, b) :
+        """Recompute the service list and update the service_list widget
+        """
+        keys = self.create_key_list(self.state, self.bindings)
+        self.dropdown.options = keys
+        self.dropdown.value = keys[0]
+
+    def submit_button_click(self, b) :
+        """Invoke the function for handling the selection
+        """
+        self.feedback.clear_output()
+        self.button_callback(self.dropdown.value, self.feedback)
+
+class PublicKeySelectionWidget(KeySelectionWidget) :
+    def __init__(self,
+                 state : pbuilder.state.State,
+                 bindings : pbuilder.bindings.Bindings,
+                 button_label : str,
+                 button_callback) :
+        super().__init__(state, bindings, 'public', button_label, button_callback)
+
+class PrivateKeySelectionWidget(KeySelectionWidget) :
+    def __init__(self,
+                 state : pbuilder.state.State,
+                 bindings : pbuilder.bindings.Bindings,
+                 button_label : str,
+                 button_callback) :
+        super().__init__(state, bindings, 'private', button_label, button_callback)
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
-def create_generate_key_widget(state : pbuilder.state.State, bindings : pbuilder.bindings.Bindings) :
-    feedback_box = ipywidgets.Output()
-    key_entry_box = ipywidgets.Text(description="Identity")
-    key_click_button = ipywidgets.Button(description="Generate Keys")
+class GenerateKeyWidget(ipywidgets.VBox) :
+    """Define a widget class for creating a key pair
 
-    def on_button_click(b) :
-        identity = key_entry_box.value
+    This widget consists of three components: the text box for the
+    new key name, the generate button for creating the key, and a
+    feedback box.
+    """
+    def __init__(self, state : pbuilder.state.State, bindings : pbuilder.bindings.Bindings) :
+        self.state = state
+        self.bindings = bindings
+
+        self.key = ipywidgets.Text(description="Identity")
+
+        self.generate = ipywidgets.Button(description="Generate Keys")
+        self.generate.on_click(self.generate_button_click)
+
+        self.feedback = ipywidgets.Output()
+
+        super().__init__([ipywidgets.HBox([self.key, self.generate]), self.feedback])
+
+    def clear_widget(self) :
+        self.key.value = ''
+        self.feedback.clear_output()
+
+    def generate_button_click(self, b) :
+        identity = self.key.value
         if identity and identity.isalnum() :
-            generate_key_pair(state, bindings, identity)
-            key_entry_box.value = ''
-            feedback_box.clear_output()
-            with feedback_box :
-                print("keys created for {}".format(identity))
+            generate_key_pair(self.state, self.bindings, identity)
+            self.clear_widget()
+            with self.feedback : print("keys created for {}".format(identity))
 
-    key_click_button.on_click(on_button_click)
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
+class UploadKeyWidget(ipywidgets.VBox) :
+    """Define a widget class for uploading a key
 
-    return ipywidgets.HBox([key_entry_box, key_click_button, feedback_box])
+    This widget consists of several components: the name of the uploaded key,
+    the type of uploaded key, the file that currently contains the key, an
+    upload button, and a feedback area.
+    """
+    def __init__(self, state : pbuilder.state.State, bindings : pbuilder.bindings.Bindings) :
+        self.state = state
+        self.bindings = bindings
+
+        self.key_entry = ipywidgets.Text(description="Identity")
+        self.key_type = ipywidgets.Dropdown(options=['public', 'private'], value='public', description='Key Type')
+        self.key_file = ipywidgets.FileUpload(accept='.pem', description='Select Key File')
+
+        self.upload_button = ipywidgets.Button(description="Upload")
+        self.upload_button.on_click(self.upload_button_click)
+
+        self.feedback = ipywidgets.Output()
+
+        hbox = ipywidgets.HBox([self.key_entry, self.key_type, self.key_file, self.upload_button])
+        super().__init__([hbox, self.feedback])
+
+    def reset_widget(self) :
+        """Reset the values of the components in the widget
+        """
+        self.key_entry.value = ''
+        self.key_type.value = 'public'
+        self.key_file.value = ()
+
+    def upload_button_click(self, b) :
+        """Handle the request to upload the file
+        """
+        self.feedback.clear_output()
+
+        if not self.key_entry.value or not self.key_entry.value.isalnum() :
+            with self.feedback : print("Identity must be alphanumeric")
+            return
+        if not self.key_file.value :
+            with self.feedback : print("No file specified")
+            return
+
+        keydir = self.bindings.expand("${keys}")
+        keyfile = "{}_{}.pem".format(self.key_entry.value, self.key_type.value)
+        filename = os.path.join(keydir, keyfile)
+        with open(filename, "wb") as fp : fp.write(self.key_file.value[0].content)
+        with self.feedback : print("keys uploaded to {}".format(filename))
+
+        self.reset_widget()
