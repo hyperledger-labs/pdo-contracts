@@ -26,8 +26,7 @@ source ${PDO_HOME}/bin/lib/common.sh
 check_python_version
 
 if ! command -v pdo-shell &> /dev/null ; then
-    yell unable to locate pdo-shell
-    exit 1
+    die unable to locate pdo-shell
 fi
 
 # -----------------------------------------------------------------
@@ -73,14 +72,21 @@ while true ; do
     esac
 done
 
-F_SERVICE_GROUPS_FILE=${SOURCE_ROOT}/test/${F_SERVICE_HOST}_groups.toml
+F_SERVICE_SITE_FILE=${PDO_HOME}/etc/sites/${F_SERVICE_HOST}.toml
+if [ ! -f ${F_SERVICE_SITE_FILE} ] ; then
+    die unable to locate the service information file ${F_SERVICE_SITE_FILE}; \
+        please copy the site.toml file from the service host
+fi
+
+F_SERVICE_GROUPS_DB_FILE=${SOURCE_ROOT}/test/${F_SERVICE_HOST}_groups_db
 F_SERVICE_DB_FILE=${SOURCE_ROOT}/test/${F_SERVICE_HOST}_db
 
 _COMMON_=("--logfile ${F_LOGFILE}" "--loglevel ${F_LOGLEVEL}")
 _COMMON_+=("--ledger ${F_LEDGER_URL}")
-_COMMON_+=("--bind service_host ${F_SERVICE_HOST}")
-_COMMON_+=("--service-groups ${F_SERVICE_GROUPS_FILE}")
+_COMMON_+=("--groups-db ${F_SERVICE_GROUPS_DB_FILE}")
 _COMMON_+=("--service-db ${F_SERVICE_DB_FILE}")
+SHORT_OPTS=${_COMMON_[@]}
+
 _COMMON_+=("--context-file ${F_CONTEXT_FILE}")
 OPTS=${_COMMON_[@]}
 
@@ -115,7 +121,7 @@ fi
 
 # -----------------------------------------------------------------
 function cleanup {
-    rm -f ${F_SERVICE_GROUPS_FILE}
+    rm -f ${F_SERVICE_GROUPS_DB_FILE} ${F_SERVICE_GROUPS_DB_FILE}-lock
     rm -f ${F_SERVICE_DB_FILE} ${F_SERVICE_DB_FILE}-lock
     rm -f ${F_CONTEXT_FILE}
     for key_file in ${F_KEY_FILES[@]} ; do
@@ -126,13 +132,18 @@ function cleanup {
 trap cleanup EXIT
 
 # -----------------------------------------------------------------
-# reset the eservice database file for the test and create the groups
+# create the service and groups databases from a site file; the site
+# file is assumed to exist in ${PDO_HOME}/etc/sites/${SERVICE_HOST}.toml
+#
+# by default, the groups will include all available services from the
+# service host
 # -----------------------------------------------------------------
-yell create the service groups database for host ${F_SERVICE_HOST}
-try ${PDO_HOME}/bin/pdo-create-service-groups.psh \
-    --service-db ${F_SERVICE_DB_FILE} \
-    --bind service_host ${F_SERVICE_HOST} \
-    --bind group_file ${F_SERVICE_GROUPS_FILE}
+yell create the service and groups database for host ${F_SERVICE_HOST}
+try pdo-service-db import ${SHORT_OPTS} --file ${F_SERVICE_SITE_FILE}
+try pdo-eservice create_from_site ${SHORT_OPTS} --file ${F_SERVICE_SITE_FILE} --group default
+try pdo-pservice create_from_site ${SHORT_OPTS} --file ${F_SERVICE_SITE_FILE} --group default
+try pdo-sservice create_from_site ${SHORT_OPTS} --file ${F_SERVICE_SITE_FILE} --group default \
+             --replicas 1 --duration 60
 
 # -----------------------------------------------------------------
 # setup the contexts that will be used later for the tests

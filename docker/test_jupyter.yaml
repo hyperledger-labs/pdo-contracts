@@ -69,4 +69,4 @@ services:
     network_mode: "host"
     volumes:
       - ./xfer/:/project/pdo/xfer/
-    entrypoint: /project/pdo/tools/run_jupyter_tests.sh -i localhost -l http://127.0.0.1:6600
+    entrypoint: /project/pdo/tools/run_jupyter_tests.sh -i localhost -l http://127.0.0.1:6600 -s localhost
