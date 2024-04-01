@@ -75,18 +75,13 @@ while [ ! -f ${XFER_DIR}/ccf/keys/networkcert.pem ]; do
 done
 try cp ${XFER_DIR}/ccf/keys/networkcert.pem ${PDO_LEDGER_KEY_ROOT}/
 
-# for now the site.toml is just a way to notify
-# that the services are running; in the future
-# the client should be able to incorporate this
-# file and begin to use the information, again
-# in theory this should be taken care of by the
-# health checks in the docker compose configuration
+# site.toml is a way to notify that the services are running
+# the guardian service does not require any site specific configuration
+# so the services and groups are not created
 while [ ! -f ${XFER_DIR}/services/etc/site.toml ]; do
     say "waiting for site configuration"
     sleep 5
 done
-
-try cp ${XFER_DIR}/services/etc/site.toml ${PDO_HOME}/etc/site.toml
 
 # -----------------------------------------------------------------
 function cleanup {

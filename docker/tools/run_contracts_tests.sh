@@ -61,6 +61,11 @@ export NO_PROXY=$PDO_HOSTNAME,$NO_PROXY
 check_pdo_runtime_env
 
 # -----------------------------------------------------------------
+# activate the virtual environment
+# -----------------------------------------------------------------
+. ${PDO_INSTALL_ROOT}/bin/activate
+
+# -----------------------------------------------------------------
 yell copy ledger keys
 # -----------------------------------------------------------------
 
@@ -75,23 +80,28 @@ while [ ! -f ${XFER_DIR}/ccf/keys/networkcert.pem ]; do
 done
 try cp ${XFER_DIR}/ccf/keys/networkcert.pem ${PDO_LEDGER_KEY_ROOT}/
 
-# for now the site.toml is just a way to notify
-# that the services are running; in the future
-# the client should be able to incorporate this
-# file and begin to use the information, again
-# in theory this should be taken care of by the
-# health checks in the docker compose configuration
+# site.toml is a way to notify that the services are running;
+# in addition, the client uses the information to load the
+# services and groups database; while we create an initial
+# default database from this information, each test is expected
+# to manage the database appropriately
+F_SERVICE_SITE_FILE=${PDO_HOME}/etc/sites/${F_SERVICE_HOST}.toml
+mkdir -p $(dirname ${F_SERVICE_SITE_FILE})
+
 while [ ! -f ${XFER_DIR}/services/etc/site.toml ]; do
     say "waiting for site configuration"
     sleep 5
 done
 
-try cp ${XFER_DIR}/services/etc/site.toml ${PDO_HOME}/etc/site.toml
+try cp ${XFER_DIR}/services/etc/site.toml ${F_SERVICE_SITE_FILE}
+try pdo-service-db import --file ${F_SERVICE_SITE_FILE}
+try pdo-eservice create_from_site --file ${F_SERVICE_SITE_FILE} --group default
+try pdo-pservice create_from_site --file ${F_SERVICE_SITE_FILE} --group default
+try pdo-sservice create_from_site --file ${F_SERVICE_SITE_FILE} --group default --replicas 1 --duration 60
 
 # -----------------------------------------------------------------
 yell run the service test suite
 # -----------------------------------------------------------------
-. ${PDO_INSTALL_ROOT}/bin/activate
 try make -C /project/pdo/contracts \
     TEST_LOG_LEVEL=${F_LOGLEVEL} TEST_SERVICE_HOST=${F_SERVICE_HOST} TEST_LEDGER=${F_LEDGER_URL} \
     test
