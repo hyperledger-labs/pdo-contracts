@@ -54,18 +54,11 @@ pc_jupyter.load_ipython_extension(get_ipython())
 # %% [markdown]
 # ### Initialize the PDO Environment
 #
-# Initialize the PDO environment. This assumes that a functional PDO configuration is in place and that the PDO virtual environment has been activated. In particular, ensure that the groups file and eservice database have been configured correctly. If you do not have a service groups configuration, you can create it for a single service host by running the following:
-
-# %%
-# %%skip True
-# %%bash -s $service_host
-if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then
-    $PDO_INSTALL_ROOT/bin/pdo-shell $PDO_HOME/bin/pdo-create-service-groups.psh --service_host $1
-fi
-
-# %% [markdown]
-# For the most part, no modifications should be require below.
-
+# Initialize the PDO environment. This assumes that a functional PDO configuration is in place and
+# that the PDO virtual environment has been activated. In particular, ensure that the groups file
+# and eservice database have been configured correctly.
+#
+# For the most part, no modifications should be required below.
 # %%
 common_bindings = {
     'host' : service_host,
