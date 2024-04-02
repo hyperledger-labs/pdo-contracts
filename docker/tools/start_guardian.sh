@@ -92,7 +92,8 @@ try ${PDO_HOME}/contracts/inference/scripts/ss_start.sh -c -o ${PDO_HOME}/logs -
     --loglevel ${F_LOGLEVEL} \
     --config guardian_service.toml \
     --config-dir ${PDO_HOME}/etc/contracts \
-    --identity guardian_sservice
+    --identity guardian_sservice \
+    --bind host ${F_INTERFACE}
 
 try ${PDO_HOME}/contracts/inference/scripts/gs_start.sh -c -o ${PDO_HOME}/logs -- \
     --loglevel ${F_LOGLEVEL} \
