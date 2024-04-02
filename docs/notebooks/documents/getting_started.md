@@ -28,19 +28,17 @@ Assumptions:
 3. Create a service group configuration
 
 
-## Simplified configuration
+## Site configuration
 
-If you are running the PDO services in the common test configuration
-(e.g. with 5 provisioning services, 5 enclave service, and 5 storage
-services all running on the same host, you can create all of the
-necessary configuration files with the command:
+In order to access services, you must add information about the
+services to the services database (see the script
+`pdo-service-db`). Further, to create new contracts it is necessary to
+create one or more groups of services that can be bound to the
+contract (see the script `pdo-groups-db`, `pdo-eservice`,
+`pdo-pservice`, and `pdo-sservice`).
 
-```
-    $ export service_host=<service hostname>
-    $ ${PDO_INSTALL_ROOT}/opt/pdo/bin/pdo-create-service-groups.psh --service_host ${service_host}
-```
-
-Use `service_host` in the notebooks that you create.
+To simplify testing, a simple configuration for local services is
+created during docker container startup.
 
 ### Create a personal configuration file
 
