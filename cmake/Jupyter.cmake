@@ -14,6 +14,9 @@
 
 
 SET(JUPYTEXT "${PDO_INSTALL_ROOT}/bin/jupytext" CACHE STRING "Path to the Jupytext command")
+IF(NOT EXISTS ${JUPYTEXT})
+  MESSAGE(FATAL_ERROR "${JUPYTEXT} not found; please install with '${PDO_INSTALL_ROOT}/bin/pip install jupytext'")
+ENDIF()
 
 FUNCTION(CONVERT_JUPYTEXT NOTEBOOKS)
   SET(RESULT)
