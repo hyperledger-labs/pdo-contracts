@@ -78,16 +78,18 @@ virtual environment in the directory `${PDO_INSTALL_ROOT}`.
 make -C ${PDO_SOURCE_ROOT}/build client
 ```
 
-Finally, activate the PDO Python virtual environment:
-
-```
-source ${PDO_INSTALL_ROOT}/bin/activate
-```
-
 More information about PDO client installation is found in the
 [PDO documentation](../private-data-objects/docs/client_install.md).
 
 ## <a name="contracts">Build and Install the PDO Contracts Packages</a>
+
+Activate the PDO Python virtual environment and install the
+Python packages necessary to build contracts:
+
+```bash
+source ${PDO_INSTALL_ROOT}/bin/activate
+${PDO_INSTALL_ROOT}/bin/pip install jupytext
+```
 
 Finally, build and install the Python packages associated with the PDO contract
 families. The packages will be built in the directory
@@ -103,4 +105,11 @@ on ${SERVICE_HOST}, you can test the installation with the following:
 
 ```
 TEST_SERVICE_HOST=${SERVICE_HOST} make -C ${PDO_CONTRACTS_ROOT} test
+```
+
+If you wish to use [Jupyter notebooks](jupyter.md) to interact with
+PDO contracts, you will need to install several additional packages:
+
+```bash
+${PDO_INSTALL_ROOT}/bin/pip install jupyterlab papermill ipywidgets
 ```
