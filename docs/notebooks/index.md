@@ -53,8 +53,8 @@ The Digital Assets contract family implements a basic digital asset for bitmap i
 
 The Inference contract family provides contracts for creating a confidentiality
 preserving policy-wrapper around the usage of a machine learning (ML) model.
-At its core, the implementation uses a token contract to  specify and enforce
-policies to be followed while using the ML model for inferecing operations.
+The policy-wrapper specifies and helps enforce policies to be followed while
+using the ML model for inferencing operations, and is implemented as a PDO contract.
 
 To experiment with inference contracts, explore the
 [Inference Contract Family notebook](inference/index.ipynb)

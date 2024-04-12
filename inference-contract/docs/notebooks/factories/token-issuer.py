@@ -16,8 +16,8 @@
 # %% [markdown]
 # # Token Family Factory
 #
-# This notebook simplifies the creation of an instance of a token issuer. 
-# Update the token configuration information then evaluate the notebook to 
+# This notebook simplifies the creation of an instance of a token issuer.
+# Update the token configuration information then evaluate the notebook to
 # create a new token issuer. That token issuer will be able to mint tokens
 # for the underlying ML model for which policy-based inferencing need to be
 # enabled. The created token is then exchanged to a prospective model user
@@ -35,20 +35,21 @@ pc_jupyter.load_ipython_extension(get_ipython())
 # %% [markdown]
 # ## Configure Token Information
 #
-# This section enables customization of the token that will be minted. 
+# This section enables customization of the token that will be minted.
 # Edit the variables in the section below as necessary.
 #
 # * identity : the identity of the token creator
 # * token_class : the name of tokens that will be generated
 #
-# Note that the notebook assumes that there is a key file for the identity of 
-# the form: `${keys}/${identity}_private.pem`.
+# Note that the notebook assumes that there is a key file for the identity of
+# the form: `${keys}/${identity}_private.pem`. Please use the /documents/key_manager.ipynb
+# notebook to create desired keys.
 
 
 # %% tags=["parameters"]
 identity = input('Identity of the token issuer: ')
 token_class = input('Name of the class of tokens to issue: ')
-service_host = input('Service host [localhost]: ')
+service_host = input('Service host [localhost]: ') or 'localhost'
 
 
 # %% [markdown]
@@ -66,4 +67,4 @@ instance_parameters = {
 }
 
 instance_file = pc_jupyter.instantiate_notebook_from_template(token_class, 'token-issuer', instance_parameters)
-ip_display.display(ip_display.Markdown('[Token Issuer]({})'.format(instance_file)))
+ip_display.display(ip_display.Markdown('[Newly created token issuer]({})'.format(instance_file)))

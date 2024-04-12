@@ -104,7 +104,12 @@ token_context = pc_jupyter.pbuilder.Context(state, token_path)
 
 
 # %% [markdown]
-# ### Invoke Inference Operation
+# ## Operations that can be performed on the Token
+# Below we illustrate some of the operations that a token owner can perform on the token.
+# Note that what is permissible is entirely dependant on the policies
+# implemented by the token contract
+#
+# ### Operation 1. Invoke Inference Operation
 #
 # The model is an image classfication model. Use the following cell to
 # provide input to the classification oepration. Current token object policy
@@ -115,9 +120,9 @@ token_context = pc_jupyter.pbuilder.Context(state, token_path)
 # via the contracts docker container, copy your test image to
 # `$PDO_CONTRACTS_SRC_ROOT/docker/xfer/client/` folder and
 # provide the value `/project/pdo/xfer/client` for the input `path`.
-#
-# Also, please note that `$PDO_CONTRACTS_SRC_ROOT/inference-contract/data` folder
-# contains the sample image `zebra_wiki.jpg` that may be used for testing
+# A sample test image `zebra_wiki.jpg` can be found at
+# `$PDO_CONTRACTS_SRC_ROOT/inference-contract/data`.
+
 
 # %% tags=["parameters"]
 image_name = input('Name of the image file')
@@ -131,7 +136,7 @@ inference_result = pc_jupyter.pcommand.invoke_contract_cmd(
 
 
 # %% [markdown]
-# ### Transfer Ownership to a New User
+# ### Operation 2.  Transfer Ownership (and hence the right to perform inference) to a New User
 #
 # User1 now transfers ownership of the token object (and hence its capabilities)
 # to a new user. Note that the notebook assumes that user1 knows the public key
@@ -147,35 +152,24 @@ pc_jupyter.pcommand.invoke_contract_cmd(
     state, token_context, new_owner=new_user_identity)
 
 # %% [markdown]
-# ### Test Ownership
+# ### Operation 3.New User Performs Operations on the Asset
 #
-# Let's ensure that user1 can no longer perform operations on the asset.
-# The following asset usage command should fail:
-
-# %%
-inference_result = pc_jupyter.pcommand.invoke_contract_cmd(
-    pc_jupyter.ml_inference_token_object.cmd_do_inference,
-    state, token_context, image=image_name, search_path=[path])
-
-# %% [markdown]
-# ### New User Performs Operations on the Asset
-#
-# Let's also ensure that user2 can indeed perform operations on the asset.
 # Note that in the following command, we explicitly pass the identity of the caller
+# The old token owner after ownership transfer can longer invoke inference oeprations.
 
 # %%
 inference_result = pc_jupyter.pcommand.invoke_contract_cmd(
     pc_jupyter.ml_inference_token_object.cmd_do_inference,
-    state, token_context, image=image_name, search_path=[path], identity='user2')
+    state, token_context, image=image_name, search_path=[path], identity=new_user_identity)
 
 # %% [markdown]
-# ### Onwership Transfer Is Still Possible, But now done by user2!
+# ### Operation 4. Re-transfer of ownership to a 3rd user Test Ownership
 #
-# User2 is the current owner of the token, and can transfer asset-usage rights to
-# a third person, say user3.
+# The token policy in this example permits re-transfer of ownership.
+
 
 # %%
-current_owner_identity = new_user_identity #user2
+current_owner_identity = new_user_identity
 new_user_identity = 'user3'
 pc_jupyter.pcommand.invoke_contract_cmd(
     pc_jupyter.ml_inference_token_object.cmd_transfer_assets,

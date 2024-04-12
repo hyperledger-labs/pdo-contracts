@@ -14,12 +14,12 @@ jupyter:
 
 # Inference Contract Family
 
-The Inference contract family is a suite of contracts that extend the 
-capabilities of the [Exchange Contract Family ](../exchange/documents/overview.ipynb) 
+The Inference contract family is a suite of contracts that extend the
+capabilities of the [Exchange Contract Family ](../exchange/documents/overview.ipynb)
 in order to create a confidentiality preserving policy-wrapper around the
-usage of a machine learning (ML) model. This directory contains sample 
+usage of a machine learning (ML) model. This directory contains sample
 Jupyter notebooks that can be used to create and interact with contract
-objects in the Inference contract family. The structure of notebooks follows 
+objects in the Inference contract family. The structure of notebooks follows
 the pattern followed by the notebooks used to illustrate the exchange contracts
 family.
 

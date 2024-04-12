@@ -3,13 +3,13 @@ Licensed under Creative Commons Attribution 4.0 International License
 https://creativecommons.org/licenses/by/4.0/
 --->
 
-# NFT and openvino inference contracts using PDO #
+# NFT and openVINO inference contracts using PDO #
 
 This directory contains a Private Data Objects contract family for
 creating a confidentiality preserving policy-wrapper around the usage
 of a machine learning (ML) model. At its core, the implementation
 contains a Token Object PDO contract that specifies and checks the
-policies to be followed while using the ML model for inferecing
+policies to be followed while using the ML model for inferencing
 operations. In this implementation, the ML Model is assumed to be an
 [OpenVINO based IR](https://docs.openvino.ai/2023.2/openvino_ir.html)
 model. The model itself is deployed via an asset guardian service; the
@@ -46,7 +46,7 @@ contract and the model usage.
 
 We note that while the Token Object smart contract is executed within
 Intel SGX enclaves (via PDO), the asset guardian service in this
-impelementation is not protected by TEEs. A prospective asset-user
+implementation is not protected by TEEs. A prospective asset-user
 (token owner) relies on the asset owner for the trustworthiness of the
 guardian service. However, it is entirely possible to extend the
 protocols and implementation here to offer increased protection by
@@ -63,7 +63,7 @@ docker pull openvino/model_server:latest
 ```
 
 Our tests are based on the
-[classication demo model](https://github.com/openvinotoolkit/model_server/tree/main/demos/image_classification)
+[Classification demo model](https://github.com/openvinotoolkit/model_server/tree/main/demos/image_classification)
 contained within the OpenVINO repository. Please use the following
 commands use to download the model and deploy the OpenVINO model
 server docker container loaded with the classification model.
@@ -79,7 +79,7 @@ The model server endpoint is `127.0.0.1:9000`. Please note that we
 want the model server to be accessible only from the Guardian Service
 frontend. In our tests, we assume that the Guardian Service and the
 model server are hosted on the same machine. The token owner (in
-practice situated on a remote node) submits inference reqeust first to
+practice situated on a remote node) submits inference request first to
 the token object, and gets back a capability package (see above for
 definition). As a second step, the token owner submits the capability
 package to the Guardian Service. The Guardian Service verifies the
@@ -112,14 +112,38 @@ cd $PDO_CONTRACTS_SOURCE_ROOT/inference-contract/test/
 
 We provide [Jupyter Notebooks](./docs/notebooks/README.md) that can be executed
 in an interactive manner to illustrate the functionality of the inference
-contract family. The notebooks assume that the pdo services,
-pdo ledger as well the asset guardian service are running prior to executing
-notebook commands. As noted earlier, the guardian backend is the OpenVINO
-model server; the `docker run` command provided above is used to deploy the
-backend. The frontend can be deployed (on bare-metal) using the following
-command:
+contract family. We support Jupyter notebook deployment via both docker containers
+as well as bare-metal.
+
+For docker, please invoke the `make test_jupyter` command
+from within the docker folder contained within this repo. This command deploys the
+pdo ledger, pdo services, guardian frontend as well as the openVINO containers in
+addition to the container that hosts the Jupyter server for interaction.
+
+If bare-metal deployment of Jupyter server is desired, please ensure that  pdo services, pdo ledger
+as well the asset guardian service are running prior to starting the Jupyter server
+on bare-metal. Note that these services may be deployed either on bare-metal or docker,
+even though the Jupyter server is deployed on bare-metal. Please consult the
+[PDO repo] `https://github.com/hyperledger-labs/private-data-objects/tree/main` repo for deployment
+options for pdo ledger and services. Regarding deployment of the model guardian,
+the guardian backend is the OpenVINO model server; the `docker run` command provided above
+is used to deploy the backend. Deploying openVINO model server without docker is possible;
+please consult `https://docs.openvino.ai/2022.3/ovms_what_is_openvino_model_server.html`
+for instructions. For deploying the guardian front end on bare-metal, please use the following
+commands to sequentially deploy the guardian storage service first, and then the guardian web service.
 
 ```bash
-cd $PDO_CONTRACTS_SOURCE_ROOT/inference-contract/test/
-./guardian_frontend.sh
+${PDO_HOME}/contracts/inference/scripts/ss_start.sh -c -o ${PDO_HOME}/logs -- \
+    --loglevel debug \
+    --config guardian_service.toml \
+    --config-dir ${PDO_HOME}/etc/contracts \
+    --identity guardian_sservice
+
+${PDO_HOME}/contracts/inference/scripts/gs_start.sh -c -o ${PDO_HOME}/logs -- \
+    --loglevel debug \
+    --config guardian_service.toml \
+    --config-dir ${PDO_HOME}/etc/contracts \
+    --identity guardian_service \
+    --bind host ${PDO_HOSTNAME} \
+    --bind service_host ${PDO_HOSTNAME}
 ```
