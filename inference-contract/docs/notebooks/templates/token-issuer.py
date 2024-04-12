@@ -14,15 +14,15 @@
 
 # %% [markdown]
 # # Token Issuer Notebook
-# This section enables customization of the token that will be minted. Edit the variables in the section below as necessary. 
+# This section enables customization of the token that will be minted. Edit the variables in the section below as necessary.
 #
-# identity : the identity of the token creator
-# service_host : the host for the eservice where tokens will be minted, this will use the default service group
-# token_class : the name of tokens that will be generated, this is only used to simplify local access (e.g. context file name)
-# token_description : a description of the asset associated with the minted tokens
-# token_metadata : additional information about the token
-# count : the number of tokens to mint for the asset
-
+# * token_owner : the identity of the token creator
+# * token_class : the name of tokens that will be generated, this is only used to simplify local access (e.g. context file name)
+# * token_description : a description of the asset associated with the minted tokens
+# * token_metadata : additional information about the token
+# * count : the number of tokens to mint for the asset
+# * service_host : the host for the eservice where tokens will be minted, this will use the default service group
+#
 # Note that the notebook assumes that there is a key file for the identity of the form: `${keys}/${identity}_private.pem`.
 
 
@@ -52,8 +52,8 @@ pc_jupyter.load_ipython_extension(get_ipython())
 # ### Initialize the PDO Environment
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration
-# is in place and that the PDO virtual environment has been activated. In particular, 
-# ensure that the groups file and eservice database have been configured correctly. 
+# is in place and that the PDO virtual environment has been activated. In particular,
+# ensure that the groups file and eservice database have been configured correctly.
 # If you do not have a service groups configuration, you can create it for a single
 # service host by running the following:
 
@@ -83,8 +83,8 @@ print('environment initialized')
 # ### Initialize the Contract Context
 #
 # The contract context defines the configuration for a collection of contract objects
-# that interact with one another. By default, the context file used in this notebook 
-# is specific to the token. If you prefer to use a common context file, edit the 
+# that interact with one another. By default, the context file used in this notebook
+# is specific to the token. If you prefer to use a common context file, edit the
 # `context_file` variable below.
 #
 # For the most part, no other modifications should be required.
@@ -114,10 +114,10 @@ print('context initialized')
 # %% [markdown]
 # ### Create the Token Issuer Contract
 #
-# The process of creating the token issuer will also create an asset type contract object, 
-# a vetting organization contract object, and the guardian contract object. 
-# The asset type and vetting organization contract objects are principally used 
-# to complete the canonical asset interface that enables transparent value exchanges 
+# The process of creating the token issuer will also create an asset type contract object,
+# a vetting organization contract object, and the guardian contract object.
+# The asset type and vetting organization contract objects are principally used
+# to complete the canonical asset interface that enables transparent value exchanges
 # with tokens and other digital assets.
 
 # %%

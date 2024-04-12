@@ -222,4 +222,6 @@ fi
 try inference_token do_inference ${OPTS} --identity token_holder1 \
     --contract token.test1.token_object.token_1 --image "zebra_wiki.jpg"
 
+#sleep for 10s
+
 exit
