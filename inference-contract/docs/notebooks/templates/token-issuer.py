@@ -97,13 +97,13 @@ print("using context file {}".format(context_file))
 context_bindings = {
     'asset_type.identity' : token_owner,
     'vetting.identity' : token_owner,
-    'guardian.identity' : token_owner,
-    'token_issuer.identity' : token_owner,
-    'token_issuer.count' : count,
-    'token_issuer.description' : token_description,
-    'token_issuer.token_metadata.opaque' : token_metadata,
-    'token_object.identity' : token_owner,
-    'guardian.url' : 'http://' + service_host + ':7900'
+    'inf_guardian.identity' : token_owner,
+    'inf_token_issuer.identity' : token_owner,
+    'inf_token_issuer.count' : count,
+    'inf_token_issuer.description' : token_description,
+    'inf_token_issuer.token_metadata.opaque' : token_metadata,
+    'inf_token_object.identity' : token_owner,
+    'inf_guardian.url' : 'http://' + service_host + ':7900'
 }
 
 context = pc_jupyter.ml_jupyter.initialize_token_context(state, bindings, context_file, token_path, **context_bindings)
@@ -121,7 +121,7 @@ print('context initialized')
 # with tokens and other digital assets.
 
 # %%
-token_issuer_context = pc_jupyter.pbuilder.Context(state, token_path + '.token_issuer')
+token_issuer_context = pc_jupyter.pbuilder.Context(state, token_path + '.inf_token_issuer')
 token_issuer_save_file = token_issuer_context.get('save_file')
 if not token_issuer_save_file :
     token_issuer_save_file = pc_jupyter.pcommand.invoke_contract_cmd(
@@ -139,7 +139,7 @@ print('token issuer contract in {}'.format(token_issuer_save_file))
 # ### Mint the Tokens
 
 # %%
-token_object_context = pc_jupyter.pbuilder.Context(state, token_path + '.token_object')
+token_object_context = pc_jupyter.pbuilder.Context(state, token_path + '.inf_token_object')
 
 minted_token_save_files = pc_jupyter.pcommand.invoke_contract_cmd(
     pc_jupyter.ml_inference_token_object.cmd_mint_tokens, state, token_object_context)
@@ -196,7 +196,7 @@ for token_context in minted_token_contexts :
 
 # %%
 contract_identifier = '{}_{}'.format(token_class, instance_identifier)
-contexts = ['asset_type', 'vetting', 'guardian', 'token_issuer', 'token_object']
+contexts = ['asset_type', 'vetting', 'inf_guardian', 'inf_token_issuer', 'inf_token_object']
 contract_files = {
     'asset_type' : context.get('asset_type.save_file'),
     'vetting' : context.get('vetting.save_file'),

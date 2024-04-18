@@ -37,7 +37,7 @@
 token_owner = 'user1'
 token_class = 'mytoken'
 token_name = 'token_1'
-token_path = 'token.${token_class}.token_object.${token_name}'
+token_path = 'token.${token_class}.inf_token_object.${token_name}'
 context_file = '${etc}/${token_class}_context.toml'
 service_host = 'localhost'
 instance_identifier = ''
