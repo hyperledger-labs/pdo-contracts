@@ -13,17 +13,15 @@
 # limitations under the License.
 
 import logging
-import os
-import sys
 
-from pdo.contracts.common import add_context_mapping, initialize_context
+import pdo.contracts.common as jp_common
 
 _logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------
 # set up the context
 # -----------------------------------------------------------------
-_asset_type_context_ = {
+asset_type_context = jp_common.ContextTemplate('asset_type', {
     'module' : 'pdo.exchange.plugins.asset_type',
     'identity' : None,
     'source' : '${ContractFamily.Exchange.asset_type.source}',
@@ -33,9 +31,9 @@ _asset_type_context_ = {
     'eservice_group' : 'default',
     'pservice_group' : 'default',
     'sservice_group' : 'default',
-}
+})
 
-_vetting_context_ = {
+vetting_context = jp_common.ContextTemplate('vetting', {
     'module' : 'pdo.exchange.plugins.vetting',
     'identity' : None,
     'source' : '${ContractFamily.Exchange.vetting.source}',
@@ -43,9 +41,9 @@ _vetting_context_ = {
     'eservice_group' : 'default',
     'pservice_group' : 'default',
     'sservice_group' : 'default',
-}
+})
 
-_issuer_context_ = {
+issuer_context = jp_common.ContextTemplate('issuer', {
     'module' : 'pdo.exchange.plugins.issuer',
     'identity' : None,
     'source' : '${ContractFamily.Exchange.issuer.source}',
@@ -54,9 +52,9 @@ _issuer_context_ = {
     'eservice_group' : 'default',
     'pservice_group' : 'default',
     'sservice_group' : 'default',
-}
+})
 
-_guardian_context_ = {
+guardian_context = jp_common.ContextTemplate('guardian', {
     'module' : 'pdo.exchange.plugins.guardian',
     'identity' : '${..token_issuer.identity}',
     'source' : '${ContractFamily.Exchange.data_guardian.source}',
@@ -64,9 +62,9 @@ _guardian_context_ = {
     'eservice_group' : 'default',
     'pservice_group' : 'default',
     'sservice_group' : 'default',
-}
+})
 
-_token_issuer_context_ = {
+token_issuer_context = jp_common.ContextTemplate('token_issuer', {
     'module' : 'pdo.exchange.plugins.token_issuer',
     'identity' : None,
     'source' : '${ContractFamily.Exchange.token_issuer.source}',
@@ -81,9 +79,9 @@ _token_issuer_context_ = {
     'eservice_group' : 'default',
     'pservice_group' : 'default',
     'sservice_group' : 'default',
-}
+})
 
-_token_object_context_ = {
+token_object_context = jp_common.ContextTemplate('token_object', {
     'module' : 'pdo.exchange.plugins.token_object',
     'identity' : '${..token_issuer.identity}',
     'source' : '${ContractFamily.Exchange.token_object.source}',
@@ -92,9 +90,9 @@ _token_object_context_ = {
     'eservice_group' : 'default',
     'pservice_group' : 'default',
     'sservice_group' : 'default',
-}
+})
 
-_order_context_ = {
+order_context = jp_common.ContextTemplate('exchange', {
     'module' : 'pdo.exchange.plugins.exchange',
     'identity' : None,
     'source' : '${ContractFamily.Exchange.exchange.source}',
@@ -109,21 +107,7 @@ _order_context_ = {
     'eservice_group' : 'default',
     'pservice_group' : 'default',
     'sservice_group' : 'default',
-}
-
-# add each of these to the global mapping
-_context_map_ = {
-    'asset_type' : _asset_type_context_,
-    'vetting' : _vetting_context_,
-    'issuer' : _issuer_context_,
-    'guardian' : _guardian_context_,
-    'token_issuer' : _token_issuer_context_,
-    'token_object' : _token_object_context_,
-    'order' : _order_context_,
-}
-
-for k, t in _context_map_.items() :
-    add_context_mapping(k, t)
+})
 
 def initialize_asset_context(state, bindings, context_file : str, prefix : str, **kwargs) :
     """Initialize a context for issuing assets
@@ -140,8 +124,8 @@ def initialize_asset_context(state, bindings, context_file : str, prefix : str, 
     @rtype: pdo.client.builder.context.Context
     @return: the initialized context
     """
-    contexts = ['asset_type', 'vetting', 'issuer']
-    return initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)
+    contexts = [asset_type_context, vetting_context, issuer_context]
+    return jp_common.initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)
 
 def initialize_token_context(state, bindings, context_file : str, prefix : str, **kwargs) :
     """Initialize a context for minting tokens
@@ -159,8 +143,8 @@ def initialize_token_context(state, bindings, context_file : str, prefix : str, 
     @rtype: pdo.client.builder.context.Context
     @return: the initialized context
     """
-    contexts = ['asset_type', 'vetting', 'guardian', 'token_issuer', 'token_object']
-    return initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)
+    contexts = [asset_type_context, vetting_context, guardian_context, token_issuer_context, token_object_context]
+    return jp_common.initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)
 
 def initialize_order_context(state, bindings, context_file, prefix, **kwargs) :
     """Initialize a context for creating an order to exchange assets
@@ -177,5 +161,5 @@ def initialize_order_context(state, bindings, context_file, prefix, **kwargs) :
     @rtype: pdo.client.builder.context.Context
     @return: the initialized context
     """
-    contexts = ['order']
-    return initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)
+    contexts = [order_context]
+    return jp_common.initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)
