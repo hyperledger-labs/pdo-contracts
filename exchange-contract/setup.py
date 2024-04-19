@@ -78,6 +78,7 @@ setup(
     include_package_data=True,
     install_requires = [
         'colorama',
+        'ipywidgets',
         'pdo-client>=' + pdo_client_version,
         'pdo-common-library>=' + pdo_client_version,
         'pdo-sservice>=' + pdo_client_version,

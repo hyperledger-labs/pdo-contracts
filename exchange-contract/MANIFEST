@@ -7,8 +7,10 @@ etc/exchange.toml
 pdo/__init__.py
 pdo/contracts/__init__.py
 pdo/contracts/common.py
+pdo/contracts/groups.py
 pdo/contracts/jupyter.py
 pdo/contracts/keys.py
+pdo/contracts/services.py
 pdo/exchange/__init__.py
 pdo/exchange/jupyter.py
 pdo/exchange/plugins/__init__.py
