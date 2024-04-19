@@ -256,8 +256,8 @@ for cf, cs in _contract_families_.items() :
         jupyter_name = 'pdo.{}.jupyter'.format(cf)
         jupyter_module = importlib.import_module(jupyter_name)
         globals()['{}_jupyter'.format(cs)] = jupyter_module
-    except :
-        pass
+    except Exception as e :
+        raise ImportError('Failed to import module for contract family {}; {}'.format(cf, e))
 
     # load the plugins module for the contract family, this
     # should provide a list of all the plugins in the family

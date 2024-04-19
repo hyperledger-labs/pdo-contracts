@@ -13,75 +13,24 @@
 # limitations under the License.
 
 import logging
-import os
-import sys
 
-from pdo.contracts.common import add_context_mapping, initialize_context
+import pdo.contracts.common as jp_common
+import pdo.exchange.jupyter as ex_jupyter
 
 _logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------
 # set up the context
 # -----------------------------------------------------------------
-asset_type_context = {
-    'module' : 'pdo.exchange.plugins.asset_type',
-    'identity' : None,
-    'source' : '${ContractFamily.Exchange.asset_type.source}',
-    'name' : 'asset_type',
-    'description' : 'asset type',
-    'link' : 'http://',
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
-}
-
-vetting_context = {
-    'module' : 'pdo.exchange.plugins.vetting',
-    'identity' : None,
-    'source' : '${ContractFamily.Exchange.vetting.source}',
-    'asset_type_context' : '@{..asset_type}',
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
-}
-
-issuer_context = {
-    'module' : 'pdo.exchange.plugins.issuer',
-    'identity' : None,
-    'source' : '${ContractFamily.Exchange.issuer.source}',
-    'asset_type_context' : '@{..asset_type}',
-    'vetting_context' : '@{..vetting}',
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
-}
-
-guardian_context = {
+guardian_context = jp_common.ContextTemplate('guardian', {
     'module' : 'pdo.inference.plugins.inference_guardian',
     'identity' : '${..token_issuer.identity}',
     'token_issuer_context' : '@{..token_issuer}',
     'service_only' : True,
     'url' : 'http://localhost:7900',
-}
+})
 
-token_issuer_context = {
-    'module' : 'pdo.exchange.plugins.token_issuer',
-    'identity' : None,
-    'source' : '${ContractFamily.Exchange.token_issuer.source}',
-    'token_object_context' : '@{..token_object}',
-    'vetting_context' : '@{..vetting}',
-    'guardian_context' : '@{..guardian}',
-    'description' : 'issuer for token',
-    'token_metadata' : {
-        'opaque' : '',
-    },
-    'count' : 10,
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
-}
-
-token_object_context = {
+token_object_context = jp_common.ContextTemplate('token_object', {
     'module' : 'pdo.inference.plugins.inference_token_object',
     'identity' : '${..token_issuer.identity}',
     'source' : '${ContractFamily.inference.token_object.source}',
@@ -90,46 +39,14 @@ token_object_context = {
     'eservice_group' : 'default',
     'pservice_group' : 'default',
     'sservice_group' : 'default',
-}
-
-order_context = {
-    'module' : 'pdo.exchange.plugins.exchange',
-    'identity' : None,
-    'source' : '${ContractFamily.Exchange.exchange.source}',
-    'offer' : {
-        'issuer_context' : '@{context.${offer_issuer}}',
-        'count' : 1,
-    },
-    'request' : {
-        'issuer_context' : '@{context.${request_issuer}}',
-        'count' : 1,
-    },
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
-}
-
-_context_map_ = {
-    'asset_type' : asset_type_context,
-    'vetting' : vetting_context,
-    'issuer' : issuer_context,
-    'guardian' : guardian_context,
-    'token_issuer' : token_issuer_context,
-    'token_object' : token_object_context,
-    'order' : order_context,
-}
-
-for k, t in _context_map_.items() :
-    add_context_mapping(k, t)
-
-def initialize_asset_context(state, bindings, context_file, prefix, **kwargs) :
-    contexts = ['asset_type', 'vetting', 'issuer']
-    return initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)
+})
 
 def initialize_token_context(state, bindings, context_file, prefix, **kwargs) :
-    contexts = ['asset_type', 'vetting', 'guardian', 'token_issuer', 'token_object']
-    return initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)
-
-def initialize_order_context(state, bindings, context_file, prefix, **kwargs) :
-    contexts = ['order']
-    return initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)
+    contexts = [
+        ex_jupyter.asset_type_context,
+        ex_jupyter.vetting_context,
+        guardian_context,
+        ex_jupyter.token_issuer_context,
+        token_object_context
+    ]
+    return jp_common.initialize_context(state, bindings, context_file, prefix, contexts, **kwargs)

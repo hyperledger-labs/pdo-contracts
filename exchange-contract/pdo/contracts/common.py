@@ -26,18 +26,17 @@ _logger = logging.getLogger(__name__)
 # -----------------------------------------------------------------
 # set up the context
 # -----------------------------------------------------------------
-_context_map_ = {
-}
+class ContextTemplate(object) :
+    """Capture information for a context template
 
-def add_context_mapping(k : str, template : dict) :
-    """Add a mapping from a keyword to a context template
-
-    Mappings provide a shortcut for referencing context templates
-    that can be used to initialize a full context; this procedure
-    adds a binding between a key word and a template.
+    A context template captures configuration information
+    generally associated with a specific contract class. For
+    the moment this is very simple.
     """
-    global _context_map_
-    _context_map_[k] = template
+
+    def __init__(self, key, template) :
+        self.key = key
+        self.template = copy.deepcopy(template)
 
 # -----------------------------------------------------------------
 # initialize_context
@@ -47,7 +46,7 @@ def initialize_context(
     bindings,
     context_file : str,
     prefix : str,
-    contexts : typing.List[str],
+    contexts : typing.List[ContextTemplate],
     **kwargs) -> pbuilder.Context :
 
     # attempt to load the context from the context file
@@ -59,7 +58,7 @@ def initialize_context(
     context =  pbuilder.Context(state, prefix)
     if not context.has_key('initialized') :
         for c in contexts :
-            context.set(c, copy.deepcopy(_context_map_[c]))
+            context.set(c.key, copy.deepcopy(c.template))
 
         context.set('initialized', True)
 
