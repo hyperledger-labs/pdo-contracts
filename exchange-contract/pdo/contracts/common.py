@@ -24,6 +24,19 @@ _logger = logging.getLogger(__name__)
 """
 
 # -----------------------------------------------------------------
+# the base context provides information that appears to be common
+# across all contexts; contexts can reference the values in the
+# base context to simplify consistent configuration
+# -----------------------------------------------------------------
+_base_context_ = {
+    'identity' : None,
+    'service_group' : 'default',          # the assumption here is that [eps]service groups all have the same name
+    'eservice_group' : '${.service_group}',
+    'pservice_group' : '${.service_group}',
+    'sservice_group' : '${.service_group}',
+}
+
+# -----------------------------------------------------------------
 # set up the context
 # -----------------------------------------------------------------
 class ContextTemplate(object) :
@@ -57,6 +70,10 @@ def initialize_context(
 
     context =  pbuilder.Context(state, prefix)
     if not context.has_key('initialized') :
+        # initialize the base context with common keys
+        for k, v in _base_context_.items() :
+            context.set(k, copy.deepcopy(v))
+
         for c in contexts :
             context.set(c.key, copy.deepcopy(c.template))
 

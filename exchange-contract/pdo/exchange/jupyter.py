@@ -23,35 +23,35 @@ _logger = logging.getLogger(__name__)
 # -----------------------------------------------------------------
 asset_type_context = jp_common.ContextTemplate('asset_type', {
     'module' : 'pdo.exchange.plugins.asset_type',
-    'identity' : None,
+    'identity' : '${..identity}',
     'source' : '${ContractFamily.Exchange.asset_type.source}',
     'name' : 'asset_type',
     'description' : 'asset type',
     'link' : 'http://',
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
+    'eservice_group' : '${..eservice_group}',
+    'pservice_group' : '${..pservice_group}',
+    'sservice_group' : '${..sservice_group}',
 })
 
 vetting_context = jp_common.ContextTemplate('vetting', {
     'module' : 'pdo.exchange.plugins.vetting',
-    'identity' : None,
+    'identity' : '${..identity}',
     'source' : '${ContractFamily.Exchange.vetting.source}',
     'asset_type_context' : '@{..asset_type}',
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
+    'eservice_group' : '${..eservice_group}',
+    'pservice_group' : '${..pservice_group}',
+    'sservice_group' : '${..sservice_group}',
 })
 
 issuer_context = jp_common.ContextTemplate('issuer', {
     'module' : 'pdo.exchange.plugins.issuer',
-    'identity' : None,
+    'identity' : '${..identity}',
     'source' : '${ContractFamily.Exchange.issuer.source}',
     'asset_type_context' : '@{..asset_type}',
     'vetting_context' : '@{..vetting}',
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
+    'eservice_group' : '${..eservice_group}',
+    'pservice_group' : '${..pservice_group}',
+    'sservice_group' : '${..sservice_group}',
 })
 
 guardian_context = jp_common.ContextTemplate('guardian', {
@@ -59,14 +59,14 @@ guardian_context = jp_common.ContextTemplate('guardian', {
     'identity' : '${..token_issuer.identity}',
     'source' : '${ContractFamily.Exchange.data_guardian.source}',
     'token_issuer_context' : '@{..token_issuer}',
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
+    'eservice_group' : '${..eservice_group}',
+    'pservice_group' : '${..pservice_group}',
+    'sservice_group' : '${..sservice_group}',
 })
 
 token_issuer_context = jp_common.ContextTemplate('token_issuer', {
     'module' : 'pdo.exchange.plugins.token_issuer',
-    'identity' : None,
+    'identity' : '${..identity}',
     'source' : '${ContractFamily.Exchange.token_issuer.source}',
     'token_object_context' : '@{..token_object}',
     'vetting_context' : '@{..vetting}',
@@ -76,9 +76,9 @@ token_issuer_context = jp_common.ContextTemplate('token_issuer', {
         'opaque' : '',
     },
     'count' : 10,
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
+    'eservice_group' : '${..eservice_group}',
+    'pservice_group' : '${..pservice_group}',
+    'sservice_group' : '${..sservice_group}',
 })
 
 token_object_context = jp_common.ContextTemplate('token_object', {
@@ -87,14 +87,14 @@ token_object_context = jp_common.ContextTemplate('token_object', {
     'source' : '${ContractFamily.Exchange.token_object.source}',
     'token_issuer_context' : '@{..token_issuer}',
     'data_guardian_context' : '@{..guardian}',
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
+    'eservice_group' : '${..eservice_group}',
+    'pservice_group' : '${..pservice_group}',
+    'sservice_group' : '${..sservice_group}',
 })
 
 order_context = jp_common.ContextTemplate('exchange', {
     'module' : 'pdo.exchange.plugins.exchange',
-    'identity' : None,
+    'identity' : '${..identity}',
     'source' : '${ContractFamily.Exchange.exchange.source}',
     'offer' : {
         'issuer_context' : '@{...offer.issuer}',
@@ -104,9 +104,9 @@ order_context = jp_common.ContextTemplate('exchange', {
         'issuer_context' : '@{...request.issuer}',
         'count' : 1,
     },
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
+    'eservice_group' : '${..eservice_group}',
+    'pservice_group' : '${..pservice_group}',
+    'sservice_group' : '${..sservice_group}',
 })
 
 def initialize_asset_context(state, bindings, context_file : str, prefix : str, **kwargs) :

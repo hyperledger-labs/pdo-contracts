@@ -13,26 +13,27 @@
 # ---
 
 # %% [markdown]
-# # Token Issuer Notebook
-# This section enables customization of the token that will be minted. Edit the variables in the section below as necessary.
+# Token Issuer Notebook This section enables customization of the token that will be minted. Edit
+# the variables in the section below as necessary.
 #
 # * token_owner : the identity of the token creator
-# * token_class : the name of tokens that will be generated, this is only used to simplify local access (e.g. context file name)
+# * token_class : the name of tokens that will be generated, used to simplify local access
 # * token_description : a description of the asset associated with the minted tokens
 # * token_metadata : additional information about the token
 # * count : the number of tokens to mint for the asset
-# * service_host : the host for the eservice where tokens will be minted, this will use the default service group
+# * service_group : the service group used for PDO services
+# * guardian_host : the host where the guardian service runs
 #
-# Note that the notebook assumes that there is a key file for the identity of the form: `${keys}/${identity}_private.pem`.
-
-
+# Note that the notebook assumes that there is a key file for the identity of the form:
+# `${keys}/${identity}_private.pem`.
 # %% tags=["parameters"]
 token_owner = 'user1'
 token_class = 'mytoken'
 token_description = 'this is my token'
 token_metadata = 'created by {}'.format(token_owner)
 count = 1
-service_host = 'localhost'
+service_group = 'default'
+guardian_host = 'localhost'
 instance_identifier = ''
 
 # %% [markdown]
@@ -47,31 +48,18 @@ import IPython.display as ip_display
 
 pc_jupyter.load_ipython_extension(get_ipython())
 
-
 # %% [markdown]
 # ### Initialize the PDO Environment
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration
 # is in place and that the PDO virtual environment has been activated. In particular,
 # ensure that the groups file and eservice database have been configured correctly.
-# If you do not have a service groups configuration, you can create it for a single
-# service host by running the following:
-
-# %%
-# %%skip True
-# %%bash -s $service_host
-if [ ! -f $PDO_HOME/etc/$1_groups.toml ] ; then
-    $PDO_INSTALL_ROOT/bin/pdo-shell $PDO_HOME/bin/pdo-create-service-groups.psh --service_host $1
-fi
-
-
-# %% [markdown]
+# If you do not have a service groups configuration, you can set it up with the
+# [service groups manager](/documents/service_groups_manager.ipynb) page.
+#
 # For the most part, no modifications should be require below.
-
 # %%
 common_bindings = {
-    'host' : service_host,
-    'service_host' : service_host,
     'token_owner' : token_owner,
     'token_class' : token_class,
 }
@@ -95,15 +83,12 @@ context_file = bindings.expand('${etc}/${token_class}_context.toml')
 print("using context file {}".format(context_file))
 
 context_bindings = {
-    'asset_type.identity' : token_owner,
-    'vetting.identity' : token_owner,
-    'guardian.identity' : token_owner,
-    'token_issuer.identity' : token_owner,
+    'identity' : token_owner,
+    'service_group' : service_group,
     'token_issuer.count' : count,
     'token_issuer.description' : token_description,
     'token_issuer.token_metadata.opaque' : token_metadata,
-    'token_object.identity' : token_owner,
-    'guardian.url' : 'http://' + service_host + ':7900'
+    'guardian.url' : 'http://' + guardian_host + ':7900'
 }
 
 context = pc_jupyter.ml_jupyter.initialize_token_context(state, bindings, context_file, token_path, **context_bindings)
@@ -166,7 +151,6 @@ parameters = {
     'token_owner' : token_owner,
     'token_class' : token_class,
     'context_file' : context_file,
-    'service_host' : service_host,
 }
 
 for token_context in minted_token_contexts :
