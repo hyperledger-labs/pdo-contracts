@@ -44,7 +44,7 @@ offer_context_file = input('Path to the contract context file for the offer issu
 offer_count = input('How many assets do you want to offer [1]') or 1
 request_context_file = input('Path to the contract context file for the requested issuer')
 request_count = input('How many assets do you want to receive [1]') or 1
-service_host = input('Service host [localhost]: ') or "localhost"
+service_group = input('Service group [default]: ') or "default"
 
 # %% [markdown]
 # ## Create a New Exchange Notebook
@@ -58,7 +58,7 @@ parameters = {
     'offer_count' : int(offer_count),
     'request_context_file' : request_context_file,
     'request_count' : int(request_count),
-    'service_host' : service_host,
+    'service_group' : service_group,
 }
 
 instance_file = pc_jupyter.instantiate_notebook_from_template('exchange', 'exchange_create', parameters)

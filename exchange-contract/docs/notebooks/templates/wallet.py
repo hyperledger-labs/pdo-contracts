@@ -16,7 +16,8 @@
 # *WORK IN PROGRESS*
 # # Wallet Notebook
 #
-# This notebook is used to manage the assets issued to an indivdual by an issuer contract. The notebook assumes that the asset type, vetting, and issuer contract objects have been created.
+# This notebook is used to manage the assets issued to an indivdual by an issuer contract. The
+# notebook assumes that the asset type, vetting, and issuer contract objects have been created.
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # <hr style="border:2px solid gray">
@@ -28,7 +29,8 @@
 # * asset_name : the name of the asset type to be created
 # * context_file : the name of the context file where token information is located
 #
-# When this notebook is instantiated, it will generally provide default values for `identity`, `asset_name`, `context_file` and `notebook_directory`.
+# When this notebook is instantiated, it will generally provide default values for `identity`,
+# `asset_name`, `context_file` and `notebook_directory`.
 #
 # Note that the notebook assumes that there is a key file for the identity of the form
 #
@@ -57,12 +59,13 @@ pc_jupyter.load_ipython_extension(get_ipython())
 # %% [markdown]
 # ### Initialize the PDO Environment
 #
-# Initialize the PDO environment. This assumes that a functional PDO configuration is in place and that the PDO virtual environment has been activated. In particular, ensure that the groups file and eservice database have been configured correctly. This can be done most easily by running the following in a shell:
-
+# Initialize the PDO environment. This assumes that a functional PDO configuration is in place and
+# that the PDO virtual environment has been activated. In particular, ensure that the groups file
+# and eservice database have been configured correctly.  If you do not have a service groups
+# configuration, you can set it up with the
+# [service groups manager](/documents/service_groups_manager.ipynb) page
 # %%
 common_bindings = {
-    'asset_name' : asset_name,
-    'notebook' : notebook_directory,
 }
 
 (state, bindings) = pc_jupyter.initialize_environment(identity, **common_bindings)
@@ -83,7 +86,10 @@ pc_jupyter.import_context(state, bindings, context_file, import_file)
 # %% [markdown]
 # ### Import the Context
 #
-# The contract context defines the configuration for a collection of contract objects that interact with one another. By default, the context file used in this notebook is specific to the asset class. We need the class to ensure that all of the information necessary for the asset itself is availaben. If you prefer to use a common context file, edit the context_file variable below.
+# The contract context defines the configuration for a collection of contract objects that interact
+# with one another. By default, the context file used in this notebook is specific to the asset
+# class. We need the class to ensure that all of the information necessary for the asset itself is
+# available. If you prefer to use a common context file, edit the context_file variable below.
 #
 # For the most part, no other modifications should be required.
 

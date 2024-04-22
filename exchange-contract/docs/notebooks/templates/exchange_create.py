@@ -44,7 +44,7 @@ request_context_file = '${etc}/context/request_issuer.toml'
 request_count = 1
 exchange_context_file = '${etc}/context/exchange_${instance}.toml'
 instance_identifier = ''
-service_host = 'localhost'
+service_group = 'default'
 
 # %% [markdown]
 # <hr style="border:2px solid gray">
@@ -63,7 +63,9 @@ pc_jupyter.load_ipython_extension(get_ipython())
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration is in place and
 # that the PDO virtual environment has been activated. In particular, ensure that the groups file
-# and eservice database have been configured correctly.
+# and eservice database have been configured correctly.  If you do not have a service groups
+# configuration, you can set it up with the
+# [service groups manager](/documents/service_groups_manager.ipynb) page.
 #
 # In the next box we will set up the PDO client configuration. This will load any client
 # configuration files, service group files, and service database files. Common bindings provides a
@@ -73,8 +75,6 @@ pc_jupyter.load_ipython_extension(get_ipython())
 
 # %%
 common_bindings = {
-    'host' : service_host,
-    'service_host' : service_host,
     'instance' : instance_identifier,
 }
 
@@ -89,7 +89,10 @@ print('environment initialized')
 # %% [markdown]
 # ### Import the Issuer Contracts
 #
-# The exchange notebook assumes that issuer contracts have been fully imported and the context files are available. If you received the issuer contracts as contract export files, import them into your local configuration. Adjust the name of the file to reflect where the contract export files are located.
+# The exchange notebook assumes that issuer contracts have been fully imported and the context files
+# are available. If you received the issuer contracts as contract export files, import them into
+# your local configuration. Adjust the name of the file to reflect where the contract export files
+# are located.
 
 # %%
 # %%skip True
@@ -104,13 +107,17 @@ pc_jupyter.import_context_file(state, bindings, request_context_file, import_fil
 # %% [markdown]
 # ### Create the Exchange Contract Context
 #
-# Create a new exchange contract context. The contract context defines the configuration for a collection of contract objects that interact with one another. By default, the context file used in this notebook is specific to the exchange contract object that will be created. If you prefer to use a common context file, edit the context_file variable below.
+# Create a new exchange contract context. The contract context defines the configuration for a
+# collection of contract objects that interact with one another. By default, the context file used
+# in this notebook is specific to the exchange contract object that will be created. If you prefer
+# to use a common context file, edit the context_file variable below.
 
 # %% [markdown]
 # #### Import the Asset Issuer Contexts
 #
-# The context files for the assets used for the offer and request must be available. The file names for these context files should have been set above. The context for each of the issuers will be loaded with the exchange instance identifier prefix.
-
+# The context files for the assets used for the offer and request must be available. The file names
+# for these context files should have been set above. The context for each of the issuers will be
+# loaded with the exchange instance identifier prefix.
 # %%
 pc_jupyter.pcontext.Context.LoadContextFile(
     state, bindings, offer_context_file, prefix='{}.offer'.format(instance_identifier))
@@ -121,20 +128,15 @@ pc_jupyter.pcontext.Context.LoadContextFile(
 # %% [markdown]
 # #### Create the Exchange Context
 #
-# Create the context for the exchange contract. In addition, we need to ensure that the identity used to interact with the issuer contracts is the same as the identity used for the exchange contract. For the most part, all settings should have been set above.
-
+# Create the context for the exchange contract. In addition, we need to ensure that the identity
+# used to interact with the issuer contracts is the same as the identity used for the exchange
+# contract. For the most part, all settings should have been set above.
 # %%
 context_bindings = {
     'identity' : identity,
-    'order.identity' : identity,
+    'service_group' : service_group,
     'order.offer.count' : offer_count,
     'order.request.count' : request_count,
-    'request.asset_type.identity' : identity,
-    'request.vetting.identity' : identity,
-    'request.issuer.identity' : identity,
-    'offer.asset_type.identity' : identity,
-    'offer.vetting.identity' : identity,
-    'offer.issuer.identity' : identity
 }
 
 context = pc_jupyter.ex_jupyter.initialize_order_context(

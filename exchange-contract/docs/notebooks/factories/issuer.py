@@ -39,7 +39,7 @@ identity = input('Identity of the issuer: ')
 asset_name = input('Name of the asset:')
 asset_description = input('Description of the asset: ')
 asset_link = input('Link to more information about the asset [http://]: ') or 'http://'
-service_host = input('Service host [localhost]: ') or 'localhost'
+service_group = input('Service group [default]: ') or 'default'
 
 # %% [markdown]
 # ## Create the Issuer Notebook
@@ -52,7 +52,7 @@ parameters = {
     'asset_name' : asset_name,
     'asset_description' : asset_description,
     'asset_link' : asset_link,
-    'service_host' : service_host,
+    'service_group' : service_group,
 }
 
 instance_file = pc_jupyter.instantiate_notebook_from_template(asset_name, 'issuer', parameters)

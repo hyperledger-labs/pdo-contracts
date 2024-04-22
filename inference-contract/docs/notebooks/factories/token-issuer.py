@@ -49,8 +49,8 @@ pc_jupyter.load_ipython_extension(get_ipython())
 # %% tags=["parameters"]
 identity = input('Identity of the token issuer: ')
 token_class = input('Name of the class of tokens to issue: ')
-service_host = input('Service host [localhost]: ') or 'localhost'
-
+service_group = input('Service group [default]: ') or "default"
+guardian_host = input('Guardian host [localhost]: ') or 'localhost'
 
 # %% [markdown]
 # ## Create the Token Issuer Notebook
@@ -63,7 +63,8 @@ service_host = input('Service host [localhost]: ') or 'localhost'
 instance_parameters = {
     'token_owner' : identity,
     'token_class' : token_class,
-    'service_host' : service_host,
+    'service_group' : service_group,
+    'guardian_host' : guardian_host
 }
 
 instance_file = pc_jupyter.instantiate_notebook_from_template(token_class, 'token-issuer', instance_parameters)

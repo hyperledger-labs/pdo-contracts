@@ -36,9 +36,9 @@ token_object_context = jp_common.ContextTemplate('token_object', {
     'source' : '${ContractFamily.inference.token_object.source}',
     'token_issuer_context' : '@{..token_issuer}',
     'data_guardian_context' : '@{..guardian}',
-    'eservice_group' : 'default',
-    'pservice_group' : 'default',
-    'sservice_group' : 'default',
+    'eservice_group' : '${..eservice_group}',
+    'pservice_group' : '${..pservice_group}',
+    'sservice_group' : '${..sservice_group}',
 })
 
 def initialize_token_context(state, bindings, context_file, prefix, **kwargs) :

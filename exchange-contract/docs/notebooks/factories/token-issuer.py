@@ -39,7 +39,7 @@ identity = input('Identity of the token issuer: ')
 token_class = input('Name of the class of tokens to issue: ')
 token_description = input('Description of the token [my token]') or 'my token'
 count = input('Number of tokens to mint [5] ') or 5
-service_host = input('Service host [localhost]: ') or "localhost"
+service_group = input('Service group [default]: ') or "default"
 
 # %% [markdown]
 # ## Create the Token Issuer Notebook
@@ -53,7 +53,7 @@ instance_parameters = {
     'token_class' : token_class,
     'token_description' : token_description,
     'count' : int(count),
-    'service_host' : service_host,
+    'service_group' : service_group,
 }
 
 instance_file = pc_jupyter.instantiate_notebook_from_template(token_class, 'token-issuer', instance_parameters)

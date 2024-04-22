@@ -235,7 +235,7 @@ def export_contract_collection(
 # -----------------------------------------------------------------
 def create_download_link(filename : str, label : str = 'Download File') :
     """Create HTML display that will download a file"""
-    content = '<a href={} download>{}</a>'.format(filename, label)
+    content = '<a href="{}" download>{}</a>'.format(filename, label)
     return ip_display.HTML(content)
 
 # -----------------------------------------------------------------

@@ -36,7 +36,7 @@ token_class = 'mytoken'
 token_description = 'this is my token'
 token_metadata = 'created by {}'.format(token_owner)
 count = 5
-service_host = 'localhost'
+service_group = 'default'
 instance_identifier = ''
 
 # %% [markdown]
@@ -56,13 +56,13 @@ pc_jupyter.load_ipython_extension(get_ipython())
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration is in place and
 # that the PDO virtual environment has been activated. In particular, ensure that the groups file
-# and eservice database have been configured correctly.
+# and eservice database have been configured correctly. If you do not have a service groups
+# configuration, you can set it up with the
+# [service groups manager](/documents/service_groups_manager.ipynb) page.
 #
 # For the most part, no modifications should be required below.
 # %%
 common_bindings = {
-    'host' : service_host,
-    'service_host' : service_host,
     'token_owner' : token_owner,
     'token_class' : token_class,
 }
@@ -83,14 +83,11 @@ context_file = bindings.expand('${etc}/${token_class}_context.toml')
 print("using context file {}".format(context_file))
 
 context_bindings = {
-    'asset_type.identity' : token_owner,
-    'vetting.identity' : token_owner,
-    'guardian.identity' : token_owner,
-    'token_issuer.identity' : token_owner,
+    'identity' : token_owner,
+    'service_group' : service_group,
     'token_issuer.count' : count,
     'token_issuer.description' : token_description,
     'token_issuer.token_metadata.opaque' : token_metadata,
-    'token_object.identity' : token_owner,
 }
 
 context = pc_jupyter.ex_jupyter.initialize_token_context(state, bindings, context_file, token_path, **context_bindings)
@@ -144,7 +141,6 @@ parameters = {
     'token_owner' : token_owner,
     'token_class' : token_class,
     'context_file' : context_file,
-    'service_host' : service_host,
 }
 
 for token_context in minted_token_contexts :

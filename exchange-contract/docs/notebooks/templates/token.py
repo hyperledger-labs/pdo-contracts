@@ -38,7 +38,6 @@ token_class = 'mytoken'
 token_name = 'token_1'
 token_path = 'token.${token_class}.token_object.${token_name}'
 context_file = '${etc}/${token_class}_context.toml'
-service_host = 'localhost'
 instance_identifier = ''
 
 # %% [markdown]
@@ -57,14 +56,11 @@ pc_jupyter.load_ipython_extension(get_ipython())
 # ### Initialize the PDO Environment
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration is in place and
-# that the PDO virtual environment has been activated. In particular, ensure that the groups file
-# and eservice database have been configured correctly.
+# that the PDO virtual environment has been activated.
 #
 # For the most part, no modifications should be required below.
 # %%
 common_bindings = {
-    'host' : service_host,
-    'service_host' : service_host,
     'token_owner' : token_owner,
     'token_class' : token_class,
     'token_name' : token_name,
@@ -76,7 +72,11 @@ print('environment initialized')
 # %% [markdown]
 # ### Initialize the Contract Context
 #
-# The contract context defines the configuration for a collection of contract objects that interact with one another. By default, the context file used in this notebook is specific to the toke class used to mint the token. We need the class to ensure that all of the information necessary for the token itself is availablen. If you prefer to use a common context file, edit the context_file variable below.
+# The contract context defines the configuration for a collection of contract objects that interact
+# with one another. By default, the context file used in this notebook is specific to the toke class
+# used to mint the token. We need the class to ensure that all of the information necessary for the
+# token itself is availablen. If you prefer to use a common context file, edit the context_file
+# variable below.
 #
 # For the most part, no other modifications should be required.
 
@@ -85,13 +85,18 @@ token_class_path = 'token.' + token_class
 context_file = bindings.expand(context_file)
 print("using context file {}".format(context_file))
 
-context = pc_jupyter.ex_jupyter.initialize_token_context(state, bindings, context_file, token_class_path)
+context_bindings = {
+    'identity' : token_owner,
+}
+
+context = pc_jupyter.ex_jupyter.initialize_token_context(
+    state, bindings, context_file, token_class_path, **context_bindings)
 print('context initialized')
 
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
-# ## Operate on the Contract
+# ## Operate on the Token Contract
 
 # %%
 token_context = pc_jupyter.pbuilder.Context(state, token_path)
@@ -100,11 +105,19 @@ token_context = pc_jupyter.pbuilder.Context(state, token_path)
 # ### Invoke Echo Operation
 
 # %%
-# %%skip True
-message = 'hello from token {}'.format(token_path)
-echo_result = pc_jupyter.pcommand.invoke_contract_cmd(
-    pc_jupyter.ex_token_object.cmd_echo, state, token_context, message=message)
+def token_echo(message) :
+    return pc_jupyter.pcommand.invoke_contract_cmd(
+        pc_jupyter.ex_token_object.cmd_echo, state, token_context, message=message)
 
+# token_echo('hello from token {}'.format(token_path))
+# %% [markdown]
+# ### Transfer Ownership
+# %%
+def token_transfer(new_owner) :
+    return pc_jupyter.pcommand.invoke_contract_cmd(
+        pc_jupyter.ex_issuer.cmd_transfer_assets, state, token_context, new_owner=new_owner)
+
+# token_transfer('user2')
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #

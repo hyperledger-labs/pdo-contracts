@@ -57,7 +57,9 @@ pc_jupyter.load_ipython_extension(get_ipython())
 #
 # Initialize the PDO environment. This assumes that a functional PDO configuration is in place and
 # that the PDO virtual environment has been activated. In particular, ensure that the groups file
-# and eservice database have been configured correctly.
+# and eservice database have been configured correctly.  If you do not have a service groups
+# configuration, you can set it up with the
+# [service groups manager](/documents/service_groups_manager.ipynb) page.
 #
 # For the most part, no modifications should be required below.
 
