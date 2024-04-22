@@ -16,47 +16,70 @@
 # # Getting Started
 #
 # This document provides an overview for preparing to work with PDO contracts through the contract
-# docker container. It will walk through the necessary steps to set up a functional configuration.
+# docker container. It will walk through the necessary steps to set up a functional
+# configuration. It does assume that the reader is familiar with
+# [basic operation of Jupyter notebooks](https://jupytext.readthedocs.io/en/latest/).
 #
 # %% [markdown]
 # ## How Contracts Use Jupyter
 #
 # Many of the PDO contract families provide Jupyter notebooks to simplify interaction with contract
 # objects. Commonly, the notebooks provide a factory for instantiating a notebook for each new
-# contract from one of the contract specific templates.The templates provided generally share five
+# contract from one of the contract specific templates. The templates provided generally include five
 # common sections:
 #
 # * Configure the Contract Object
-# * Initialize the Interpreter and the PDO Environment
+# * Initialize the Jupyter Interpreter and the PDO Environment
 # * Initialize the Contract Object Context
 # * Operate on the Contract
 # * View Contract Metadata
 #
-# To initialize the interpreter, the notebook loads the Juptyer helper module. This module imports
-# all of the relevant PDO and Jupyter modules to simplify access for code in the notebook. It also
-# defines several procedures that are useful for initializing and interacting with the environment.
+# *Configure the Contract Object*: Each notebook either loads an existing contract object from a
+# file (see the PDO documentation on contract collections) or creates a new contract object based on
+# an initial set of parameters. To create a new contract object, a factory will collect input that
+# is used to instantiate a template notebook with the set of required parameters.
 #
-# In addition, the interpreter initialization configures an IPython extension that makes it easier
-# to provide code for multiple types of operations that can be performed on the contract
+# *Initialize the Jupyter Interpreter and PDO Environment*: To initialize the Jupyter interpreter,
+# the notebook loads the Juptyer helper module. This module imports all of the relevant PDO and
+# Jupyter IPython modules to simplify code in the notebook. It also defines several procedures that
+# are useful for initializing and interacting with the PDO environment.
+#
+# In addition, the Jupyter interpreter initialization configures an IPython extension that makes it
+# easier to provide code for multiple types of operations that can be performed on the contract
 # object. Specifically, the extension defines a magic keyword, `skip`, that takes a value or
 # expression that, if it evaluates to True, causes the code section to be skipped during notebook
 # execution.
 #
-# The next section in the notebook configures information about the contract object associated with
-# the notebook. In some cases, the variables will set by the notebook using the Papermill
-# extensions. In some cases, the variables may be customized for the specific behavior desired.
+# *Initialize the Contract Object Context*: The next section in the notebook creates a PDO context
+# for the contract object (see the PDO documentation for more information on contexts).  The context
+# includes all information necessary to create the contract object (and its dependencies) based on
+# the initial set of parameters provided by the factory notebook. Beyond the initial parameters, the
+# context allows for fine-grained customization of the contract object, though the defaults are
+# usually sufficient.
 #
-# The following section initializes the PDO environment from the PDO configuration files. There may
-# be opportunities for customization, but so long as the PDO configuration is complete changes to
-# this section should be infrequent.
+# *Operate on the Contract*: The contract object may be used once it has been created and
+# initialized. In general, cells in this section of the notebook are turned off by default; that is,
+# `%%skip True` is added at the top of the cell. To perform an operation, change the top line to
+# `%%skip False` and evaluate the cell.
 #
-# The final common section initializes the contract context. Where the PDO initialization handles
-# configuration of the PDO modules, this section handles configuration of the specific contract
-# object and its relationship to other contract objects.
+# *View Contract Metadata*: For the curious (and those debugging contract behavior), the final
+# section of most notebooks includes a section to examine the metadata associated with a contract.
+
+# %% [markdown]
+# ## Configure the PDO Environment
+#
+# The remainder of this notebook helps to setup and verify the PDO environment in which the
+# notebooks operate. If you have started the Jupyter Lab server through the docker test interface, a
+# basic environment has already been created that is sufficient for working with the notebooks.
+# Otherwise, you may use the sections of this notebook to create or import signing keys for
+# transactions, configure PDO services (e.g. by importing a PDO `site.toml` file), and configure
+# service groups to simplify contract creation.
 #
 # %% [markdown]
-# ## Initialize the Environment
+# ## Initialize the Interpreter
 #
+# The following cell loads modules that configure the Jupyter interpreter and simplify interaction
+# with the PDO environment.
 # %%
 import os
 import pdo.contracts.jupyter as pc_jupyter
