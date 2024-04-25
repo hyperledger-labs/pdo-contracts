@@ -24,6 +24,11 @@
 CONTRACTS_USER_UID ?= $(shell id -u)
 CONTRACTS_GROUP_UID ?= $(shell id -g)
 
+DOCKER_COMMAND ?= docker
+DOCKER_COMPOSE_COMMAND ?= docker-compose
+# to work with upstream docker and docker compose plugin, redefine above
+# as `DOCKER_COMPOSE_COMMAND=docker compose` in your `make.loc`
+
 # Turns out that setting the script directory from the Makefile's name
 # does not work very well if the path contains spaces in the name; in
 # fact lots of things break very badly; set this explicitly
@@ -73,18 +78,18 @@ TIMESTAMP := $(shell /bin/date "+%Y%m%d%H%M%S")
 all : build_contracts
 
 rebuild_contracts : repository models
-	docker build $(DOCKER_ARGS) \
+	$(DOCKER_COMMAND) build $(DOCKER_ARGS) \
 		--build-arg REBUILD=$(TIMESTAMP) \
 		--tag pdo_contracts:$(CONTRACTS_VERSION) \
 		--file $(DOCKER_DIR)/pdo_contracts.dockerfile .
 
 build_contracts : repository models
-	docker build $(DOCKER_ARGS) \
+	$(DOCKER_COMMAND) build $(DOCKER_ARGS) \
 		--tag pdo_contracts:$(CONTRACTS_VERSION) \
 		--file $(DOCKER_DIR)/pdo_contracts.dockerfile .
 
 clean_contracts :
-	- docker rmi -f pdo_contracts:$(CONTRACTS_VERSION)
+	- $(DOCKER_COMMAND) rmi -f pdo_contracts:$(CONTRACTS_VERSION)
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
@@ -127,11 +132,11 @@ OPENVINO_RUN_ARGS += --rm
 OPENVINO_RUN_COMMAND ?= --model_path /models/ --model_name resnet --port 9000 --shape auto --grpc_bind_address 127.0.0.1
 
 run_openvino : models
-	docker run $(OPENVINO_RUN_ARGS) -d --name openvino_container $(OPENVINO_CONTAINER) \
+	$(DOCKER_COMMAND) run $(OPENVINO_RUN_ARGS) -d --name openvino_container $(OPENVINO_CONTAINER) \
 		$(OPENVINO_RUN_COMMAND)
 
 stop_openvino :
-	- docker rm -f openvino_container
+	- $(DOCKER_COMMAND) rm -f openvino_container
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
@@ -141,10 +146,10 @@ DOCKER_RUN_ARGS += --rm
 DOCKER_RUN_COMMAND ?= "stty cols $$(tput cols) rows $$(tput lines) && bash"
 
 stop_contracts :
-	- docker rm -f contracts_container
+	- $(DOCKER_COMMAND) rm -f contracts_container
 
 run_contracts : build_contracts stop_contracts
-	docker run $(DOCKER_RUN_ARGS) -it --name contracts_container pdo_contracts:${CONTRACTS_VERSION} \
+	$(DOCKER_COMMAND) run $(DOCKER_RUN_ARGS) -it --name contracts_container pdo_contracts:${CONTRACTS_VERSION} \
 		-c $(DOCKER_RUN_COMMAND)
 
 # -----------------------------------------------------------------
@@ -159,10 +164,10 @@ DOCKER_JUPYTER_COMMAND += --service-host $(JUPYTER_SERVICE_HOST)
 DOCKER_JUPYTER_COMMAND += -m $(JUPYTER_MODE)
 
 stop_jupyter :
-	- docker rm -f jupyter_container
+	- $(DOCKER_COMMAND) rm -f jupyter_container
 
 run_jupyter : build_contracts stop_jupyter
-	docker run $(DOCKER_RUN_ARGS) -it --name jupyter_container pdo_contracts:${CONTRACTS_VERSION} \
+	$(DOCKER_COMMAND) run $(DOCKER_RUN_ARGS) -it --name jupyter_container pdo_contracts:${CONTRACTS_VERSION} \
 		$(DOCKER_JUPYTER_COMMAND)
 
 # -----------------------------------------------------------------
@@ -194,17 +199,17 @@ TEST_COMPOSE_ARGS += -f test.yaml
 
 test : clean_config clean_repository clean_models build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-	 	docker-compose $(TEST_COMPOSE_ARGS) up --abort-on-container-exit
+	 	$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-	 	docker-compose $(TEST_COMPOSE_ARGS) down
+	 	$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) down
 
 JUPYTER_COMPOSE_ARGS += -f test_jupyter.yaml
 
 test_jupyter : clean_config clean_repository clean_models build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-		docker-compose $(JUPYTER_COMPOSE_ARGS) up --abort-on-container-exit
+		$(DOCKER_COMOPSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-		docker-compose $(JUPYTER_COMPOSE_ARGS) down
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
 
 # -----------------------------------------------------------------
 # Cleaning is a bit interesting because the containers don't go away
@@ -212,11 +217,11 @@ test_jupyter : clean_config clean_repository clean_models build_contracts
 # referenced images. Clean make sure that everything is cleaned up
 # across the board.
 # -----------------------------------------------------------------
-_IMAGES_=$(shell docker images -a --filter=dangling=true -q)
-_CONTAINERS_=$(shell docker ps --filter=status=exited --filter=status=created -q)
+_IMAGES_=$(shell $(DOCKER_COMMAND) images -a --filter=dangling=true -q)
+_CONTAINERS_=$(shell $(DOCKER_COMMAND) ps --filter=status=exited --filter=status=created -q)
 clean_images : clean_contracts
-	@ if [ ! -z "$(_CONTAINERS_)" ]; then docker rm -f $(_CONTAINERS_); fi
-	@ if [ ! -z "$(_IMAGES_)" ]; then docker rmi -f $(_IMAGES_); fi
+	@ if [ ! -z "$(_CONTAINERS_)" ]; then $(DOCKER_COMMAND) rm -f $(_CONTAINERS_); fi
+	@ if [ ! -z "$(_IMAGES_)" ]; then $(DOCKER_COMMAND) rmi -f $(_IMAGES_); fi
 
 clean_config :
 	@ rm -f $(DOCKER_DIR)/xfer/ccf/keys/*.pem $(DOCKER_DIR)/xfer/ccf/etc/*.toml
