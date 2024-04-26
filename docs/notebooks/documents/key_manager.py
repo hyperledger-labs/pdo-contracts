@@ -14,7 +14,6 @@
 
 # %% [markdown]
 # # Key Management for PDO Contracts
-# ## WORK IN PROGRESS
 #
 # This notebook helps to manage keys for signing PDO contract transactions.
 
