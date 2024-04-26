@@ -237,7 +237,7 @@ contract_files = {
 # %%
 # %%skip True
 export_file = pc_jupyter.export_contract_collection(state, bindings, context, contexts, contract_identifier)
-ip_display.display(pc_jupyter.create_download_link(export_file, 'Download Contract Collection File'))
+ip_display.display(pc_jupyter.widgets.FileDownloadButton(export_file, 'Download Contract'))
 
 # %% [markdown]
 # <hr style="border:2px solid gray">

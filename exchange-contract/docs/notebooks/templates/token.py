@@ -25,18 +25,11 @@
 # * token_path : the full context path to the token
 # * context_file : the name of the context file where token information is located
 #
-# Note that the notebook assumes that there is a key file for the identity of the form
-#
-# ```bash
-# ${keys}/${identity}_private.pem
-# ```
-#
 
 # %% tags=["parameters"]
 token_owner = 'user1'
 token_class = 'mytoken'
 token_name = 'token_1'
-token_path = 'token.${token_class}.token_object.${token_name}'
 context_file = '${etc}/${token_class}_context.toml'
 instance_identifier = ''
 
@@ -60,13 +53,16 @@ pc_jupyter.load_ipython_extension(get_ipython())
 #
 # For the most part, no modifications should be required below.
 # %%
-common_bindings = {
-    'token_owner' : token_owner,
-    'token_class' : token_class,
-    'token_name' : token_name,
-}
+try : state
+except NameError :
+    common_bindings = {
+        'token_owner' : token_owner,
+        'token_class' : token_class,
+        'token_name' : token_name,
+    }
 
-(state, bindings) = pc_jupyter.initialize_environment(token_owner, **common_bindings)
+    (state, bindings) = pc_jupyter.initialize_environment(token_owner, **common_bindings)
+
 print('environment initialized')
 
 # %% [markdown]
@@ -81,7 +77,6 @@ print('environment initialized')
 # For the most part, no other modifications should be required.
 
 # %%
-token_class_path = 'token.' + token_class
 context_file = bindings.expand(context_file)
 print("using context file {}".format(context_file))
 
@@ -89,6 +84,7 @@ context_bindings = {
     'identity' : token_owner,
 }
 
+token_class_path = 'token.' + token_class
 context = pc_jupyter.ex_jupyter.initialize_token_context(
     state, bindings, context_file, token_class_path, **context_bindings)
 print('context initialized')
@@ -99,6 +95,7 @@ print('context initialized')
 # ## Operate on the Token Contract
 
 # %%
+token_path = '{}.token_object.{}'.format(token_class_path, token_name)
 token_context = pc_jupyter.pbuilder.Context(state, token_path)
 
 # %% [markdown]
@@ -108,16 +105,18 @@ token_context = pc_jupyter.pbuilder.Context(state, token_path)
 def token_echo(message) :
     return pc_jupyter.pcommand.invoke_contract_cmd(
         pc_jupyter.ex_token_object.cmd_echo, state, token_context, message=message)
-
-# token_echo('hello from token {}'.format(token_path))
+# %%
+# %%skip True
+token_echo('hello from token {}'.format(token_path))
 # %% [markdown]
 # ### Transfer Ownership
 # %%
 def token_transfer(new_owner) :
     return pc_jupyter.pcommand.invoke_contract_cmd(
         pc_jupyter.ex_issuer.cmd_transfer_assets, state, token_context, new_owner=new_owner)
-
-# token_transfer('user2')
+# %%
+# %%skip True
+token_transfer('user2')
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
@@ -145,7 +144,7 @@ contract_files = {
 # %%
 # %%skip True
 export_file = pc_jupyter.export_contract_collection(state, bindings, context, contexts, contract_identifier)
-ip_display.display(pc_jupyter.create_download_link(export_file, 'Download Contract Collection File'))
+ip_display.display(pc_jupyter.widgets.FileDownloadButton(export_file, 'Download Contract'))
 
 # %% [markdown]
 # <hr style="border:2px solid gray">
