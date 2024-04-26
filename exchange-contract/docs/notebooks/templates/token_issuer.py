@@ -19,16 +19,20 @@
 # %% [markdown]
 # ## Configure Token Information
 #
-# This section enables customization of the token that will be minted. Edit the variables in the section below as necessary.
+# This section enables customization of the token that will be minted. Edit the variables in the
+# section below as necessary.
 #
 # * identity : the identity of the token creator
-# * service_host : the host for the eservice where tokens will be minted, this will use the default service group
-# * token_class : the name of tokens that will be generated, this is only used to simplify local access (e.g. context file name)
+# * service_host : the host for the eservice where tokens will be minted, this will use the default
+#   service group
+# * token_class : the name of tokens that will be generated, this is only used to simplify local
+#   access (e.g. context file name)
 # * token_description : a description of the asset associated with the minted tokens
 # * token_metadata : additional information about the token
 # * count : the number of tokens to mint for the asset
 #
-# Note that the notebook assumes that there is a key file for the identity of the form: `${keys}/${identity}_private.pem`.
+# Note that the notebook assumes that there is a key file for the identity of the form:
+# `${keys}/${identity}_private.pem`.
 
 # %% tags=["parameters"]
 token_owner = 'user1'
@@ -73,12 +77,14 @@ print('environment initialized')
 # %% [markdown]
 # ### Initialize the Contract Context
 #
-# The contract context defines the configuration for a collection of contract objects that interact with one another. By default, the context file used in this notebook is specific to the token. If you prefer to use a common context file, edit the `context_file` variable below.
+# The contract context defines the configuration for a collection of contract objects that interact
+# with one another. By default, the context file used in this notebook is specific to the token. If
+# you prefer to use a common context file, edit the `context_file` variable below.
 #
 # For the most part, no other modifications should be required.
 
 # %%
-token_path = 'token.' + token_class
+token_class_path = 'token.' + token_class
 context_file = bindings.expand('${etc}/${token_class}_context.toml')
 print("using context file {}".format(context_file))
 
@@ -90,22 +96,25 @@ context_bindings = {
     'token_issuer.token_metadata.opaque' : token_metadata,
 }
 
-context = pc_jupyter.ex_jupyter.initialize_token_context(state, bindings, context_file, token_path, **context_bindings)
-pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=token_path)
+context = pc_jupyter.ex_jupyter.initialize_token_context(state, bindings, context_file, token_class_path, **context_bindings)
+pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=token_class_path)
 print('context initialized')
 
 # %% [markdown]
 # ### Create the Token Issuer Contract
 #
-# The process of creating the token issuer will also create an asset type contract object, a vetting organization contract object, and the guardian contract object. The asset type and vetting organization contract objects are principally used to complete the canonical asset interface that enables transparent value exchanges with tokens and other digital assets.
+# The process of creating the token issuer will also create an asset type contract object, a vetting
+# organization contract object, and the guardian contract object. The asset type and vetting
+# organization contract objects are principally used to complete the canonical asset interface that
+# enables transparent value exchanges with tokens and other digital assets.
 
 # %%
-token_issuer_context = pc_jupyter.pbuilder.Context(state, token_path + '.token_issuer')
+token_issuer_context = pc_jupyter.pbuilder.Context(state, token_class_path + '.token_issuer')
 token_issuer_save_file = token_issuer_context.get('save_file')
 if not token_issuer_save_file :
     token_issuer_save_file = pc_jupyter.pcommand.invoke_contract_cmd(
         pc_jupyter.ex_token_issuer.cmd_create_token_issuer, state, token_issuer_context)
-    pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=token_path)
+    pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=token_class_path)
 print('token issuer contract in {}'.format(token_issuer_save_file))
 
 # %% [markdown]
@@ -117,11 +126,11 @@ print('token issuer contract in {}'.format(token_issuer_save_file))
 # ### Mint the Tokens
 
 # %%
-token_object_context = pc_jupyter.pbuilder.Context(state, token_path + '.token_object')
+token_object_context = pc_jupyter.pbuilder.Context(state, token_class_path + '.token_object')
 
 minted_token_save_files = pc_jupyter.pcommand.invoke_contract_cmd(
     pc_jupyter.ex_token_object.cmd_mint_tokens, state, token_object_context)
-pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=token_path)
+pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=token_class_path)
 
 minted_token_contexts = []
 for token_index in range(1, len(minted_token_save_files)+1) :
@@ -144,7 +153,6 @@ parameters = {
 }
 
 for token_context in minted_token_contexts :
-    parameters['token_path'] = token_context.path
     parameters['token_name'] = token_context.path.split('.')[-1]
 
     instance_file = pc_jupyter.instantiate_notebook_from_template(token_class, 'token', parameters)
@@ -179,7 +187,7 @@ contract_files = {
 # %%
 # %%skip True
 export_file = pc_jupyter.export_contract_collection(state, bindings, context, contexts, contract_identifier)
-ip_display.display(pc_jupyter.create_download_link(export_file, 'Download Contract Collection File'))
+ip_display.display(pc_jupyter.widgets.FileDownloadButton(export_file, 'Download Contract'))
 
 # %% [markdown]
 # <hr style="border:2px solid gray">

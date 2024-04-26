@@ -56,5 +56,5 @@ instance_parameters = {
     'service_group' : service_group,
 }
 
-instance_file = pc_jupyter.instantiate_notebook_from_template(token_class, 'token-issuer', instance_parameters)
+instance_file = pc_jupyter.instantiate_notebook_from_template(token_class, 'token_issuer', instance_parameters)
 ip_display.display(ip_display.Markdown('[Token Issuer]({})'.format(instance_file)))
