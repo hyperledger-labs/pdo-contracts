@@ -13,7 +13,7 @@
 # ---
 
 # %% [markdown]
-# # Service Management for PDO Contracts (WIP)
+# # Service Management for PDO Contracts
 #
 # This notebook helps to manage the services database.
 
