@@ -211,6 +211,14 @@ test_jupyter : clean_config clean_repository clean_models build_contracts
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
 
+JUPYTER_MULTIUSER_COMPOSE_ARGS += -f test_multiuser_jupyter.yaml
+
+test_multiuser_jupyter : clean_config clean_repository clean_models build_contracts
+	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		docker-compose $(JUPYTER_MULTIUSER_COMPOSE_ARGS) up --abort-on-container-exit
+	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		docker-compose $(JUPYTER_MULTIUSER_COMPOSE_ARGS) down
+
 # -----------------------------------------------------------------
 # Cleaning is a bit interesting because the containers don't go away
 # unless they are told to very nicely. Until they go away they hold onto
