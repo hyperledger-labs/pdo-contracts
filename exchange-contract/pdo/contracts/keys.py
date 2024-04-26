@@ -15,11 +15,13 @@
 import functools
 import glob
 import os
+import re
 
 import ipywidgets
 
 import pdo.client.builder as pbuilder
 from pdo.common.keys import ServiceKeys
+from pdo.contracts.common_widgets import FileDownloadLink
 
 __all__ = [
     'build_public_key_map',
@@ -147,7 +149,7 @@ class KeyListWidget(ipywidgets.VBox) :
         result = self.table_header
 
         for k in keys :
-            result += "<tr><td>{}</td><td>{}</td></tr>\n".format(k, key_map[k])
+            result += "<tr><td>{}</td><td>{}</td></tr>\n".format(k, FileDownloadLink(key_map[k], key_map[k]).value)
 
         result += self.table_footer
 
@@ -269,15 +271,17 @@ class GenerateKeyWidget(ipywidgets.VBox) :
         super().__init__([ipywidgets.HBox([self.key, self.generate]), self.feedback])
 
     def clear_widget(self) :
-        self.key.value = ''
         self.feedback.clear_output()
 
     def generate_button_click(self, b) :
         identity = self.key.value
-        if identity and identity.isalnum() :
+        if identity and re.match(r'^\w+$', identity) :
             generate_key_pair(self.state, self.bindings, identity)
-            self.clear_widget()
             with self.feedback : print("keys created for {}".format(identity))
+        else :
+            with self.feedback : print("invalid identity {}".format(identity))
+
+        self.key.value = ''
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
@@ -316,7 +320,7 @@ class UploadKeyWidget(ipywidgets.VBox) :
         """
         self.feedback.clear_output()
 
-        if not self.key_entry.value or not self.key_entry.value.isalnum() :
+        if not self.key_entry.value or not re.match(r'^\w+$', self.key_entry.value) :
             with self.feedback : print("Identity must be alphanumeric")
             return
         if not self.key_file.value :

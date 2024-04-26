@@ -36,9 +36,11 @@ import pdo.client.commands.context as pcontext_cmd
 import pdo.client.commands.contract as pcontract_cmd
 import pdo.client.commands.collection as pcollection_cmd
 
+import pdo.contracts.common as common
 import pdo.contracts.groups as groups
 import pdo.contracts.keys as keys
 import pdo.contracts.services as services
+import pdo.contracts.common_widgets as widgets
 
 _logger = logging.getLogger(__name__)
 
@@ -226,17 +228,27 @@ def export_contract_collection(
 
     data_directory = bindings.get('data', state.get(['Contract', 'DataDirectory']))
     contract_cache = bindings.get('save', os.path.join(data_directory, '__contract_cache__'))
-    export_file = '{}.zip'.format(identifier)
+    export_file = '{}/{}.zip'.format(data_directory, identifier)
 
+    paths += common._base_context_.keys()
     pcollection_cmd.export_contract_collection(context, paths, contract_cache, export_file)
     return export_file
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
-def create_download_link(filename : str, label : str = 'Download File') :
-    """Create HTML display that will download a file"""
-    content = '<a href="{}" download>{}</a>'.format(filename, label)
-    return ip_display.HTML(content)
+def import_contract_collection(
+    state : pbuilder.state.State,
+    bindings : pbuilder.bindings.Bindings,
+    context_file : str,
+    import_file : str) :
+    """Import a contract collection file
+    """
+
+    data_directory = bindings.get('data', state.get(['Contract', 'DataDirectory']))
+    contract_cache = bindings.get('save', os.path.join(data_directory, '__contract_cache__'))
+    context = pcollection_cmd.import_contract_collection(context_file, contract_cache, import_file)
+
+    return context
 
 # -----------------------------------------------------------------
 # Load plugins from the contract families. Each contract family
