@@ -15,9 +15,9 @@
 # %% [markdown]
 # # Managing the PDO Environment
 #
-# This notebook provides an aggregate interface for preparing to work with PDO contracts through the
-# necessary steps to set up a functional configuration. It assumes that the reader is familiar with
-# [basic operation of Jupyter notebooks](https://jupytext.readthedocs.io/en/latest/).
+# This notebook provides an aggregate interface for preparing to work with PDO contracts and
+# describes the necessary steps to set up a functional configuration. It assumes that the reader is
+# familiar with [basic operation of Jupyter notebooks](https://jupytext.readthedocs.io/en/latest/).
 #
 # This notebook helps to setup and verify the PDO environment in which the notebooks operate. If you
 # have started the Jupyter Lab server through the PDO contracts docker test interface, a basic
