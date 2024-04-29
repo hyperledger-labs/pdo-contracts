@@ -13,8 +13,8 @@
 # ---
 
 # %% [markdown]
-# *WORK IN PROGRESS*
 # # Wallet Notebook
+# *WORK IN PROGRESS*
 #
 # This notebook is used to manage the assets issued to an indivdual by an issuer contract. The
 # notebook assumes that the asset type, vetting, and issuer contract objects have been created.
@@ -22,24 +22,16 @@
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # <hr style="border:2px solid gray">
 #
-# ## Configure Issuer Information
+# ## Configure Asset Information
 #
 # This section enables customization wallet. Edit the variables in the section below as necessary.
-# * identity : the identity of the creator of the asset type
-# * asset_name : the name of the asset type to be created
-# * context_file : the name of the context file where token information is located
+# * wallet_owner : the identity of the wallet owner
+# * asset_name : the name of the asset type to be managed
+# * context_file : the name of the context file where asset information is located
 #
-# When this notebook is instantiated, it will generally provide default values for `identity`,
-# `asset_name`, `context_file` and `notebook_directory`.
-#
-# Note that the notebook assumes that there is a key file for the identity of the form
-#
-# ```bash
-# ${keys}/${identity}_private.pem
-# ```
 
 # %% tags=["parameters"]
-identity = 'user'
+wallet_owner = 'user1'
 asset_name = 'asset'
 context_file = '${etc}/${asset_name}_context.toml'
 instance_identifier = ''
@@ -53,6 +45,7 @@ instance_identifier = ''
 import os
 import pdo.contracts.jupyter as pc_jupyter
 import IPython.display as ip_display
+import ipywidgets
 
 pc_jupyter.load_ipython_extension(get_ipython())
 
@@ -65,26 +58,19 @@ pc_jupyter.load_ipython_extension(get_ipython())
 # configuration, you can set it up with the
 # [service groups manager](/documents/service_groups_manager.ipynb) page
 # %%
-common_bindings = {
-}
+try : state
+except NameError:
+    common_bindings = {
+        'wallet_owner' : wallet_owner,
+        'asset_name' : asset_name,
+    }
 
-(state, bindings) = pc_jupyter.initialize_environment(identity, **common_bindings)
+    (state, bindings) = pc_jupyter.initialize_environment(wallet_owner, **common_bindings)
+
 print('environment initialized')
 
 # %% [markdown]
-# ### Import the Contract
-#
-# If you received the contract as a contract export file, import it into your
-# local configuration here. Adjust the name of the file to reflect where the
-# contract export file is located.
-
-# %%
-# %%skip True
-import_file = '${{data}}/{}.zip'.format(asset_name)
-pc_jupyter.import_context(state, bindings, context_file, import_file)
-
-# %% [markdown]
-# ### Import the Context
+# ### Initialize the Contract Context
 #
 # The contract context defines the configuration for a collection of contract objects that interact
 # with one another. By default, the context file used in this notebook is specific to the asset
@@ -94,17 +80,15 @@ pc_jupyter.import_context(state, bindings, context_file, import_file)
 # For the most part, no other modifications should be required.
 
 # %%
-asset_path = 'asset.' + asset_name
 context_file = bindings.expand(context_file)
 print('using context file {}'.format(context_file))
 
 # Customize the context with the user's identity
 context_bindings = {
-    'asset_type.identity' : identity,
-    'vetting.identity' : identity,
-    'issuer.identity' : identity,
+    'identity' : wallet_owner,
 }
 
+asset_path = 'asset.' + asset_name
 context = pc_jupyter.ex_jupyter.initialize_asset_context(
     state, bindings, context_file, asset_path, **context_bindings)
 print('context initialized')
@@ -117,18 +101,9 @@ print('context initialized')
 # of the other contracts as well.
 
 # %%
-asset_type_context = pc_jupyter.pbuilder.Context(state, asset_path + '.asset_type')
-asset_type_save_file = asset_type_context.get('save_file')
-print('asset type contract in {}'.format(asset_type_save_file))
-
-vetting_context = pc_jupyter.pbuilder.Context(state, asset_path + '.vetting')
-vetting_save_file = vetting_context.get('save_file')
-print('vetting contract in {}'.format(vetting_save_file))
-
 issuer_context = pc_jupyter.pbuilder.Context(state, asset_path + '.issuer')
 issuer_save_file = issuer_context.get('save_file')
 print('issuer contract in {}'.format(issuer_save_file))
-
 
 # %% [markdown]
 # <hr style="border:2px solid gray">
@@ -142,7 +117,7 @@ print('issuer contract in {}'.format(issuer_save_file))
 # %%
 def get_balance(owner) :
     pc_jupyter.pcommand.invoke_contract_cmd(
-        pc_jupyter.ex_issuer.cmd_get_balance, state, issuer_context, identity=owner)
+        pc_jupyter.ex_issuer.cmd_get_balance, state, issuer_context, identity=wallet_owner)
 
 def transfer(count, new_owner, old_owner=identity) :
     pc_jupyter.pcommand.invoke_contract_cmd(
@@ -153,27 +128,16 @@ def transfer(count, new_owner, old_owner=identity) :
 
 
 # %% [markdown]
-# ### Get the Account Balance
-
+# ### Account Balance
 # %%
 # %%skip True
-owner = input('identity to check [{}]'.format(identity)) or identity
-get_balance(owner)
+get_balance(wallet_owner)
 
 # %% [markdown]
 # ### Transfer Assets
-
 # %%
 # %%skip True
 count = int(input('number of assets to transfer'))
-new_owner = input('identity of the recipient of the transfer')
-old_owner = input('identity of the source of the transfer [{}]'.format(identity)) or identity
+recipient = input('identity of the recipient of the transfer')
 
-transfer(count, new_owner, old_owner)
-
-# %% [markdown] editable=true slideshow={"slide_type": ""}
-# ### Escrow Assets
-#
-# Work in Progress
-
-# %%
+transfer(count, recipient, wallet_owner)
