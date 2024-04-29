@@ -32,14 +32,35 @@ pc_jupyter.load_ipython_extension(get_ipython())
 #
 # * identity : the identity of the token creator
 # * asset_name : the name of tokens that will be generated
-# * context_file : the
+# * asset_import_file : the name of the contract collections file for the asset
 #
-# Note that the notebook assumes that there is a key file for the identity of the form: `${keys}/${identity}_private.pem`.
+# Note that the notebook assumes that there is a key file for the identity of the form:
+# `${keys}/${identity}_private.pem`.
 
 # %%
-identity = input('Identity of the wallet owner: ')
-asset_name = input('Name of the asset:')
-context_file = input('Path to the contract context file')
+wallet_owner = input('Identity of the wallet owner: ')
+asset_name = input('Name of the asset: ')
+import_file = input('Name of the asset import file: ')
+
+# %% [markdown]
+# ### Initialize the PDO Environment
+#
+# Initialize the PDO environment. This assumes that a functional PDO configuration is in place and
+# that the PDO virtual environment has been activated. In particular, ensure that the groups file
+# and eservice database have been configured correctly.
+#
+# For the most part, no modifications should be required below.
+# %%
+common_bindings = {
+    'wallet_owner' : wallet_owner,
+    'asset_name' : asset_name,
+}
+
+(state, bindings) = pc_jupyter.initialize_environment(wallet_owner, **common_bindings)
+
+context_file = bindings.expand('${etc}/${asset_name}_context.toml')
+import_file = bindings.expand(import_file)
+_ = pc_jupyter.import_contract_collection(state, bindings, context_file, import_file)
 
 # %% [markdown]
 # ## Create the Wallet Notebook
@@ -47,12 +68,12 @@ context_file = input('Path to the contract context file')
 # Create a new wallet notebook with the specific asset identified.
 
 # %%
-parameters = {
-    'identity' : identity,
+instance_parameters = {
+    'wallet_owner' : wallet_owner,
     'asset_name' : asset_name,
     'context_file' : context_file,
 }
 
-instance_file = pc_jupyter.instantiate_notebook_from_template(asset_name, 'wallet', parameters)
+instance_file = pc_jupyter.instantiate_notebook_from_template(asset_name, 'wallet', instance_parameters)
 ip_display.display(ip_display.Markdown('[Wallet]({})'.format(instance_file)))
 # %%
