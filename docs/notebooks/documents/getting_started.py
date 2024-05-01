@@ -52,10 +52,10 @@ except NameError:
 # Additional management of keys is provided by the [Key Manager Notebook](key_manager.ipynb).
 #
 # %%
-from pdo.contracts.keys import PrivateKeyListWidget
-from pdo.contracts.keys import PublicKeyListWidget
-from pdo.contracts.keys import GenerateKeyWidget
-from pdo.contracts.keys import UploadKeyWidget
+from pdo.contracts.jupyter.keys import PrivateKeyListWidget
+from pdo.contracts.jupyter.keys import PublicKeyListWidget
+from pdo.contracts.jupyter.keys import GenerateKeyWidget
+from pdo.contracts.jupyter.keys import UploadKeyWidget
 
 private_key_list = PrivateKeyListWidget(state, bindings)
 public_key_list = PublicKeyListWidget(state, bindings)
@@ -77,9 +77,9 @@ ip_display.display(ipywidgets.Tab(children=children, titles=titles))
 # [Service Manager Notebook](service_manager.ipynb)
 #
 # %%
-from pdo.contracts.services import ServiceListWidget
-from pdo.contracts.services import ServiceUploadWidget
-from pdo.contracts.services import service_labels
+from pdo.contracts.jupyter.services import ServiceListWidget
+from pdo.contracts.jupyter.services import ServiceUploadWidget
+from pdo.contracts.jupyter.services import service_labels
 
 children = map(lambda stype : ServiceListWidget(state, bindings, stype), service_labels.keys())
 titles = service_labels.values()
@@ -97,10 +97,10 @@ ip_display.display(ipywidgets.VBox([service_list, ServiceUploadWidget(state, bin
 # Additional management of service group information is provided by the [Service Groups Manager
 # Notebook](service_groups_manager.ipynb)
 # %%
-from pdo.contracts.groups import ServiceGroupListWidget
-from pdo.contracts.groups import EnclaveServiceGroupCreateWidget
-from pdo.contracts.groups import ProvisioningServiceGroupCreateWidget
-from pdo.contracts.groups import StorageServiceGroupCreateWidget
+from pdo.contracts.jupyter.groups import ServiceGroupListWidget
+from pdo.contracts.jupyter.groups import EnclaveServiceGroupCreateWidget
+from pdo.contracts.jupyter.groups import ProvisioningServiceGroupCreateWidget
+from pdo.contracts.jupyter.groups import StorageServiceGroupCreateWidget
 # %% [markdown]
 # ### List Service Groups
 #

@@ -17,7 +17,7 @@ import typing
 import ipywidgets
 
 import pdo.client.builder as pbuilder
-import pdo.contracts.services as pservices
+import pdo.contracts.jupyter.services as pservices
 
 from pdo.service_client.service_data.service_data import ServiceDatabaseManager as service_data
 from pdo.service_client.service_data.service_groups import GroupsDatabaseManager as group_data
