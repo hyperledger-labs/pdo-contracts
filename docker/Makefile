@@ -207,7 +207,7 @@ JUPYTER_COMPOSE_ARGS += -f test_jupyter.yaml
 
 test_jupyter : clean_config clean_repository clean_models build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-		$(DOCKER_COMOPSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) up --abort-on-container-exit
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
 
