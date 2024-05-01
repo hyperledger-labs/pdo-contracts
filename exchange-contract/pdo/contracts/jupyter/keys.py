@@ -21,7 +21,7 @@ import ipywidgets
 
 import pdo.client.builder as pbuilder
 from pdo.common.keys import ServiceKeys
-from pdo.contracts.common_widgets import FileDownloadLink
+from pdo.contracts.jupyter.common_widgets import FileDownloadLink
 
 __all__ = [
     'build_public_key_map',

@@ -22,11 +22,11 @@ import pdo.contracts.jupyter as pc_jupyter
 import IPython.display as ip_display
 import ipywidgets
 
-from pdo.contracts.services import service_labels
-from pdo.contracts.groups import ServiceGroupListWidget
-from pdo.contracts.groups import EnclaveServiceGroupCreateWidget
-from pdo.contracts.groups import ProvisioningServiceGroupCreateWidget
-from pdo.contracts.groups import StorageServiceGroupCreateWidget
+from pdo.contracts.jupyter.services import service_labels
+from pdo.contracts.jupyter.groups import ServiceGroupListWidget
+from pdo.contracts.jupyter.groups import EnclaveServiceGroupCreateWidget
+from pdo.contracts.jupyter.groups import ProvisioningServiceGroupCreateWidget
+from pdo.contracts.jupyter.groups import StorageServiceGroupCreateWidget
 
 pc_jupyter.load_ipython_extension(get_ipython())
 

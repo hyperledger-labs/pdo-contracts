@@ -13,38 +13,38 @@
 # limitations under the License.
 
 import copy
-import importlib.util
 import logging
 import os
 import random
 import string
-import sys
 import types
 import typing
 
-from zipfile import ZipFile
-
-import IPython.display as ip_display
-
 import pdo.client.builder as pbuilder
-import pdo.client.builder.command as pcommand
-import pdo.client.builder.context as pcontext
-import pdo.client.builder.contract as pcontract
 import pdo.client.builder.shell as pshell
-
-import pdo.client.commands.context as pcontext_cmd
-import pdo.client.commands.contract as pcontract_cmd
 import pdo.client.commands.collection as pcollection_cmd
 
 import pdo.contracts.common as common
-import pdo.contracts.groups as groups
-import pdo.contracts.keys as keys
-import pdo.contracts.services as services
-import pdo.contracts.common_widgets as widgets
 
 _logger = logging.getLogger(__name__)
 
 logging.getLogger('papermill.translators').setLevel(logging.ERROR)
+
+__all__ = [
+    'skip',
+    'load_ipython_extension',
+    'unload_ipython_extension',
+    'notebook_root',
+    'notebook_instance_root',
+    'initialize_environment',
+    'find_contract_family',
+    'contract_family_root',
+    'contract_family_template_root',
+    'contract_family_instance_root',
+    'instantiate_notebook_from_template',
+    'export_contract_collection',
+    'import_contract_collection',
+]
 
 # -----------------------------------------------------------------
 # Code based on suggestions found here:
@@ -66,10 +66,12 @@ def skip(line, cell=None) :
 
     get_ipython().run_cell(cell)
 
+
 def load_ipython_extension(shell):
     """Registers the skip magic when the extension loads.
     """
     shell.register_magic_function(skip, 'line_cell')
+
 
 def unload_ipython_extension(shell):
     """Unregister the skip magic when the extension unloads.
@@ -249,39 +251,3 @@ def import_contract_collection(
     context = pcollection_cmd.import_contract_collection(context_file, contract_cache, import_file)
 
     return context
-
-# -----------------------------------------------------------------
-# Load plugins from the contract families. Each contract family
-# is listed (the python module for it) with a short, unique prefix
-# that will be prepended to each of the module names. This way all
-# of the contract family plugins can be made available easily through
-# the single jupyter module. for example, ex_asset_type will provide
-# access to the exchange family asset type plugin module.
-# -----------------------------------------------------------------
-_contract_families_ = {
-    'exchange' : 'ex',
-    'inference' : 'ml',
-}
-
-for cf, cs in _contract_families_.items() :
-    try :
-        # attempt to load the jupyter module from the contract family
-        # not a problem if this fails
-        jupyter_name = 'pdo.{}.jupyter'.format(cf)
-        jupyter_module = importlib.import_module(jupyter_name)
-        globals()['{}_jupyter'.format(cs)] = jupyter_module
-    except Exception as e :
-        raise ImportError('Failed to import module for contract family {}; {}'.format(cf, e))
-
-    # load the plugins module for the contract family, this
-    # should provide a list of all the plugins in the family
-    # (in the __all__ variable)
-    try :
-        family_name = 'pdo.{}.plugins'.format(cf)
-        family_module = importlib.import_module(family_name)
-
-        for plugin_name in family_module.__all__ :
-            plugin_module = importlib.import_module('{}.{}'.format(family_name, plugin_name))
-            globals()['{}_{}'.format(cs,plugin_name)] = plugin_module
-    except :
-        pass

@@ -23,8 +23,8 @@ import pdo.contracts.jupyter as pc_jupyter
 import IPython.display as ip_display
 import ipywidgets
 
-from pdo.contracts.services import service_labels, ServiceSelectionWidget
-from pdo.contracts.groups import ServiceGroupSelectionWidget
+from pdo.contracts.jupyter.services import service_labels, ServiceSelectionWidget
+from pdo.contracts.jupyter.groups import ServiceGroupSelectionWidget
 
 pc_jupyter.load_ipython_extension(get_ipython())
 

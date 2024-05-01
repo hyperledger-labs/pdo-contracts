@@ -66,7 +66,9 @@ setup(
     packages = [
         'pdo',
         'pdo.contracts',
+        'pdo.contracts.jupyter',
         'pdo.exchange',
+        'pdo.exchange.jupyter',
         'pdo.exchange.plugins',
         'pdo.exchange.scripts',
         'pdo.exchange.resources',
