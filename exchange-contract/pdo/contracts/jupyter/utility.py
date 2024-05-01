@@ -92,7 +92,7 @@ _default_configuration_ = {
     'config' : [],                        # list of configuration files
     'client_identity' : None,             # initial identity
     'client_key_file' : None,             # key file associated with the identity
-    'verbose' : True,                     # interactive output verbosity
+    'verbose' : False,                    # interactive output verbosity
     'logfile' : '__screen__',
     'loglevel' : None,
 }

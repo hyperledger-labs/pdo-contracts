@@ -144,6 +144,8 @@ if not issuer_context.has_key('initialized') :
     issuer_context.set('initialized', True)
     pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=asset_path)
 
+print('issuer authority approved')
+
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
@@ -161,6 +163,7 @@ def issue_assets(owner, count) :
         pc_jupyter.pcommand.invoke_contract_cmd(
             pc_jupyter.ex_issuer.cmd_issue_assets, state, issuer_context,
             owner=owner, count=count)
+        print(f'{count} assets issued to {owner}')
     except ValueError as v :
         print("assets have already been issued to {}".format(owner))
 

@@ -13,7 +13,6 @@
 # ---
 
 # %% [markdown]
-# *WORK IN PROGRESS*
 # # Wallet Factory
 #
 # Use this notebook to create a wallet associated with a particular issuer.
@@ -39,28 +38,7 @@ pc_jupyter.load_ipython_extension(get_ipython())
 
 # %%
 wallet_owner = input('Identity of the wallet owner: ')
-asset_name = input('Name of the asset: ')
-import_file = input('Name of the asset import file: ')
-
-# %% [markdown]
-# ### Initialize the PDO Environment
-#
-# Initialize the PDO environment. This assumes that a functional PDO configuration is in place and
-# that the PDO virtual environment has been activated. In particular, ensure that the groups file
-# and eservice database have been configured correctly.
-#
-# For the most part, no modifications should be required below.
-# %%
-common_bindings = {
-    'wallet_owner' : wallet_owner,
-    'asset_name' : asset_name,
-}
-
-(state, bindings) = pc_jupyter.initialize_environment(wallet_owner, **common_bindings)
-
-context_file = bindings.expand('${etc}/${asset_name}_context.toml')
-import_file = bindings.expand(import_file)
-_ = pc_jupyter.import_contract_collection(state, bindings, context_file, import_file)
+wallet_name = input('Name of the wallet: ')
 
 # %% [markdown]
 # ## Create the Wallet Notebook
@@ -70,10 +48,10 @@ _ = pc_jupyter.import_contract_collection(state, bindings, context_file, import_
 # %%
 instance_parameters = {
     'wallet_owner' : wallet_owner,
-    'asset_name' : asset_name,
-    'context_file' : context_file,
+    'wallet_name' : wallet_name,
+    'context_file' : '${etc}/${wallet_name}_context.toml',
 }
 
-instance_file = pc_jupyter.instantiate_notebook_from_template(asset_name, 'wallet', instance_parameters)
+instance_file = pc_jupyter.instantiate_notebook_from_template(wallet_name, 'wallet', instance_parameters)
 ip_display.display(ip_display.Markdown('[Wallet]({})'.format(instance_file)))
 # %%

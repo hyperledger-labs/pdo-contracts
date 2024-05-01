@@ -354,7 +354,7 @@ class cmd_initialize_issuer(pcommand.contract_command_base) :
             authority)
 
         cls.display('initialized issuer in {}'.format(save_file))
-        return save_file
+        return True
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
@@ -391,7 +391,7 @@ class cmd_issue_assets(pcommand.contract_command_base) :
             **kwargs)
 
         cls.display('issued {} assets to {}'.format(count, owner))
-        return save_file
+        return True
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
@@ -419,7 +419,7 @@ class cmd_get_balance(pcommand.contract_command_base) :
             **kwargs)
 
         cls.display('current balance of {} for {} is {}'.format(context.path, state.identity, balance))
-        return save_file
+        return balance
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
@@ -465,7 +465,7 @@ class cmd_transfer_assets(pcommand.contract_command_base) :
             **kwargs)
 
         cls.display('transfered {} assets to {}'.format(count, new_owner))
-        return save_file
+        return True
 
 ## -----------------------------------------------------------------
 ## Create the generic, shell independent version of the aggregate command
