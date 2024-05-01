@@ -14,7 +14,6 @@
 
 # %% [markdown]
 # # Wallet Notebook
-# *WORK IN PROGRESS*
 #
 # This notebook is used to manage the assets issued to an indivdual by an issuer contract. The
 # notebook assumes that the asset type, vetting, and issuer contract objects have been created.
@@ -22,25 +21,23 @@
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # <hr style="border:2px solid gray">
 #
-# ## Configure Asset Information
+# ## Configure Wallet Information
 #
-# This section enables customization wallet. Edit the variables in the section below as necessary.
-# * wallet_owner : the identity of the wallet owner
-# * asset_name : the name of the asset type to be managed
+# This section enables customization of the wallet. Edit the variables in the section below as
+# necessary. These may be assigned through the factory interface.
+# * wallet_owner : the identity of the wallet owner, default identity for assets
+# * wallet_name : a name for customizing the wallet
 # * context_file : the name of the context file where asset information is located
-#
-
 # %% tags=["parameters"]
 wallet_owner = 'user1'
-asset_name = 'asset'
-context_file = '${etc}/${asset_name}_context.toml'
+wallet_name = 'wallet'
+context_file = '${etc}/${wallet_name}_context.toml'
 instance_identifier = ''
 
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
 # ## Initialize
-
 # %%
 import os
 import pdo.contracts.jupyter as pc_jupyter
@@ -62,7 +59,8 @@ try : state
 except NameError:
     common_bindings = {
         'wallet_owner' : wallet_owner,
-        'asset_name' : asset_name,
+        'wallet_name' : wallet_name,
+        'instance' : instance_identifier,
     }
 
     (state, bindings) = pc_jupyter.initialize_environment(wallet_owner, **common_bindings)
@@ -70,74 +68,57 @@ except NameError:
 print('environment initialized')
 
 # %% [markdown]
-# ### Initialize the Contract Context
+# ### Initialize the Wallet Context
 #
-# The contract context defines the configuration for a collection of contract objects that interact
-# with one another. By default, the context file used in this notebook is specific to the asset
-# class. We need the class to ensure that all of the information necessary for the asset itself is
-# available. If you prefer to use a common context file, edit the context_file variable below.
-#
-# For the most part, no other modifications should be required.
-
+# The wallet context defines the configuration for a collection of contract objects that interact
+# with one another.
 # %%
+wallet_path = 'wallet.{}'.format(wallet_name)
 context_file = bindings.expand(context_file)
-print('using context file {}'.format(context_file))
 
-# Customize the context with the user's identity
 context_bindings = {
     'identity' : wallet_owner,
 }
 
-asset_path = 'asset.' + asset_name
-context = pc_jupyter.ex_jupyter.initialize_asset_context(
-    state, bindings, context_file, asset_path, **context_bindings)
+context = pc_jupyter.common.initialize_context(state, bindings, context_file, wallet_path, [], **context_bindings)
+pc_jupyter.pbuilder.Context.SaveContextFile(state, context_file, prefix=wallet_path)
+
 print('context initialized')
-
-# %% [markdown]
-# ### Configure the Contract Objects
-#
-# Set up the connections to each of the contract objects. Although most interactions
-# are with the issuer contract object, it may be necessary to verify the authority
-# of the other contracts as well.
-
-# %%
-issuer_context = pc_jupyter.pbuilder.Context(state, asset_path + '.issuer')
-issuer_save_file = issuer_context.get('save_file')
-print('issuer contract in {}'.format(issuer_save_file))
 
 # %% [markdown]
 # <hr style="border:2px solid gray">
 #
 # ## Operate on the Issuer Contract
 #
-# This section defines several functions that can be used to interact with the issuer contract:
-# * get_balance -- get the current number of assets associated with the given identity
+# This section defines several functions that can be used to interact with the wallet:
+# * import issuers -- add asset handles to the wallet
+# * account balance -- list the asset balances for each handle stored in the wallet
 # * transfer -- transfer assets from one identity to another
 
+# %% [markdown]
+# ### Import Asset Issuers
+#
+# Import asset issuer contract collections and select an identity to use with the issuer.  An asset
+# handle is associated with the issuer/identity pair to simpflify other operations.  The handle can
+# be any name (alphanumeric string).
+#
+# Note that the veracity of the imported collections is assumed to be addressed out of
+# band. Correctness checks are not a part of the import process.
 # %%
-def get_balance(owner) :
-    pc_jupyter.pcommand.invoke_contract_cmd(
-        pc_jupyter.ex_issuer.cmd_get_balance, state, issuer_context, identity=wallet_owner)
-
-def transfer(count, new_owner, old_owner=identity) :
-    pc_jupyter.pcommand.invoke_contract_cmd(
-        pc_jupyter.ex_issuer.cmd_transfer_assets, state, issuer_context,
-        new_owner=new_owner, count=count, identity=old_owner)
-    pc_jupyter.pcommand.invoke_contract_cmd(
-        pc_jupyter.ex_issuer.cmd_get_balance, state, issuer_context, identity=old_owner)
-
+import_widget = pc_jupyter.ex_jupyter.ImportIssuerWidget(state, bindings, context_file, wallet_path)
+ip_display.display(import_widget)
 
 # %% [markdown]
 # ### Account Balance
 # %%
-# %%skip True
-get_balance(wallet_owner)
+balance_widget = pc_jupyter.ex_jupyter.AssetBalanceWidget(state, bindings, wallet_path)
+ip_display.display(balance_widget)
 
 # %% [markdown]
 # ### Transfer Assets
+#
+# If necessary, use the [Key Manager Notebook](/documents/key_manager.ipynb) to import or create additional
+# keys that can be used for the transfer.
 # %%
-# %%skip True
-count = int(input('number of assets to transfer'))
-recipient = input('identity of the recipient of the transfer')
-
-transfer(count, recipient, wallet_owner)
+transfer_widget = pc_jupyter.ex_jupyter.AssetTransferWidget(state, bindings, wallet_path)
+ip_display.display(transfer_widget)

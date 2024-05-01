@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = [ 'context', ]
+__all__ = [ 'context', 'wallet', ]
 
 from .context import *
+from .wallet import *

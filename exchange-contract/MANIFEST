@@ -16,6 +16,7 @@ pdo/contracts/jupyter/utility.py
 pdo/exchange/__init__.py
 pdo/exchange/jupyter/__init__.py
 pdo/exchange/jupyter/context.py
+pdo/exchange/jupyter/wallet.py
 pdo/exchange/plugins/__init__.py
 pdo/exchange/plugins/asset_type.py
 pdo/exchange/plugins/exchange.py
