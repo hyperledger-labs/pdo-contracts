@@ -166,6 +166,10 @@ bool ww::exchange::issuer::transfer(const Message& msg, const Environment& env, 
     const std::string new_owner(msg.get_string("new_owner_identity"));
     ASSERT_SUCCESS(rsp, new_owner.size() > 0, "invalid transfer request, invalid owner identity parameter");
 
+    // if the old and new accounts are the same, then there is nothing to be done
+    if (old_owner == new_owner)
+        return rsp.success(false);
+
     const int count = (int) msg.get_number("count");
     ASSERT_SUCCESS(rsp, count > 0, "invalid transfer request, invalid asset count");
 
@@ -173,7 +177,7 @@ bool ww::exchange::issuer::transfer(const Message& msg, const Environment& env, 
     ww::exchange::LedgerEntry old_entry;
     ASSERT_SUCCESS(rsp, ledger_store.get_entry(old_owner, old_entry),
                    "transfer failed, insufficient balance for transfer");
-    ASSERT_SUCCESS(rsp, count < old_entry.asset_.count_,
+    ASSERT_SUCCESS(rsp, count <= old_entry.asset_.count_,
                    "transfer failed, insufficient balance for transfer");
 
     if (! ledger_store.exists(new_owner))
