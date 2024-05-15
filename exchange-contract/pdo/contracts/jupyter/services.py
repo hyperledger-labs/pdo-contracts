@@ -205,6 +205,7 @@ class ServiceSelectionWidget(ipywidgets.VBox) :
         return self.service_list.value
 
     def reset_widget(self) :
+        self.service_list.options = self.create_service_list()
         self.service_list.value = []
 
     def create_service_list(self) :
