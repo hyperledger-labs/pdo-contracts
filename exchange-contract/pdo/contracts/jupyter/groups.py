@@ -192,8 +192,8 @@ class ProvisioningServiceGroupCreateWidget(ipywidgets.VBox) :
         super().__init__([self.group_name, self.services, self.submit_button, self.feedback])
 
     def reset_widget(self) :
-        self.services.reset_widget()
         self.group_name.value = ''
+        self.services.reset_widget()
 
     def submit_button_click(self, b) :
         """Create the provisioning services group
@@ -230,6 +230,8 @@ class EnclaveServiceGroupCreateWidget(ipywidgets.VBox) :
         if change['type'] == 'change' and change['name'] == 'value' :
             value = self.preferred_service.value
             selection = self.services.selection
+            if not selection :
+                selection = ['unknown']
             if value not in selection :
                 value = selection[0]
 
@@ -237,9 +239,11 @@ class EnclaveServiceGroupCreateWidget(ipywidgets.VBox) :
             self.preferred_service.value = value
 
     def reset_widget(self) :
-        self.services.reset_widget()
         self.group_name.value = ''
-        self.preferred_service.value = ''
+
+        self.services.reset_widget()
+        self.preferred_service.options = ['unknown']
+        self.preferred_service.value = 'unknown'
 
     def submit_button_click(self, b) :
         """Create the enclave services group
@@ -295,6 +299,8 @@ class StorageServiceGroupCreateWidget(ipywidgets.VBox) :
         if change['type'] == 'change' and change['name'] == 'value' :
             value = self.persistent_service.value
             selection = self.services.selection
+            if not selection :
+                selection = ['unknown']
             if value not in selection :
                 value = selection[0]
 
@@ -302,11 +308,13 @@ class StorageServiceGroupCreateWidget(ipywidgets.VBox) :
             self.persistent_service.value = value
 
     def reset_widget(self) :
-        self.services.reset_widget()
         self.group_name.value = ''
-        self.persistent_service.value = ''
         self.replicas.value = 2
         self.duration.value = 120
+
+        self.services.reset_widget()
+        self.persistent_service.options = ['unknown']
+        self.persistent_service.value =  'unknown'
 
     def submit_button_click(self, b) :
         """Create the storage services group
