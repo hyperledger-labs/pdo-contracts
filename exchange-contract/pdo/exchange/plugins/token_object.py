@@ -41,6 +41,7 @@ __all__ = [
     'op_get_asset_type_identifier',
     'op_get_issuer_authority',
     'op_get_authority',
+    'op_get_balance',
     'op_transfer',
     'op_escrow',
     'op_release',
@@ -59,6 +60,7 @@ op_get_contract_code_metadata = common.op_get_contract_code_metadata
 op_get_asset_type_identifier = asset_type.op_get_asset_type_identifier
 op_get_issuer_authority = vetting.op_get_issuer_authority
 op_get_authority = issuer.op_get_authority
+op_get_balance = issuer.op_get_balance
 op_transfer = issuer.op_transfer
 op_escrow = issuer.op_escrow
 op_release = issuer.op_release
@@ -312,6 +314,13 @@ class cmd_transfer_assets(pcommand.contract_command_base) :
         with open (keyfile, "r") as myfile:
             verifying_key = myfile.read()
 
+        # in case count was specified, it must be 1 and we must remove it since it is set explicitly
+        # in the op invocation below
+        if 'count' in kwargs :
+            if kwargs['count'] != 1 :
+                raise ValueError('unexpected count for token transfer')
+            kwargs.pop('count')
+
         session = pbuilder.SessionParameters(save_file=save_file)
         pcontract.invoke_contract_op(issuer.op_transfer, state, context, session, verifying_key, 1, **kwargs)
 
@@ -372,6 +381,7 @@ __operations__ = [
     op_get_asset_type_identifier,
     op_get_issuer_authority,
     op_get_authority,
+    op_get_balance,
     op_transfer,
     op_escrow,
     op_release,
