@@ -62,6 +62,7 @@ namespace token_object
     bool initialize(const Message& msg, const Environment& env, Response& rsp);
 
     // the interface for these methods is copied from issuer contract
+    bool get_balance(const Message& msg, const Environment& env, Response& rsp);
     bool transfer(const Message& msg, const Environment& env, Response& rsp);
     bool escrow(const Message& msg, const Environment& env, Response& rsp);
     bool escrow_attestation(const Message& msg, const Environment& env, Response& rsp);

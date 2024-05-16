@@ -140,6 +140,30 @@ bool ww::exchange::token_object::initialize(
 }
 
 // -----------------------------------------------------------------
+// METHOD: get_balance
+//
+// JSON PARAMETERS:
+//   none
+//
+// RETURNS:
+//   current number of assets assigned to the requestor
+// -----------------------------------------------------------------
+bool ww::exchange::token_object::get_balance(const Message& msg, const Environment& env, Response& rsp)
+{
+    ASSERT_INITIALIZED(rsp);
+
+    int count = 0;
+    std::string owner;
+
+    ASSERT_SUCCESS(rsp, ww::contract::base::get_owner(owner), "failed to retrieve owner");
+    if (env.originator_id_ == owner)
+        count = 1;
+
+    ww::value::Number balance(count);
+    return rsp.value(balance, false);
+}
+
+// -----------------------------------------------------------------
 // transfer
 // -----------------------------------------------------------------
 bool ww::exchange::token_object::transfer(const Message& msg, const Environment& env, Response& rsp)

@@ -135,8 +135,11 @@ token_transfer('user2')
 # free to change the file name as well. The default uses the asset name.
 
 # %%
+# this adds a reference key to "issuer" which makes the wallets work with tokens
+context.set('issuer', '@{.token_object.' + token_name + '}')
+
 contract_identifier = '{}_{}'.format(token_class, instance_identifier)
-contexts = ['asset_type', 'vetting', 'guardian', 'token_issuer', 'token_object']
+contexts = ['asset_type', 'issuer', 'vetting', 'guardian', 'token_issuer', 'token_object']
 contract_files = {
     'token' : token_context.get('save_file'),
 }

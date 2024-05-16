@@ -93,6 +93,7 @@ contract_method_reference_t contract_method_dispatch_table[] = {
     CONTRACT_METHOD(echo),
 
     // object transfer, escrow & claim methods
+    CONTRACT_METHOD2(get_balance,ww::exchange::token_object::get_balance),
     CONTRACT_METHOD2(transfer,ww::exchange::token_object::transfer),
     CONTRACT_METHOD2(escrow,ww::exchange::token_object::escrow),
     CONTRACT_METHOD2(escrow_attestation,ww::exchange::token_object::escrow_attestation),
