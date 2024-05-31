@@ -22,6 +22,7 @@ import pdo.client.builder.command as pcommand
 import pdo.client.builder.contract as pcontract
 import pdo.client.builder.shell as pshell
 import pdo.client.commands.contract as pcontract_cmd
+import pdo.common.utility as putils
 
 import pdo.client.plugins.common as common
 import pdo.exchange.plugins.issuer as pi_issuer
@@ -302,7 +303,7 @@ class cmd_create_order(pcommand.contract_command_base) :
         request_issuer_verifying_key = ""
         request_issuer_context = None
         if request_issuer :
-            request_issuer_context = Context(state, request_issuer)
+            request_issuer_context = pbuilder.Context(state, request_issuer)
         elif context.has_key('request.issuer_context') :
             request_issuer_context = context.get_context('request.issuer_context')
         if request_issuer_context is None :
@@ -341,7 +342,7 @@ class cmd_create_order(pcommand.contract_command_base) :
         # process information about the offer
         # --------------------------------------------------
         if offer_issuer :
-            offer_issuer_context = Context(state, offer_issuer)
+            offer_issuer_context = pbuilder.Context(state, offer_issuer)
         else :
             offer_issuer_context = context.get_context('offer.issuer_context')
             if offer_issuer_context is None :
@@ -424,7 +425,7 @@ class cmd_match_order(pcommand.contract_command_base) :
 
         # get the issuer that will provide the assets
         if issuer :
-            issuer_context = Context(state, issuer)
+            issuer_context = pbuilder.Context(state, issuer)
         else :
             issuer_context = context.get_context('request.issuer_context')
         issuer_save_file = pcontract_cmd.get_contract_from_context(state, issuer_context)
