@@ -20,12 +20,11 @@ import subprocess
 import warnings
 
 # this should only be run with python3
-import sys
 if sys.version_info[0] < 3:
     print('ERROR: must run with python3')
     sys.exit(1)
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 ## -----------------------------------------------------------------
 # Versions are tied to tags on the repository; to compute correctly
@@ -37,14 +36,14 @@ try :
     pdo_contracts_version = subprocess.check_output(
         'bin/get_version', cwd=os.path.join(root_dir, os.pardir)).decode('ascii').strip()
 except Exception as e :
-    warnings.warn('Failed to get pdo_contracts version, using the default')
+    warnings.warn(f'Failed to get pdo_contracts version, using the default; {e}')
     pdo_contracts_version = '0.0.0'
 
 try :
     pdo_client_version = subprocess.check_output(
         'bin/get_version', cwd=os.path.join(root_dir, os.pardir, 'private-data-objects')).decode('ascii').strip()
 except Exception as e :
-    warnings.warn('Failed to get pdo_client version, using the default')
+    warnings.warn(f'Failed to get pdo_client version, using the default; {e}')
     pdo_client_version = '0.0.0'
 
 ## -----------------------------------------------------------------
@@ -65,6 +64,7 @@ setup(
     packages = [
         'pdo',
         'pdo.digital_asset',
+        'pdo.digital_asset.jupyter',
         'pdo.digital_asset.plugins',
         'pdo.digital_asset.scripts',
         'pdo.digital_asset.resources',
