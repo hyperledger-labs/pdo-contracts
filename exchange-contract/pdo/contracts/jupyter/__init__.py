@@ -43,6 +43,7 @@ from .utility import *
 # access to the exchange family asset type plugin module.
 # -----------------------------------------------------------------
 _contract_families_ = {
+    'digital_asset' : 'da',
     'exchange' : 'ex',
     'inference' : 'ml',
 }
