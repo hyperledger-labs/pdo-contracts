@@ -41,6 +41,7 @@ static KeyValueStore image_store("image");
 static const std::string md_image_key("image");
 static const std::string md_image_hash_key("image_hash");
 static const std::string md_border_width_key("border_width");
+static const std::string transfer_key("_transfer_");
 
 static std::map<std::string, contract_method_t> initialize_capability_map(void)
 {
@@ -98,17 +99,8 @@ static bool get_image(bitmap_image& image)
     if (! get_image(image_array))
         return false;
 
-    // yes... it is silly to copy from a ww::types::ByteArray to a std::vector
-    const unsigned char* data_ptr = image_array.data();
-    const unsigned int data_size = image_array.size();
-
-    std::vector<unsigned char> image_vector;
-    std::copy(data_ptr, data_ptr + data_size, std::back_inserter(image_vector));
-
-    if (image.load_image(image_vector) < 0)
-        return false;
-
-    return true;
+    image.load_image(image_array);
+    return image.error_code_ == 0;
 }
 
 // -----------------------------------------------------------------
@@ -134,21 +126,41 @@ bool ww::digital_asset::guardian::initialize(const Message& msg, const Environme
     const uint32_t border_width = (unsigned int)msg.get_number("public_border_width");
     ASSERT_SUCCESS(rsp, 0 < border_width, "border width must be positive integer");
 
-    const std::string encoded_image(msg.get_string("encoded_image"));
-    ww::types::ByteArray decoded_image;
+    // Grab the image from the transferred KV store
+    const std::string encoded_encryption_key(msg.get_string("encryption_key"));
+    const std::string encoded_state_hash(msg.get_string("state_hash"));
+    const std::string transfer_key(msg.get_string("transfer_key"));
 
-    ASSERT_SUCCESS(rsp, ww::crypto::b64_decode(encoded_image, decoded_image), "failed to decode the encoded image");
+    ww::types::ByteArray encryption_key;
+    ASSERT_SUCCESS(rsp, ww::crypto::b64_decode(encoded_encryption_key, encryption_key),
+                   "invalid encryption key");
 
-    const unsigned char* data_ptr = decoded_image.data();
-    const unsigned int data_size = decoded_image.size();
+    ww::types::ByteArray state_hash;
+    ASSERT_SUCCESS(rsp, ww::crypto::b64_decode(encoded_state_hash, state_hash),
+                   "invalid state hash");
 
-    std::vector<unsigned char> image_vector(data_ptr, data_ptr + data_size);
+    int handle = KeyValueStore::open(state_hash, encryption_key);
+    if (handle < 0)
+        return rsp.error("failed to open the key value store");
 
+    ww::types::ByteArray image_vector;
+    KeyValueStore input_store("", handle);
+
+    ASSERT_SUCCESS(rsp, input_store.get(transfer_key, image_vector),
+                   "store does not contain a value");
+
+    ww::types::ByteArray new_state_hash;
+    ASSERT_SUCCESS(rsp, input_store.finalize(handle, new_state_hash),
+                   "failed to close the output store");
+
+    // verify and store the image in the contract state
     bitmap_image image(image_vector);
-    ASSERT_SUCCESS(rsp, (border_width * 2) < image.width(), "invalid image");
-    ASSERT_SUCCESS(rsp, (border_width * 2) < image.height(), "invalid image");
+    ASSERT_SUCCESS(rsp, image.error_code_ == 0, "invalid image format");
 
-    ASSERT_SUCCESS(rsp, set_image(decoded_image), "failed to store the image");
+    ASSERT_SUCCESS(rsp, (border_width * 2) < image.width(), "invalid image width");
+    ASSERT_SUCCESS(rsp, (border_width * 2) < image.height(), "invalid image height");
+
+    ASSERT_SUCCESS(rsp, set_image(image_vector), "failed to store the image");
     ASSERT_SUCCESS(rsp, set_public_border_width(border_width), "failed to store the border width");
 
     // Initialize the data guardian
@@ -202,21 +214,57 @@ bool ww::digital_asset::guardian::get_original_image(const Message& msg, const E
 {
     ASSERT_INITIALIZED(rsp);
 
-    bitmap_image image;
-    ASSERT_SUCCESS(rsp, get_image(image), "failed to retrieve the image");
+    ww::types::ByteArray image_vector;
 
-    std::vector<unsigned char> image_vector;
-    image.save_image(image_vector);
+    {
+        // Get the image
+        bitmap_image image;
+        ASSERT_SUCCESS(rsp, get_image(image), "failed to retrieve the image");
+        image.save_image(image_vector);
+    }
 
-    const ww::types::ByteArray decoded_image(image_vector.begin(), image_vector.end());
-    std::string encoded_image;
-    ASSERT_SUCCESS(rsp, ww::crypto::b64_encode(decoded_image, encoded_image), "failed to encode image");
+    ww::types::ByteArray encryption_key;
+    ASSERT_SUCCESS(rsp, ww::crypto::aes::generate_key(encryption_key),
+                   "unexpected error: failed to create encryption key");
 
-    ww::value::Object v;
-    const ww::value::String e(encoded_image.c_str());
-    v.set_value("encoded_image", e);
+    // Save it to the output store
+    int handle = KeyValueStore::create(encryption_key);
+    if (handle < 0)
+        return rsp.error("failed to create the key value store");
 
-    return rsp.value(v, false);
+    KeyValueStore output_store("", handle);
+    ASSERT_SUCCESS(rsp, output_store.set(transfer_key, image_vector),
+                   "unexpected error: failed to save value");
+
+    ww::types::ByteArray state_hash;
+    ASSERT_SUCCESS(rsp, output_store.finalize(handle, state_hash),
+                   "failed to close the output store");
+
+    // Package the result
+    ww::value::Structure result(DAG_IMAGE_TRANSFER_SCHEMA);
+
+    {
+        const ww::value::String v(transfer_key.c_str());
+        result.set_value("transfer_key", v);
+    }
+
+    {
+        std::string encoded_encryption_key;
+        ASSERT_SUCCESS(rsp, ww::crypto::b64_encode(encryption_key, encoded_encryption_key),
+                       "unexpected error: failed to encode key");
+        const ww::value::String v(encoded_encryption_key.c_str());
+        result.set_value("encryption_key", v);
+    }
+
+    {
+        std::string encoded_hash;
+        ASSERT_SUCCESS(rsp, ww::crypto::b64_encode(state_hash, encoded_hash),
+                       "unexpected error: failed to encode hash");
+        const ww::value::String v(encoded_hash.c_str());
+        result.set_value("state_hash", v);
+    }
+
+    return rsp.value(result, false);
 }
 
 // -----------------------------------------------------------------
@@ -225,23 +273,58 @@ bool ww::digital_asset::guardian::get_public_image(const Message& msg, const Env
 {
     ASSERT_INITIALIZED(rsp);
 
-    bitmap_image image;
-    ASSERT_SUCCESS(rsp, get_image(image), "failed to retrieve the image");
+    ww::types::ByteArray image_vector;
 
-    image.convert_to_grayscale();
+    {
+        // Get the image
+        bitmap_image image;
+        ASSERT_SUCCESS(rsp, get_image(image), "failed to retrieve the image");
+        image.convert_to_grayscale();
+        image.save_image(image_vector);
+    }
 
-    std::vector<unsigned char> image_vector;
-    image.save_image(image_vector);
+    ww::types::ByteArray encryption_key;
+    ASSERT_SUCCESS(rsp, ww::crypto::aes::generate_key(encryption_key),
+                   "unexpected error: failed to create encryption key");
 
-    const ww::types::ByteArray decoded_image(image_vector.begin(), image_vector.end());
-    std::string encoded_image;
-    ASSERT_SUCCESS(rsp, ww::crypto::b64_encode(decoded_image, encoded_image), "failed to encode image");
+    // Save it to the output store
+    int handle = KeyValueStore::create(encryption_key);
+    if (handle < 0)
+        return rsp.error("failed to create the key value store");
 
-    ww::value::Object v;
-    const ww::value::String e(encoded_image.c_str());
-    v.set_value("encoded_image", e);
+    KeyValueStore output_store("", handle);
+    ASSERT_SUCCESS(rsp, output_store.set(transfer_key, image_vector),
+                   "unexpected error: failed to save value");
 
-    return rsp.value(v, false);
+    ww::types::ByteArray state_hash;
+    ASSERT_SUCCESS(rsp, output_store.finalize(handle, state_hash),
+                   "failed to close the output store");
+
+    // Package the result
+    ww::value::Structure result(DAG_IMAGE_TRANSFER_SCHEMA);
+
+    {
+        const ww::value::String v(transfer_key.c_str());
+        result.set_value("transfer_key", v);
+    }
+
+    {
+        std::string encoded_encryption_key;
+        ASSERT_SUCCESS(rsp, ww::crypto::b64_encode(encryption_key, encoded_encryption_key),
+                       "unexpected error: failed to encode key");
+        const ww::value::String v(encoded_encryption_key.c_str());
+        result.set_value("encryption_key", v);
+    }
+
+    {
+        std::string encoded_hash;
+        ASSERT_SUCCESS(rsp, ww::crypto::b64_encode(state_hash, encoded_hash),
+                       "unexpected error: failed to encode hash");
+        const ww::value::String v(encoded_hash.c_str());
+        result.set_value("state_hash", v);
+    }
+
+    return rsp.value(result, false);
 }
 
 // -----------------------------------------------------------------

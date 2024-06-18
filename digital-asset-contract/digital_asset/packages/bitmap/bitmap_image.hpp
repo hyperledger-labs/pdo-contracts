@@ -508,6 +508,19 @@ public:
 
       create_bitmap();
 
+      /* attempt to catch allocation errors */
+      if (data_.size() != height_ * width_ * bytes_per_pixel_)
+      {
+          CONTRACT_SAFE_LOG(3, "Failed to allocate bitmap memory (size)");
+          return -1;
+      }
+
+      if (data_.data() == NULL)
+      {
+          CONTRACT_SAFE_LOG(3, "Failed to allocate bitmap memory (null)");
+          return -1;
+      }
+
       for (unsigned int i = 0; i < height_; ++i)
       {
          unsigned int data_size = sizeof(char) * bytes_per_pixel_ * width_;
