@@ -15,7 +15,7 @@
 import json
 import logging
 
-from pdo.common.crypto import byte_array_to_base64, base64_to_byte_array
+from pdo.common.key_value import KeyValueStore
 from pdo.contract import invocation_request
 
 import pdo.client.builder as pbuilder
@@ -23,12 +23,17 @@ import pdo.client.builder.command as pcommand
 import pdo.client.builder.contract as pcontract
 import pdo.client.builder.shell as pshell
 import pdo.client.commands.contract as pcontract_cmd
+from pdo.client.commands.eservice import get_eservice_from_contract
 
 import pdo.exchange.plugins.token_object as token_object
 
+logger = logging.getLogger(__name__)
+
 __all__ = [
+    'op_get_image_metadata',
+    'op_get_public_image',
+    'op_get_original_image',
     'op_initialize',
-    'op_echo',
     'op_get_verifying_key',
     'op_get_contract_metadata',
     'op_get_contract_code_metadata',
@@ -51,6 +56,7 @@ __all__ = [
 
 ## -----------------------------------------------------------------
 ## -----------------------------------------------------------------
+op_initialize = token_object.op_initialize
 op_get_verifying_key = token_object.op_get_verifying_key
 op_get_contract_metadata = token_object.op_get_contract_metadata
 op_get_contract_code_metadata = token_object.op_get_contract_code_metadata
@@ -61,7 +67,6 @@ op_transfer = token_object.op_transfer
 op_escrow = token_object.op_escrow
 op_release = token_object.op_release
 op_claim = token_object.op_claim
-op_initialize = token_object.op_initialize
 cmd_mint_tokens = token_object.cmd_mint_tokens
 cmd_transfer_assets = token_object.cmd_transfer_assets
 
@@ -72,14 +77,23 @@ logger = logging.getLogger(__name__)
 ## -----------------------------------------------------------------
 
 ## -----------------------------------------------------------------
-def __save_image__(result, filename) :
+def __save_image__(state, session, result, filename) :
     # not catching exceptions intentionally, we want the interpreter
     # to see and handle the exception
     parsed_result = json.loads(result)
-    decoded_image_data = base64_to_byte_array(parsed_result['encoded_image'])
+
+    eservice_client = get_eservice_from_contract(state, session.save_file, session.eservice_url)
+    if not eservice_client :
+        raise Exception('unknown eservice {}'.format(session.eservice_url))
+
+    kv = KeyValueStore(parsed_result['encryption_key'])
+    _ = kv.sync_from_block_store(parsed_result['state_hash'], eservice_client)
+
+    with kv :
+        image_data = kv.get(parsed_result['transfer_key'], output_encoding='raw')
 
     with open(filename, 'wb') as fp:
-        fp.write(bytes(decoded_image_data))
+        fp.write(bytes(image_data))
 
 ## -----------------------------------------------------------------
 ## get_image_metadata
@@ -148,7 +162,7 @@ class op_get_public_image(pcontract.contract_op_base) :
         cls.log_invocation(message, result)
 
         if image_file:
-            __save_image__(result, image_file)
+            __save_image__(state, dg_session, result, image_file)
 
         return result
 
@@ -187,7 +201,7 @@ class op_get_original_image(pcontract.contract_op_base) :
         cls.log_invocation(message, result)
 
         if image_file:
-            __save_image__(result, image_file)
+            __save_image__(state, dg_session, result, image_file)
 
         return result
 
@@ -211,6 +225,7 @@ class cmd_get_image_metadata(pcommand.contract_command_base) :
             op_get_image_metadata, state, context, session, guardian_save_file, **kwargs)
 
         cls.display(result)
+        return result
 
 ## -----------------------------------------------------------------
 ## -----------------------------------------------------------------
@@ -240,6 +255,7 @@ class cmd_get_public_image(pcommand.contract_command_base) :
             op_get_public_image, state, context, session, guardian_save_file, image_file, **kwargs)
 
         cls.display("image saved to file {}".format(image_file))
+        return result
 
 ## -----------------------------------------------------------------
 ## -----------------------------------------------------------------
@@ -269,6 +285,7 @@ class cmd_get_original_image(pcommand.contract_command_base) :
             op_get_original_image, state, context, session, guardian_save_file, image_file, **kwargs)
 
         cls.display("image saved to file {}".format(image_file))
+        return result
 
 ## -----------------------------------------------------------------
 ## Create the generic, shell independent version of the aggregate command

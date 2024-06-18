@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = [ 'da_guardian', 'da_token' ]
+__all__ = [ 'guardian', 'token_object' ]

@@ -28,8 +28,17 @@
 #define DAG_INITIALIZE_PARAM_SCHEMA                             \
     "{"                                                         \
         SCHEMA_KW(public_border_width, 0) ","                   \
-        SCHEMA_KW(encoded_image, "") ","                        \
+        SCHEMA_KW(encryption_key, "") ","                       \
+        SCHEMA_KW(state_hash, "") ","                           \
+        SCHEMA_KW(transfer_key, "") ","                         \
         SCHEMA_KWS(guardian, DG_INITIALIZE_PARAM_SCHEMA)        \
+    "}"
+
+#define DAG_IMAGE_TRANSFER_SCHEMA               \
+    "{"                                         \
+        SCHEMA_KW(encryption_key, "") ","       \
+        SCHEMA_KW(state_hash, "") ","           \
+        SCHEMA_KW(transfer_key, "")             \
     "}"
 
 #define DAG_IMAGE_METADATA_SCHEMA               \
