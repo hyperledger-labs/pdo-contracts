@@ -88,6 +88,7 @@ setup(
         'twisted',
         'jsonschema>=3.0.1',
         'futures==3.1.1',
+        'numpy==1.24.4',
         'opencv-python>=4.6.0',
         'tensorflow-serving-api==2.11.0',
         'pdo-client>=' + pdo_client_version,
