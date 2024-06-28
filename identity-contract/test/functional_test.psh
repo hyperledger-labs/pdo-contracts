@@ -34,3 +34,9 @@ if -o ${_error_code_} 0
    echo ${ERROR} [ERROR ${_error_code_}] identity test failed; ${_error_message_}
    exit -v ${_error_code_}
 fi
+
+script -f ${_path_}/tests/signature_authority.psh
+if -o ${_error_code_} 0
+   echo ${ERROR} [ERROR ${_error_code_}] signature_authority test failed; ${_error_message_}
+   exit -v ${_error_code_}
+fi

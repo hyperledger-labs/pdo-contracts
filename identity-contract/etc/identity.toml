@@ -2,4 +2,5 @@
 # Exchange family contract source
 # -----------------------------------------------------------------
 [ContractFamily.Identity]
+signature_authority = { source = "${home}/contracts/identity/_signature_authority.b64" }
 identity = { source = "${home}/contracts/identity/_identity.b64" }
