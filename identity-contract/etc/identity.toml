@@ -1,0 +1,5 @@
+# -----------------------------------------------------------------
+# Exchange family contract source
+# -----------------------------------------------------------------
+[ContractFamily.Identity]
+identity = { source = "${home}/contracts/identity/_identity.b64" }
