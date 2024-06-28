@@ -20,5 +20,10 @@ warnings.simplefilter("ignore")
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
+def signature_authority() :
+    run_shell_command('do_signature_authority', 'pdo.identity.plugins.signature_authority')
+
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
 def identity() :
     run_shell_command('do_identity', 'pdo.identity.plugins.identity')

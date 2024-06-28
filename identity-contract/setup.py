@@ -81,6 +81,7 @@ setup(
     ],
     entry_points = {
         'console_scripts' : [
+            'ex_signature_authority=pdo.identity.scripts.scripts:signature_authority',
             'ex_identity=pdo.identity.scripts.scripts:identity',
         ]
     }

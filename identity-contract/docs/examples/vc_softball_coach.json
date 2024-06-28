@@ -1,0 +1,36 @@
+{
+    "//": "this is a verifiable credential",
+    "id": "PDO://ledgerco.org:8001/SMeYjWc5IOdvI3KJtPbx4WHlRvkdL5A__xcHayDj9-0=/XT3LAe_ERcsP2HGdzEA9gw=="
+    "issuer": {
+        "description": "Issuer is Washington County ASA Commissioner, contract object is ASA national office",
+        "id": "PDO://ledgerco.org:8001/A6QBclbcAayAvw7BggM7iMz_Xa6NEn_YGT94mpkQmEk=",
+        "context_path": [ "Oregon", "Washington County", "GeorgeSmiley" ]
+    }
+    "issuanceDate": "03/21/2023",
+    "expirationData": "12/31/2024",
+    "credentialSubject": {
+        "//": "Local coach is the subject of the credential",
+        "id": "PDO://ledgerco.org:8001/SMeYjWc5IOdvI3KJtPbx4WHlRvkdL5A__xcHayDj9-0="
+        "identified_by": {
+            "type": "http://registerusasoftball.com/schema/identifying_information.json",
+            "picture": {
+                "url": "http://photos.google.com/",
+                "hash": ""
+            }
+            "date_of_birth": "06/19/1972",
+        },
+        "certified_coach": {
+            "type": "http://registerusasoftball.com/schema/asa_coach_certification.json",
+            "certification_level": 5,
+            "background_check": true,
+            "concussion_certification": true
+        },
+        "insured_by": {
+            "type": "http://registerusasoftball.com/schema/asa_insurance.json",
+            "member_id": "1375777",
+            "policy_number": "NAS1A21",
+            "maximum_liability_claim": 1000000,
+            "deductible": 250
+        }
+    }
+}

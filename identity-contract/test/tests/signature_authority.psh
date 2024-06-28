@@ -1,0 +1,119 @@
+#! /usr/bin/env pdo-shell
+
+## Copyright 2023 Intel Corporation
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+## Two shell variables are used:
+##    data -- the directory where the contract objects are stored
+##    path -- the directory where the PSH scripts are stored
+##
+## $ pdo-shell -s create.psh -m path <contract path>
+
+set --conditional -s home -v .
+set --conditional -s data -v .
+set --conditional -s save -v .
+set --conditional -s _bin_ -v ${home}/contracts/identity/scripts
+
+script -f ${_bin_}/init.psh
+
+set -s _contract_ -v ${save}/identity.pdo
+set -s _owner_ -v user1
+
+trap_error
+
+## =================================================================
+echo ${HEADER} create a signature authority ${ENDC}
+## =================================================================
+set -s _contract_ -v /tmp/signature_authority.pdo
+set -s _owner_ -v user1
+
+identity -n ${_owner_}
+
+contract create -c signature_authority --source ${contracts}/_signature_authority -f ${_contract_}
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to create the signature authority contract ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+signature_authority_contract initialize -w -f ${_contract_} \
+    --description "this is a test identity"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to initialize the signature authority contract ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+signature_authority_contract register_signing_context -w -f ${_contract_} \
+    -d "test1 context" --fixed -p "test1"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to save signing context test1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+signature_authority_contract register_signing_context -w -f ${_contract_} \
+    -d "test1 context" --fixed -p "test1" "test2"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to save signing context test1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+## =================================================================
+echo ${HEADER} simple credential test  ${ENDC}
+## =================================================================
+set -s _credential1_ -f ${_path_}/../credential1.json
+
+signature_authority_contract sign_credential -f ${_contract_} -c ${_credential1_} -p test1 test2 -s _signed_credential1_
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to sign credential ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+echo ${INFO} Signed Credential: ${ENDC}
+echo ${_signed_credential1_}
+
+signature_authority_contract verify_credential -f ${_contract_} -c ${_signed_credential1_} -s _result_
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to verify the credential; ${_error_message_} ${ENDC}
+   exit -v ${_error_code_}
+fi
+if --not -e ${_result_} "true"
+   echo ${ERROR} [Error] credential verification failed ${ENDC}
+   exit -v 1
+fi
+
+## =================================================================
+echo ${HEADER} complex credential test  ${ENDC}
+## =================================================================
+set -s _credential2_ -f ${_path_}/../credential2.json
+
+signature_authority_contract sign_credential -f ${_contract_} -c ${_credential2_} -p test1 -s _signed_credential2_
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to sign credential; ${_error_message_} ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+echo ${INFO} Signed Credential: ${ENDC}
+echo ${_signed_credential2_}
+
+signature_authority_contract verify_credential -f ${_contract_} -c ${_signed_credential2_} -s _result_
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to verify the credential; ${_error_message_} ${ENDC}
+   exit -v ${_error_code_}
+fi
+if --not -e ${_result_} "true"
+   echo ${ERROR} [Error] credential verification failed ${ENDC}
+   exit -v 1
+fi
+
+
+exit

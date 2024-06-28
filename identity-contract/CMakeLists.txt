@@ -29,6 +29,7 @@ SET_PROPERTY(TARGET ${IDENTITY_LIB} APPEND_STRING PROPERTY LINK_OPTIONS "${WASM_
 SET_TARGET_PROPERTIES(${IDENTITY_LIB} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 # -----------------------------------------------------------------
+BUILD_CONTRACT(signature_authority contracts/signature_authority.cpp)
 BUILD_CONTRACT(identity contracts/identity.cpp)
 
 # -----------------------------------------------------------------
