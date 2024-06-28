@@ -20,6 +20,7 @@ set --conditional -s plugins -v ${home}/contracts/plugins/identity
 
 ## load_plugin -m pdo.identity.plugins.assertion
 load_plugin -m pdo.identity.plugins.identity
+load_plugin -m pdo.identity.plugins.signature_authority
 
 ## some definitions to make it easier to display text
 set -s ENDC   -v "\033[0m"
