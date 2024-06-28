@@ -1,0 +1,59 @@
+{
+    "//": "this is a verifiable credential",
+    "nonce": "p86OvShgiWuODUdABK6Ong==",
+    "issuer": {
+        "description": "The build manager is the issuer, the id is for the build manager org",
+        "id": "PDO://ledgerco.org:8001/A6QBclbcAayAvw7BggM7iMz_Xa6NEn_YGT94mpkQmEk=",
+    }
+    "issuanceDate": "04/17/2023",
+    "expirationData": "12/31/2024",
+    "type": [ "VerifiableCredential" ],
+    "credentialSchema": "http://example.com/scai_schema.json",
+    "credentialSubject":
+    {
+        "subject": {
+            "id": "PDO://ledgerco.org:8001/SMeYjWc5IOdvI3KJtPbx4WHlRvkdL5A__xcHayDj9+0=",
+            "identified_by": {
+                "sha256": "0b222de8bcb1ea30807f1a4d733108e96de4512b689da8c5f371ac8a572e9271"
+            }
+        },
+        "claims": {
+            "HasStackProtection": {
+                "conditions": {
+                    "flags": "-fstack-protector*"
+                },
+            },
+            "NoKnownVulnerabilities": {
+                "evidence": {
+                    "mediaType":"text/plain"
+                    "digest": {
+                        "sha256":"6db3ee1d8bdf7ea064281ecfaf999f9eb5749e4647d2a59e62eaa1ea8fcf6837"
+                    },
+                    "downloadLocation":"https://scans.example.com/results/snyk",
+                }
+            },
+            "HasSBOM": {
+                "evidence": {
+                    "mediaType": "application/spdx+json",
+                    "digest": {
+                        "sha256": "911d4365b61ba7ace55f7333b2c638caca4b811ee73da5beb28b9ecbbd22ca78"
+                    },
+                    "downloadLocation": "https://github.com/hyperledger-labs/private-data-objects/artifacts/808758122"
+                }
+            },
+            "HasSLSA": {
+                "evidence": {
+                    "mediaType": "application/x.dsse+jsonl",
+                    "digest": {
+                        "sha256": "ea4d1e56e739f26a451c095b9fb40a353b3e73ea1778fdddafe13562e81bd745"
+                    },
+                    "downloadLocation": "https://github.com/hyperledger-labs/private-data-objects/artifacts/808758121"
+                }
+            },
+            "ProducedBy": {
+                "id": "PDO://ledgerco.org:8001/contract_identifer_for_gcc_binary",
+                "command_line": "gcc -fstack-protector -o hello-world hello-world.c"
+            }
+        }
+    }
+}
