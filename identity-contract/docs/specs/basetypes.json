@@ -1,0 +1,94 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "title": "PDO Credential Interface",
+    "id": "http://tradenet.org/pdo-contracts/identity/credential#",
+
+    "definitions": {
+        "identity": {
+            "//": "-----------------------------------------------------------------",
+            "description": [
+                "Provides a reference to a specific identity contract object"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": [
+                        "Identity of the subject of the credential, since all subjects",
+                        "are contracts this will be assumed to be a contract id"
+                    ],
+                    "$ref": "#/pdo/basetypes/contract-id",
+                    "required": true
+                },
+                "name": {
+                    "description": [
+                        "A human readable name for the object",
+                        "It need not be unique nor meaningful"
+                    ],
+                    "type": "string",
+                    "required": false
+                },
+                "description": {
+                    "description": [
+                        "A human readable description of the object"
+                    ],
+                    "type": "string",
+                    "required": false
+                },
+                "identified_by": {
+                    "description": [
+                        "A list of attributes that can be used to establish the binding",
+                        "between an entity and the identity contract object."
+                    ],
+                    "type": "object",
+                    "required": false
+                }
+            }
+        },
+        "identity_key": {
+            "//": "-----------------------------------------------------------------",
+            "description": [
+                "Provides information required to identify a specific key in the",
+                "context of an identity object"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": [
+                        "Identity of the subject of the credential, since all subjects",
+                        "are contracts this will be assumed to be a contract id"
+                    ],
+                    "$ref": "#/pdo/basetypes/contract-id",
+                    "required": true
+                },
+                "context_path": {
+                    "description": [
+                        "A list of strings that contextualizes the identity"
+                    ],
+                    "type": "array",
+                    "items": {
+                        "type" : "string",
+                        "minItems": 0,
+                        "uniqueItems": false
+                    }
+                    "required": true
+                }
+                "name": {
+                    "description": [
+                        "A human readable name for the object",
+                        "It need not be unique nor meaningful"
+                    ],
+                    "type": "string",
+                    "required": false
+                },
+                "description": {
+                    "description": [
+                        "A human readable description of the object"
+                    ],
+                    "type": "string",
+                    "required": false
+                }
+            }
+        },
+
+    }
+}

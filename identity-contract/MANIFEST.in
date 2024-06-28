@@ -1,0 +1,3 @@
+recursive-include ../build/identity-contract *.b64
+recursive-include etc *.toml
+recursive-include scripts *.psh
