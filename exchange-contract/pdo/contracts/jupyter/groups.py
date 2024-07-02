@@ -121,21 +121,22 @@ class ServiceGroupSelectionWidget(ipywidgets.VBox) :
                  state : pbuilder.state.State,
                  bindings : pbuilder.bindings.Bindings,
                  service_type : str,
-                 button_label : str = None,
+                 button_label : str = 'Submit',
                  button_callback : typing.Callable = None) :
 
         assert service_type in service_data.service_types, "Unknown service type {}".format(service_type)
         self.service_type = service_type
+        self.service_label = pservices.service_labels[service_type]
 
         self.button_label = button_label
         self.button_callback = button_callback
 
         groups = self.create_groups_list()
-        self.groups_list = ipywidgets.Dropdown(options=groups, value=groups[0], description='Groups')
+        self.groups_list = ipywidgets.Dropdown(options=groups, value=groups[0], description=self.service_label)
 
-        self.refresh_button = ipywidgets.Button(description="Refresh")
+        self.refresh_button = ipywidgets.Button(description="Refresh Groups")
         self.refresh_button.on_click(self.refresh_button_click)
-        buttonbar = [self.refresh_button]
+        buttonbar = [self.groups_list, self.refresh_button]
         if button_callback :
             self.button_label = button_label
             self.button_callback = button_callback
@@ -147,7 +148,7 @@ class ServiceGroupSelectionWidget(ipywidgets.VBox) :
 
         self.feedback = ipywidgets.Output()
 
-        super().__init__([self.groups_list, ipywidgets.HBox(buttonbar), self.feedback])
+        super().__init__([ipywidgets.HBox(buttonbar), self.feedback])
 
     @property
     def selection(self) :
@@ -171,7 +172,8 @@ class ServiceGroupSelectionWidget(ipywidgets.VBox) :
         """Invoke the function for handling the selection
         """
         self.feedback.clear_output()
-        self.button_callback(self.service_type, self.groups_list.value, self.feedback)
+        if self.button_callback :
+            self.button_callback(self.service_type, self.groups_list.value, self.feedback)
 
 
 # -----------------------------------------------------------------

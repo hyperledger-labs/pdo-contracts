@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import logging
-logger = logging.getLogger(__name__)
 
 import pdo.common.crypto as pcrypto
+from pdo.common.key_value import KeyValueStore
 from pdo.contract import ContractCode
 from pdo.contract import invocation_request
 from pdo.submitter.create import create_submitter
@@ -26,8 +25,11 @@ import pdo.client.builder.command as pcommand
 import pdo.client.builder.contract as pcontract
 import pdo.client.builder.shell as pshell
 import pdo.client.commands.contract as pcontract_cmd
+from pdo.client.commands.eservice import get_eservice_from_contract
 
 import pdo.exchange.plugins.guardian as guardian_base
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     'op_initialize',
@@ -118,13 +120,31 @@ class op_initialize(pcontract.contract_op_base) :
         else :
             raise ValueError("missing required parameter; must specify verifying key")
 
+        # prepare a local KV store that we can use to pass the image
         with open(image, 'rb') as fp:
             image_data = fp.read()
+
+        transfer_key = '_transfer_'
+
+        kv = KeyValueStore()
+        with kv :
+            encoded_key = KeyValueStore.input_encoding_conversion['str'](transfer_key)
+            encoded_image_data = tuple(image_data)
+            kv.set(encoded_key, encoded_image_data, input_encoding='raw', output_encoding='raw')
+
+        # push the blocks to the eservice so the server can open the store
+        eservice_client = get_eservice_from_contract(state, session_params.save_file, session_params.eservice_url)
+        if not eservice_client :
+            raise Exception('unknown eservice {}'.format(session_params.eservice_url))
+
+        _ = kv.sync_to_block_store(eservice_client)
 
         params = {}
         params['guardian'] = gparams
         params['public_border_width'] = border
-        params['encoded_image'] = pcrypto.byte_array_to_base64(image_data)
+        params['encryption_key'] = kv.encryption_key
+        params['state_hash'] = kv.hash_identity
+        params['transfer_key'] = transfer_key
 
         message = invocation_request('initialize', **params)
         result = pcontract_cmd.send_to_contract(state, message, **session_params)
@@ -165,8 +185,8 @@ class cmd_create_guardian(pcommand.contract_command_base) :
         # parameters
         if image is None :
             image = context['image_file']
-        if border is None or border is 0 :
-            border = context['image_border'] or 10
+        if border is None or border == 0 :
+            border = int(context['image_border']) or 10
 
         # need the ledger key as the root of trust for binding to the issuer
         ledger_submitter = create_submitter(state.get(['Ledger']))

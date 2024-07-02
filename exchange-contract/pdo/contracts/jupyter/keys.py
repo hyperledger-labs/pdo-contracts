@@ -16,6 +16,7 @@ import functools
 import glob
 import os
 import re
+import typing
 
 import ipywidgets
 
@@ -182,8 +183,8 @@ class KeySelectionWidget(ipywidgets.VBox) :
                  state : pbuilder.state.State,
                  bindings : pbuilder.bindings.Bindings,
                  keytype : str,
-                 button_label : str,
-                 button_callback) :
+                 button_label : str = 'Submit',
+                 button_callback : typing.Callable = None) :
 
         assert keytype in ['public', 'private']
 
@@ -191,21 +192,26 @@ class KeySelectionWidget(ipywidgets.VBox) :
         self.bindings = bindings
         self.keytype = keytype
 
-        self.button_label = button_label
-        self.button_callback = button_callback
-
-        self.submit = ipywidgets.Button(description=self.button_label)
-        self.submit.on_click(self.submit_button_click)
-
         keys = self.create_key_list(self.state, self.bindings)
         self.dropdown = ipywidgets.Dropdown(options=keys, value=keys[0], description='Keys')
 
         self.refresh = ipywidgets.Button(description="Refresh Keys")
         self.refresh.on_click(self.refresh_button_click)
 
+        buttonbar = [self.dropdown, self.refresh]
+
+        if button_callback :
+            self.button_label = button_label
+            self.button_callback = button_callback
+
+            self.submit = ipywidgets.Button(description=self.button_label)
+            self.submit.on_click(self.submit_button_click)
+
+            buttonbar.append(self.submit)
+
         self.feedback = ipywidgets.Output()
 
-        super().__init__([ipywidgets.HBox([self.dropdown, self.refresh, self.submit]), self.feedback])
+        super().__init__([ipywidgets.HBox(buttonbar), self.feedback])
 
     @property
     def selection(self) :
@@ -230,22 +236,23 @@ class KeySelectionWidget(ipywidgets.VBox) :
         """Invoke the function for handling the selection
         """
         self.feedback.clear_output()
-        self.button_callback(self.dropdown.value, self.feedback)
+        if self.button_callback :
+            self.button_callback(self.dropdown.value, self.feedback)
 
 class PublicKeySelectionWidget(KeySelectionWidget) :
     def __init__(self,
                  state : pbuilder.state.State,
                  bindings : pbuilder.bindings.Bindings,
-                 button_label : str,
-                 button_callback) :
+                 button_label : str = 'Submit',
+                 button_callback : typing.Callable = None) :
         super().__init__(state, bindings, 'public', button_label, button_callback)
 
 class PrivateKeySelectionWidget(KeySelectionWidget) :
     def __init__(self,
                  state : pbuilder.state.State,
                  bindings : pbuilder.bindings.Bindings,
-                 button_label : str,
-                 button_callback) :
+                 button_label : str = 'Submit',
+                 button_callback : typing.Callable = None) :
         super().__init__(state, bindings, 'private', button_label, button_callback)
 
 # -----------------------------------------------------------------

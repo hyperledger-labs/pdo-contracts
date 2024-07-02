@@ -4,6 +4,10 @@ context/tokens.toml
 etc/digital_asset.toml
 pdo/__init__.py
 pdo/digital_asset/__init__.py
+pdo/digital_asset/jupyter/__init__.py
+pdo/digital_asset/jupyter/context.py
+pdo/digital_asset/jupyter/token.py
+pdo/digital_asset/jupyter/token_issuer.py
 pdo/digital_asset/plugins/__init__.py
 pdo/digital_asset/plugins/guardian.py
 pdo/digital_asset/plugins/token_object.py

@@ -49,6 +49,13 @@ ADD_SHELL_TEST(digital-asset functional SCRIPT test/run_tests.sh)
 # is significant and should not be removed; it prevents the notebooks
 # directory being prepended to the copied name
 # -----------------------------------------------------------------
+INCLUDE(Jupyter)
+FILE(GLOB_RECURSE NOTEBOOK_SOURCES docs/notebooks/*.py docs/notebooks/*.md)
+
+CONVERT_JUPYTEXT(DA_NOTEBOOKS ${NOTEBOOK_SOURCES})
+
+ADD_CUSTOM_TARGET(digital-asset-notebooks ALL DEPENDS ${DA_NOTEBOOKS})
+
 INSTALL(DIRECTORY docs/notebooks/
   DESTINATION "${PDO_JUPYTER_ROOT}/digital-asset"
-  FILES_MATCHING PATTERN "*.ipynb")
+  FILES_MATCHING PATTERN "*.ipynb" PATTERN "*.png")
