@@ -1,0 +1,4 @@
+recursive-include ../build/hfmodels-contract *.b64
+recursive-include etc *.toml
+recursive-include context *.toml
+recursive-include scripts *.sh
