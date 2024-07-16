@@ -215,9 +215,9 @@ JUPYTER_MULTIUSER_COMPOSE_ARGS += -f test_multiuser_jupyter.yaml
 
 test_multiuser_jupyter : clean_config clean_repository build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-		docker-compose $(JUPYTER_MULTIUSER_COMPOSE_ARGS) up --abort-on-container-exit
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_MULTIUSER_COMPOSE_ARGS) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-		docker-compose $(JUPYTER_MULTIUSER_COMPOSE_ARGS) down
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_MULTIUSER_COMPOSE_ARGS) down
 
 # -----------------------------------------------------------------
 # Cleaning is a bit interesting because the containers don't go away
