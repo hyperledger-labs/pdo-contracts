@@ -1,0 +1,54 @@
+# Copyright 2024 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# -----------------------------------------------------------------
+# token ${token}
+# -----------------------------------------------------------------
+[token.${token}.asset_type]
+module = "pdo.exchange.plugins.asset_type"
+identity = "token_type"
+source = "${ContractFamily.Exchange.asset_type.source}"
+name = "${token}"
+description = "asset type for ${token} token objects"
+link = "http://"
+
+[token.${token}.vetting]
+module = "pdo.exchange.plugins.vetting"
+identity = "token_vetting"
+source = "${ContractFamily.Exchange.vetting.source}"
+asset_type_context = "@{..asset_type}"
+
+[token.${token}.guardian]
+module = "pdo.hfmodels.plugins.hfmodels_guardian"
+url = "${url}"
+identity = "${..token_issuer.identity}"
+token_issuer_context = "@{..token_issuer}"
+service_only = true
+
+[token.${token}.token_issuer]
+module = "pdo.exchange.plugins.token_issuer"
+identity = "token_issuer"
+source = "${ContractFamily.Exchange.token_issuer.source}"
+token_object_context = "@{..token_object}"
+vetting_context = "@{..vetting}"
+guardian_context = "@{..guardian}"
+description = "issuer for token ${token}"
+count = 1
+
+[token.${token}.token_object]
+module = "pdo.hfmodels.plugins.hfmodels_token_object"
+identity = "${..token_issuer.identity}"
+source = "${ContractFamily.hfmodels.token_object.source}"
+token_issuer_context = "@{..token_issuer}"
+data_guardian_context = "@{..guardian}"

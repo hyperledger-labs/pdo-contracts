@@ -18,6 +18,8 @@ PROJECT(pdo-contracts)
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/exchange-contract")
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/digital-asset-contract")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/inference-contract")
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/hfmodels-contract")
 INCLUDE(ProjectVariables)
 
 LIST(APPEND CMAKE_MODULE_PATH "${PDO_SOURCE_ROOT}/contracts/wawaka")
@@ -27,7 +29,7 @@ INCLUDE(wawaka_common)
 LIST(APPEND WASM_LIBRARIES ${WW_COMMON_LIB})
 LIST(APPEND WASM_INCLUDES ${WW_COMMON_INCLUDES})
 
-SET(CONTRACT_FAMILIES exchange-contract digital-asset-contract inference-contract)
+SET(CONTRACT_FAMILIES exchange-contract digital-asset-contract inference-contract hfmodels-contract)
 
 # A local cmake file (Local.cmake) allows for local overrides of
 # variables. In particular, this is useful to set CONTRACT_FAMILIES

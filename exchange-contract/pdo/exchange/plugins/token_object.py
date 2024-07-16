@@ -240,7 +240,8 @@ class cmd_mint_tokens(pcommand.contract_command_base) :
             state, to_context, to_session,
             ledger_key,
             to_package,
-            authority)
+            authority,
+            **kwargs)
         return to_save_file
 
     @classmethod
