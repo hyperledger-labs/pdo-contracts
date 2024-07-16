@@ -19,7 +19,7 @@ ENDIF()
 # ---------------------------------------------
 # Set up the include list
 # ---------------------------------------------
-SET (INFERENCE__INCLUDES ${WASM_INCLUDES})
+SET (INFERENCE_INCLUDES ${WASM_INCLUDES})
 LIST(APPEND INFERENCE_INCLUDES ${EXCHANGE_INCLUDES})
 LIST(APPEND INFERENCE_INCLUDES ${CMAKE_CURRENT_LIST_DIR})
 
