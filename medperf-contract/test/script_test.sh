@@ -194,38 +194,102 @@ try pdo-context load ${OPTS} --import-file ${F_CONTEXT_TEMPLATES}/tokens.toml \
 # start the tests
 # -----------------------------------------------------------------
 
-yell create a token issuer and mint the tokens. Token configured so that asset can be used at most 3 times.
+yell create a token issuer and mint the tokens. This token does not have any policy
 try ex_token_issuer create ${OPTS} --contract token.test1.token_issuer
 try medperf_token mint_dataset_tokens ${OPTS} --contract token.test1.token_object \
-    --dataset_id "test_dataset_1" \
-    --experiment_id  "test_experiment_1" \
-    --associated_model_ids  "model_1" \
-    --max_use_count 3
-    
+    --dataset_id "test_dataset_1" 
 
-yell get dataset info from the token object
+# yell get dataset and policy info from the token object
+# try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
+    
+yell the owner of the token updates the policy by adding an experiment id and a list of associated models with the experiment id
+yell the experiment contains 5 models, but the dataset can be used only 5 times
+try medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
+    --dataset_id "test_dataset_1" \
+    --experiment_id "test_experiment_1" \
+    --associated_model_ids "5" \
+    --max_use_count 5
+
+yell get dataset and policy info from the token object
 try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
 
-yell a test call of the hello world method in the contract
-try medperf_token hello_world ${OPTS} --contract token.test1.token_object.token_1
 
-yell use the dataset for a model, this is the first usage prior to transfer
-try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1
+yell the owner transfers the token to token_holder1
+try medperf_token transfer ${OPTS} --contract token.test1.token_object.token_1 \
+    --new-owner token_holder1
+
+yell the token_holder1 tries to update the policy to a maximum 10 uese, but fails
+medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
+    --experiment_id "test_experiment_1" \
+    --dataset_id "test_dataset_1" \
+    --associated_model_ids "10" \
+    --max_use_count 10 \
+    --identity token_holder1
+
+yell the token_issuer tries to update the policy to a maximum 2 uses
+try medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
+    --experiment_id "test_experiment_1" \
+    --dataset_id "test_dataset_1" \
+    --associated_model_ids "10" \
+    --max_use_count 2 
+
+yell the token_holder1 tries to check the policy again
+try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
+    --identity token_holder1
+
+
+yell the token_holder1 tries to use the dataset with the first models, this time works
+medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
+    --identity token_holder1 \
+    --dataset_id "test_dataset_1" \
+    --model_ids_to_evaluate '3'
+
+yell check the policy again
+try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
+    --identity token_holder1
+
+
+yell the token_holder1 tries to use a model that is not associated with the experiment, but fails
+medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
+    --identity token_holder1 \
+    --dataset_id "test_dataset_1" \
+    --model_ids_to_evaluate '15'
+
+yell the token_holder1 tries to use the dataset with the second model, this time works
+try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
+    --identity token_holder1 \
+    --dataset_id "test_dataset_1" \
+    --model_ids_to_evaluate '5'
+
+# yell the token_holder1 tries to use the dataset with the third model, this time fails
+# try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
+#     --identity token_holder1 \
+#     --dataset_id "test_dataset_1" \
+#     --model_ids_to_evaluate '4'
+
+# yell check the policy again
+# try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
+#     --identity token_holder1
+
+yell get experiment order and submit to the guardian service
+try medperf_token experiment_order ${OPTS} --contract token.test1.token_object.token_1 \
+    --identity token_holder1 \
+    --dataset_id "test_dataset_1" \
+
+yell check the policy again
+try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
+    --identity token_holder1
+
+# yell a test call of the hello world method in the contract
+# try medperf_token owner_test ${OPTS} --contract token.test1.token_object.token_1
+
+# yell use the dataset for a model, this is the first usage prior to transfer
+# try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1
     # --user_inputs '{"inputs": "Can you please let us know more details about yourself ?"}'
 
 # yell a test call of the hello world method in the contract
-# try medperf_token hello_world ${OPTS} --contract token.test1.token_object.token_1
+# try medperf_token owner_test ${OPTS} --contract token.test1.token_object.token_1
 
-yell transfer the token to token_holder1 , only one more use permitted by the new owner
-try medperf_token transfer ${OPTS} --contract token.test1.token_object.token_1 \
-    --new-owner token_holder1 
-
-yell new owner uses the model, this is the second and last usage of the asset
-try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
-    # --user_inputs '{"inputs": "Do you know me ?"}' --identity token_holder1
-
-yell new owner attempts 3rd usage, and this should fail
-try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
-    # --user_inputs '{"inputs": "Am I lucky today ?"}' --identity token_holder1
+read -p "Press enter to quit"
 
 exit

@@ -66,8 +66,8 @@ contract_method_reference_t contract_method_dispatch_table[] = {
     CONTRACT_METHOD2(get_dataset_info, ww::medperf::token_object::get_dataset_info),
     CONTRACT_METHOD2(use_dataset, ww::medperf::token_object::use_dataset),
     CONTRACT_METHOD2(get_capability, ww::medperf::token_object::get_capability),
-    CONTRACT_METHOD2(hello_world, ww::medperf::token_object::hello_world),
-    CONTRACT_METHOD2(hello_world_function, ww::medperf::token_object::hello_world_function),
+    CONTRACT_METHOD2(owner_test, ww::medperf::token_object::owner_test),
+    CONTRACT_METHOD2(update_policy, ww::medperf::token_object::update_policy),
 
     // object transfer, escrow & claim methods
     CONTRACT_METHOD2(transfer,ww::exchange::token_object::transfer),

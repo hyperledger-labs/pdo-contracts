@@ -18,6 +18,10 @@ This file defines the InvokeApp class, a WSGI interface class for
 handling contract method invocation requests.
 """
 
+import hashlib
+import random
+import yaml
+import subprocess
 from pdo.medperf.common.utility import ValidateJSON
 from pdo.common.key_value import KeyValueStore
 
@@ -25,6 +29,7 @@ import logging
 import requests
 import urllib.request
 import json
+import os
 logger = logging.getLogger(__name__)
 
 
@@ -40,9 +45,6 @@ class DataOperation(object) :
             "kvstore_input_key" : { "type" : "string" },
             "dataset_id" : { "type" : "string" },
             "experiment_id" : { "type" : "string" },
-            # "payload_type" : { "type" : "string" },
-            # "user_inputs" : { "type" : "string" },
-            # "user_inputs_schema" : { "type" : "string" },
             "associated_model_ids" : { "type" : "string" },
         }
     }
@@ -95,47 +97,56 @@ class DataOperation(object) :
         kvstore_root_block_hash = params['kvstore_root_block_hash']
         kvstore_input_key = params['kvstore_input_key']
         dataset_id = params['dataset_id']
-        experiment_id = params['experiment_id']
-        # payload_type = params['payload_type']
-        # user_inputs = json.loads(params['user_inputs'])
-        # user_inputs_schema = json.loads(params['user_inputs_schema'])
-        associated_model_ids = params['associated_model_ids']
+        model_ids_to_evaluate = params['model_ids_to_evaluate']
         
-        
-        # # If payload type is binary, get the input data from the key-value store.
-        # if payload_type == 'binary':
-        #     kv = KeyValueStore(kvstore_encryption_key, kvstore_root_block_hash)
-        #     with kv:
-        #         input_data = kv.get(kvstore_input_key, output_encoding='raw')
-        #     payload = bytes(input_data)
-        # elif payload_type == 'json':
-        #     # check schema of user inputs, and generate payload by merging user inputs with fixed model parameters
-        #     if not ValidateJSON(user_inputs, user_inputs_schema) :
-        #         logger.error("Invalid user inputs")
-        #         return None
-        #     payload = {**associated_model_ids, **user_inputs}
-        # else:
-        #     logger.error("Invalid payload type. Supported types are 'json' and 'binary'")
-        #     return None
+        mlcube_script_path = "/home/wenyi1/medperf/test_resource/test.sh"
+        result_path = "/home/wenyi1/medperf/test_resource/test_results"
 
-        # query the Hugging Face model and return the response
-        # return self.query_hf_model(experiment_id, dataset_id, payload, payload_type)
-        
-        test_message = "Hello from the guardian service. Assume the experiment has been run successfully."
+        test_message = "Hello from the guardian service."
         # put the parameters in test_message and return
         # for testing purpose
+        test_message += f"\nReceived order for:"
         test_message += f"\nDataset ID: {dataset_id}"
-        test_message += f"\nExperiment ID: {experiment_id}"
-        test_message += f"\nAssociated Model IDs: {associated_model_ids}"
+        test_message += f"\nModel IDs : {model_ids_to_evaluate}"
+        print(test_message)
+        print("================================================")
+        print("Evaluating models...")
+        # split model_ids_to_evaluate into a list of integers
+        model_ids = model_ids_to_evaluate.split(',')
+        model_ids = [int(i) for i in model_ids]
+        
+        for model in model_ids:
+            if model == 1 or model == 2:
+                print(f"Cubes available for model {model}, running the MLCube script...")
+                # run the MLCube script with parameter model
+                # os.system(f"bash {mlcube_script_path} {model}")
+                output_result = subprocess.run(["bash", mlcube_script_path, str(model)], capture_output=True, text=True)
+                print(output_result.stdout)
+            else:
+                print(f"Model {model} not available. Generating simulated data...")
+                # generate simulated data
+                sim_data = {'AUC': random.uniform(0.5, 1), 'Accuracy': random.uniform(0.5, 1)} 
+                with open(f"{result_path}/{str(model)}.yaml", 'w') as file:
+                    yaml.dump(sim_data, file)
+                print(f"Simulated data for model {model} generated successfully.")
+        
+        print("================================================")
+        print("Signing each file with simple SHA256 and challenge...")
+        # handle each model result
+        for model in model_ids:
+            try:
+                with open(f"{result_path}/{str(model)}.yaml", 'r+') as file:
+                    result_data = yaml.safe_load(file)
+                    hash_result = self.simpleSHA256withChallenge(kvstore_input_key, result_data)
+                    new_data = {"hash": hash_result}
+                    yaml.dump(new_data, file)
+                    print(f"Model {model} result signed successfully.")
+            except Exception as e:
+                print(f"Error signing model {model} result: {e}")
+                continue
         return test_message
     
-        # to do: (Support for post processing)
-        # Add support for optionally encrypting response before sending back to the client
-        # encryption key specified by token object
-        # token object can implement policies for endorsing encryption keys
-        # for example: results encrypted for use within another PDO contract or even the token object itself
-        # Such a feature can be used for privacy-preserving post processing of the model outputs
-        # before sharing final results with the client
-        # If there are generic post processing steps that can be applied to a large class of models, 
-        # the code can be added here itself. 
-        
+    def simpleSHA256withChallenge(self, challenge, result_data):
+        # parse result_data to string
+        result_data_string = json.dumps(result_data)
+        return hashlib.sha256(challenge.encode() + result_data_string.encode()).hexdigest()

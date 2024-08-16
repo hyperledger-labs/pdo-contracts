@@ -16,6 +16,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <map>
+#include <sstream>
 
 #include "Util.h"
 #include "Secret.h"
@@ -26,9 +29,6 @@
 #define DATASET_TO_INIT_PARAM_SCHEMA               \
     "{"                                         \
         SCHEMA_KW(dataset_id, "") ","                 \
-        SCHEMA_KW(experiment_id, "") ","                 \
-        SCHEMA_KW(associated_model_ids, "") ","                 \
-        SCHEMA_KW(max_use_count, 0) ","          \
         SCHEMA_KW(ledger_verifying_key, "") ","           \
         SCHEMA_KWS(initialization_package, CONTRACT_SECRET_SCHEMA) ","          \
         SCHEMA_KWS(asset_authority_chain, ISSUER_AUTHORITY_CHAIN_SCHEMA)\
@@ -38,18 +38,23 @@
     "{"                                         \
         SCHEMA_KW(dataset_id, "") ","                 \
         SCHEMA_KW(experiment_id, "") ","                 \
-        SCHEMA_KW(associated_model_ids, "") ","                 \
+        SCHEMA_KW(associated_model_ids, "") ","           \
+        SCHEMA_KW(associated_model_tags, "") ","           \
+        SCHEMA_KW(max_use_count, 0) ","          \
     "}"
 
 #define USE_DATASET_SCHEMA               \
-    "{"                                         \
+    "{"                                       \
+        SCHEMA_KW(dataset_id, "") "," \
+        SCHEMA_KW(model_ids_to_evaluate, "") ","                 \
         SCHEMA_KW(kvstore_encryption_key, "") ","                 \
         SCHEMA_KW(kvstore_root_block_hash, "") ","                 \
         SCHEMA_KW(kvstore_input_key, "") ","                       \
     "}"
 
 #define GET_CAPABILITY_SCHEMA  \
-    "{"                                                 \
+    "{"                                   \
+        SCHEMA_KW(dataset_id, "") ","        \
         SCHEMA_KW(ledger_signature,"")               \
    "}"
 
@@ -60,8 +65,15 @@
         SCHEMA_KW(kvstore_root_block_hash, "") ","      \
         SCHEMA_KW(kvstore_input_key, "") ","            \
         SCHEMA_KW(dataset_id, "") ","                   \
-        SCHEMA_KW(experiment_id, "") ","                 \
-        SCHEMA_KW(associated_model_ids, "") ","            \
+        SCHEMA_KW(model_ids_to_evaluate, "") ","            \
+    "}"
+
+#define UPDATE_POLICY_SCHEMA  \
+   "{"                                         \
+        SCHEMA_KW(dataset_id, "") ","              \
+        SCHEMA_KW(experiment_id, "") ","           \
+        SCHEMA_KW(associated_model_ids, "") ","       \
+        SCHEMA_KW(max_use_count, 0) ","          \
     "}"
 
 
@@ -74,7 +86,9 @@ namespace token_object
 {
     // methods
     bool initialize(const Message& msg, const Environment& env, Response& rsp);
-    
+
+    bool update_policy(const Message &msg, const Environment &env, Response &rsp);
+
     // reserved for testing
     bool get_dataset_info(const Message& msg, const Environment& env, Response& rsp);
     
@@ -82,8 +96,18 @@ namespace token_object
     bool get_capability(const Message& msg, const Environment& env, Response& rsp);
     
     // reserved for testing
-    bool hello_world(const Message& msg, const Environment& env, Response& rsp);
-    bool hello_world_function(const Message& msg, const Environment& env, Response& rsp);
+    bool owner_test(const Message& msg, const Environment& env, Response& rsp);
+    bool update_policy(const Message& msg, const Environment& env, Response& rsp);
+
+    // utility functions
+    const std::string mapToString(const std::map<std::string, std::string>& myMap);
+    std::map<std::string, std::string> stringToMap(const std::string& str);
+    std::vector<std::string> stringToVector(const std::string& str);
+    std::string vectorToString(const std::vector<std::string>& vec);
+    // ww::value::Array splitString(const std::string& str, char delimiter);
+    std::vector<std::string> splitString(const std::string& str, char delimiter);
+    std::string joinString(const std::vector<std::string>& vec, char delimiter);
+    std::vector<ww::types::StringArray> splitForTags(const std::string& str);
 }; // token_object
 }; // medperf
 }; // ww

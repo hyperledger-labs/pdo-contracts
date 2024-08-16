@@ -15,6 +15,7 @@
 import json
 import logging
 import time
+import sqlite3
 
 from pdo.submitter.create import create_submitter
 from pdo.contract import invocation_request
@@ -49,15 +50,16 @@ __all__ = [
     'op_get_dataset_info',
     'op_use_dataset',
     'op_get_capability',
-    'op_hello_world',
-    'op_hello_world_function',
+    'op_owner_test',
+    'op_update_policy',
     'cmd_mint_dataset_tokens',
     'cmd_mint_tokens',
     'cmd_transfer_assets',
     'cmd_use_dataset',
     'cmd_get_dataset_info',
-    'cmd_hello_world',
-    'cmd_hello_world_function',
+    'cmd_owner_test',
+    'cmd_experiment_order',
+    'cmd_update_policy',
     'do_medperf_token',
     'do_medperf_token_contract',
     'load_commands',
@@ -103,12 +105,12 @@ class op_initialize(pcontract.contract_op_base) :
             help='ledger verifying key',
             type=pbuilder.invocation_parameter, required=True)
         subparser.add_argument('--dataset_id', help='Name of the contract class for the given dataset', type=str)
-        subparser.add_argument('--experiment_id', help='Experiments to be teseted on the dataset', type=str)
-        subparser.add_argument('--associated_model_ids', help='Models to be tested on the dataset', type=str)
-        # subparser.add_argument('--user_inputs_schema', help='Name of the provisioning service group to use', type=str)
-        # subparser.add_argument('--payload_type', help='Name of the storage service group to use', type=str)
-        # subparser.add_argument('--medperf_usage_info', help='File that contains contract source code', type=str)
-        subparser.add_argument('--max_use_count', help='File that contains contract source code', type=int)
+        # subparser.add_argument('--experiment_id', help='Experiments to be teseted on the dataset', type=str)
+        # subparser.add_argument('--associated_model_ids', help='Models to be tested on the dataset', type=str)
+        # # subparser.add_argument('--user_inputs_schema', help='Name of the provisioning service group to use', type=str)
+        # # subparser.add_argument('--payload_type', help='Name of the storage service group to use', type=str)
+        # # subparser.add_argument('--medperf_usage_info', help='File that contains contract source code', type=str)
+        # subparser.add_argument('--max_use_count', help='File that contains contract source code', type=int)
 
 
     @classmethod
@@ -121,12 +123,12 @@ class op_initialize(pcontract.contract_op_base) :
 
         # Add params from kwargs
         params['dataset_id'] = kwargs.get('dataset_id')
-        params['experiment_id'] = kwargs.get('experiment_id')
-        params['associated_model_ids'] = kwargs.get('associated_model_ids')
+        # params['experiment_id'] = kwargs.get('experiment_id')
+        # params['associated_model_ids'] = kwargs.get('associated_model_ids')
         # params['user_inputs_schema'] = kwargs.get('user_inputs_schema')
         # params['payload_type'] = kwargs.get('payload_type', 'json')
         # params['medperf_usage_info'] = kwargs.get('medperf_usage_info')
-        params['max_use_count'] = kwargs.get('max_use_count', 1)
+        # params['max_use_count'] = kwargs.get('max_use_count', 1)
 
 
         # parse the message (python dict as the defined schema) and call 
@@ -151,7 +153,13 @@ class op_get_dataset_info(pcontract.contract_op_base) :
 
         params = {}
         message = invocation_request('get_dataset_info', **params)
+        # try:
+        #     result = pcontract_cmd.send_to_contract(state,  message, **session_params)
+        # except Exception as e:
+        #     cls.display_error("get_dataset_info method evaluation failed. {}".format(e))
+        #     return None
         result = pcontract_cmd.send_to_contract(state,  message, **session_params)
+
         cls.log_invocation(message, result)
 
         return result
@@ -189,12 +197,17 @@ class op_use_dataset(pcontract.contract_op_base) :
             type=str)
         
         # subparser.add_argument(
-        #     '--user_inputs',
-        #     help='User inputs for the model, used when the payload is JSON',
+        #     '--dataset_id',
+        #     help='Name of the contract class for the given dataset',
+        #     type=str)
+        
+        # subparser.add_argument(
+        #     '--model_ids_to_evaluate',
+        #     help='Models to be tested on the dataset',
         #     type=str)
 
     @classmethod
-    def invoke(cls, state, session_params, kvstore_encryption_key, kvstore_input_key, kvstore_root_block_hash, **kwargs) :
+    def invoke(cls, state, session_params, kvstore_encryption_key, kvstore_input_key, kvstore_root_block_hash, dataset_id, model_ids_to_evaluate, **kwargs) :
         session_params['commit'] = True
 
         # send the request to the contract to create a capability for the guardian
@@ -202,13 +215,17 @@ class op_use_dataset(pcontract.contract_op_base) :
         params['kvstore_encryption_key'] = kvstore_encryption_key
         params['kvstore_input_key'] = kvstore_input_key
         params['kvstore_root_block_hash'] = kvstore_root_block_hash
+        params['dataset_id'] = dataset_id
+        params['model_ids_to_evaluate'] = model_ids_to_evaluate
         # params['user_inputs'] = user_inputs
 
         message = invocation_request('use_dataset', **params)
-        try:
-            result = pcontract_cmd.send_to_contract(state,  message, **session_params)
-        except Exception as e:
-            raise
+        result = pcontract_cmd.send_to_contract(state,  message, **session_params)
+
+        # try:
+        #     result = pcontract_cmd.send_to_contract(state,  message, **session_params)
+        # except Exception as e:
+        #     raise
 
         cls.log_invocation(message, result)
         return result
@@ -232,6 +249,11 @@ class op_get_capability(pcontract.contract_op_base) :
             '-l', '--ledger-attestation',
             help='attestation from the ledger that the current state of the token issuer is committed',
             type=pbuilder.invocation_parameter, required=True)
+        
+        subparser.add_argument(
+            '--dataset_id',
+            help='Name of the contract class for the given dataset',
+            type=str)
 
     @classmethod
     def invoke(cls, state, session_params, ledger_attestation, **kwargs) :
@@ -239,6 +261,7 @@ class op_get_capability(pcontract.contract_op_base) :
 
         params = {}
         params['ledger_signature'] = ledger_attestation
+        params['dataset_id'] = kwargs.get('dataset_id')
 
         message = invocation_request('get_capability', **params)
         capability = pcontract_cmd.send_to_contract(state, message, **session_params)
@@ -248,11 +271,11 @@ class op_get_capability(pcontract.contract_op_base) :
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
-class op_hello_world(pcontract.contract_op_base) :
-    """op_hello_world implements a simple hello world operation
+class op_owner_test(pcontract.contract_op_base) :
+    """op_owner_test implements a simple hello world operation
     """
 
-    name = "hello_world"
+    name = "owner_test"
     help = "simple hello world operation"
 
     # # For this operation, we don't need any arguments
@@ -267,7 +290,7 @@ class op_hello_world(pcontract.contract_op_base) :
 
         params = {}
 
-        message = invocation_request('hello_world', **params)
+        message = invocation_request('owner_test', **params)
 
         result = pcontract_cmd.send_to_contract(state, message, **session_params)
         cls.log_invocation(message, result)
@@ -277,11 +300,11 @@ class op_hello_world(pcontract.contract_op_base) :
     
 ## -----------------------------------------------------------------
 ## -----------------------------------------------------------------
-class cmd_hello_world(pcommand.contract_command_base) :
-    """cmd_hello_world implements a simple hello world command
+class cmd_owner_test(pcommand.contract_command_base) :
+    """cmd_owner_test implements a simple hello world command
     """
 
-    name = "hello_world"
+    name = "owner_test"
     help = "simple hello world command"
 
     @classmethod
@@ -291,35 +314,64 @@ class cmd_hello_world(pcommand.contract_command_base) :
             raise ValueError("token has not been created")
 
         session = pbuilder.SessionParameters(save_file=save_file)
-        # invoke the hello_world operation
-
+        # invoke the owner_test operation
         result = pcontract.invoke_contract_op(
-            op_hello_world,
-            state, context, session,
-            **kwargs)
-
+                op_owner_test,
+                state, context, session,
+                **kwargs)
+        # try:
+        #     result = pcontract.invoke_contract_op(
+        #         op_owner_test,
+        #         state, context, session,
+        #         **kwargs)
+        # except Exception as e:
+        #     cls.display_error("op_owner_test method evaluation failed. {}".format(e))
+        #     return None
         cls.display(result) 
 
 ## -----------------------------------------------------------------
 ## -----------------------------------------------------------------
-class op_hello_world_function(pcontract.contract_op_base) :
-    """op_hello_world_function implements a simple hello world operation
+class op_update_policy(pcontract.contract_op_base) :
+    """op_update_policy implements a simple hello world operation
     """
 
-    name = "hello_world_function"
+    name = "update_policy"
     help = "simple hello world operation"
 
     @classmethod
     def add_arguments(cls, subparser) :
-        pass
+        subparser.add_argument(
+            '--dataset_id',
+            help='Name of the contract class for the given dataset',
+            type=str)
+        
+        subparser.add_argument(
+            '--experiment_id',
+            help='Experiments to be teseted on the dataset',
+            type=str)
+            
+        
+        subparser.add_argument(
+            '--associated_model_ids',
+            help='Models to be tested on the dataset',
+            type=str)
+        
+        subparser.add_argument(
+            '--max_use_count',
+            help='Max number of times the dataset can be used',
+            type=int)
     
     @classmethod
     def invoke(cls, state, session_params, **kwargs) :
         session_params['commit'] = False
 
         params = {}
+        params['dataset_id'] = kwargs.get('dataset_id')
+        params['experiment_id'] = kwargs.get('experiment_id')
+        params['associated_model_ids'] = kwargs.get('associated_model_ids')
+        params['max_use_count'] = kwargs.get('max_use_count')
 
-        message = invocation_request('hello_world_function', **params)
+        message = invocation_request('update_policy', **params)
 
         result = pcontract_cmd.send_to_contract(state, message, **session_params)
         cls.log_invocation(message, result)
@@ -335,22 +387,19 @@ class cmd_use_dataset(pcommand.contract_command_base) :
     name = "use_dataset"
     help = "run experiment on the dataset"
 
-    # @classmethod
-    # def add_arguments(cls, subparser) :
-    #     # subparser.add_argument(
-    #     #     '--data_file',
-    #     #     help='Filename of the data_file to use as inference input. this is used only if payload is binary',
-    #     #     type=str)
-
-    #     # subparser.add_argument(
-    #     #     '--search-path',
-    #     #     help='Directories to search for the data file',
-    #     #     nargs='+', type=str, default=['.', './data'])
+    @classmethod
+    def add_arguments(cls, subparser) :
         
-        # subparser.add_argument(
-        #     '--user_inputs',
-        #     help='User inputs for the model, used when the payload is JSON',
-        #     type=str)
+        subparser.add_argument(
+            '--dataset_id',
+            help='Name of the contract class for the given dataset',
+            type=str)
+        
+        subparser.add_argument(
+            '--model_ids_to_evaluate',
+            help='Models to be tested on the dataset',
+            type=str)
+        
 
     @classmethod
     def invoke(cls, state, context, **kwargs) :
@@ -363,20 +412,17 @@ class cmd_use_dataset(pcommand.contract_command_base) :
         # query the token object for model info, get the payload type, and ensure that for binary payloads
         # data file is provided, and for json payloads, user inputs are provided
         session = pbuilder.SessionParameters(save_file=save_file)
-        model_info_json = pcontract.invoke_contract_op(
-            op_get_dataset_info,
-            state, context, session,
-            **kwargs)
+        # model_info_json = pcontract.invoke_contract_op(
+        #     op_get_dataset_info,
+        #     state, context, session,
+        #     **kwargs)
 
 
         kvstore_encryption_key = "not_used"
-        kvstore_input_key = "not_used"
+        kvstore_input_key = "this_is_a_test_string_as_challenge"
         kvstore_root_block_hash = "not_used"
-    
-        # invoke op_use_dataset to store the parameters required to generate the capability
-        session = pbuilder.SessionParameters(save_file=save_file)
         try:
-            _ = pcontract.invoke_contract_op(
+            result = pcontract.invoke_contract_op(
                 op_use_dataset,
                 state, context, session,
                 kvstore_encryption_key, 
@@ -391,26 +437,28 @@ class cmd_use_dataset(pcommand.contract_command_base) :
         time.sleep(2) # wait for the ledger to commit the transaction, not sure if any wait is needed or the 
         # correct solution is to poll the ledger until the transaction is committed
 
-        to_contract = pcontract_cmd.get_contract(state, save_file)
-        ledger_submitter = create_submitter(state.get(['Ledger']))
-        state_attestation = ledger_submitter.get_current_state_hash(to_contract.contract_id)
-
-        # get capability from the token object
-        capability = pcontract.invoke_contract_op (
-            op_get_capability,
-            state, context, session,
-            state_attestation['signature'],
-            **kwargs)
-
-        # push data file to storage service associated with the guardian if payload is binary
-        guardian_context = context.get_context('data_guardian_context')
-        url = guardian_context['url']
-        service_client = GuardianServiceClient(url)
-        # send capability to guardian service
-        capability = json.loads(capability)
-        result = service_client.process_capability(**capability)
-        cls.display(result)
         return result
+        
+        # to_contract = pcontract_cmd.get_contract(state, save_file)
+        # ledger_submitter = create_submitter(state.get(['Ledger']))
+        # state_attestation = ledger_submitter.get_current_state_hash(to_contract.contract_id)
+
+        # # get capability from the token object
+        # capability = pcontract.invoke_contract_op (
+        #     op_get_capability,
+        #     state, context, session,
+        #     state_attestation['signature'],
+        #     **kwargs)
+
+        # # push data file to storage service associated with the guardian if payload is binary
+        # guardian_context = context.get_context('data_guardian_context')
+        # url = guardian_context['url']
+        # service_client = GuardianServiceClient(url)
+        # # send capability to guardian service
+        # capability = json.loads(capability)
+        # result = service_client.process_capability(**capability)
+        # cls.display(result)
+        # return result
 
         
 
@@ -428,12 +476,6 @@ class cmd_mint_dataset_tokens(pcommand.contract_command_base) :
     @classmethod
     def add_arguments(cls, subparser) :
         subparser.add_argument('--dataset_id', help='Name of the contract class for the given dataset', type=str)
-        subparser.add_argument('--experiment_id', help='Experiments to be teseted on the dataset', type=str)
-        subparser.add_argument('--associated_model_ids', help='Models to be tested on the dataset', type=str)
-        # subparser.add_argument('--user_inputs_schema', help='Name of the provisioning service group to use', type=str)
-        # subparser.add_argument('--payload_type', help='Name of the storage service group to use', type=str)
-        # subparser.add_argument('--medperf_usage_info', help='File that contains contract source code', type=str)
-        subparser.add_argument('--max_use_count', help='File that contains contract source code', type=int)
 
     @classmethod
     def invoke(cls, state, context, **kwargs) :
@@ -467,6 +509,121 @@ class cmd_get_dataset_info(pcommand.contract_command_base) :
 
         return result
 
+class cmd_update_policy(pcommand.contract_command_base) :
+    """cmd_update_policy implements a simple hello world command
+    """
+
+    name = "update_policy"
+    help = "simple hello world command"
+
+    @classmethod
+    def add_arguments(cls, subparser) :
+        subparser.add_argument(
+            '--dataset_id',
+            help='Name of the contract class for the given dataset',
+            type=str)
+        
+        subparser.add_argument(
+            '--experiment_id',
+            help='Experiments to be teseted on the dataset',
+            type=str)
+        
+        subparser.add_argument(
+            '--associated_model_ids',
+            help='Models to be tested on the dataset',
+            type=str)
+        
+        subparser.add_argument(
+            '--max_use_count',
+            help='Max number of times the dataset can be used',
+            type=int)
+
+    @classmethod
+    def invoke(cls, state, context, **kwargs) :
+        save_file = pcontract_cmd.get_contract_from_context(state, context)
+        if not save_file :
+            raise ValueError("token has not been created")
+
+        session = pbuilder.SessionParameters(save_file=save_file)
+        # invoke the owner_test operation
+        # result = pcontract.invoke_contract_op(
+        #         op_update_policy,
+        #         state, context, session,
+        #         **kwargs)
+        try:
+            result = pcontract.invoke_contract_op(
+                op_update_policy,
+                state, context, session,
+                **kwargs)
+        except Exception as e:
+            cls.display_error("op_update_policy method evaluation failed. {}".format(e))
+            return None
+
+        cls.display(result)
+
+
+class cmd_experiment_order(pcommand.contract_command_base) :
+    """cmd_experiment_order implements a simple hello world command
+    """
+
+    name = "experiment_order"
+    help = "simple hello world command"
+
+    @classmethod
+    def add_arguments(cls, subparser) :
+        subparser.add_argument(
+            '--dataset_id',
+            help='Name of the contract class for the given dataset',
+            type=str)
+
+
+    @classmethod
+    def invoke(cls, state, context, **kwargs) :
+        save_file = pcontract_cmd.get_contract_from_context(state, context)
+        if not save_file :
+            raise ValueError("token has not been created")
+
+        session = pbuilder.SessionParameters(save_file=save_file)
+
+        to_contract = pcontract_cmd.get_contract(state, save_file)
+        ledger_submitter = create_submitter(state.get(['Ledger']))
+        state_attestation = ledger_submitter.get_current_state_hash(to_contract.contract_id)
+
+        # get capability from the token object
+        capability = pcontract.invoke_contract_op (
+            op_get_capability,
+            state, context, session,
+            state_attestation['signature'],
+            **kwargs)
+        try:
+            data_json = {}
+            data_json["order"] = json.dumps(capability)
+            print(data_json)
+            conn = sqlite3.connect("/home/wenyi1/medperf/server/db.sqlite3")
+            cur = conn.cursor()
+            # insert new result record to the table
+            for i in range(10):
+                cur.execute("update dataset_dataset set user_metadata = ? where id = ?", (json.dumps(data_json), 1))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print("Error in posting order to MedPerf server")
+            print(e)
+            conn.close()
+        
+        input("Posting the packed work order to MedPerf Server, now the dataset owner can download the encrypted workorder from Medperf.\n For simplicity, forwarding directly to the guardian.\nPress Enter to continue...")
+
+
+        guardian_context = context.get_context('data_guardian_context')
+        url = guardian_context['url']
+        service_client = GuardianServiceClient(url)
+        # send capability to guardian service
+        capability = json.loads(capability)
+        result = service_client.process_capability(**capability)
+        cls.display(result)
+        return result
+
+
 ## -----------------------------------------------------------------
 ## Create the generic, shell independent version of the aggregate command
 ## -----------------------------------------------------------------
@@ -485,8 +642,8 @@ __operations__ = [
     op_use_dataset,
     op_get_dataset_info,
     op_get_capability,
-    op_hello_world,
-    op_hello_world_function,
+    op_owner_test,
+    op_update_policy,
 ]
 
 do_medperf_token_contract = pcontract.create_shell_command('medperf_token_contract', __operations__)
@@ -496,8 +653,9 @@ __commands__ = [
     cmd_transfer_assets,
     cmd_use_dataset,
     cmd_get_dataset_info,
-    cmd_hello_world,
-    # cmd_hello_world_function,
+    cmd_owner_test,
+    cmd_update_policy,
+    cmd_experiment_order,
 ]
 
 do_medperf_token = pcommand.create_shell_command('medperf_token', __commands__)

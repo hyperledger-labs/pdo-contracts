@@ -14,9 +14,11 @@
  */
 
 #include <string>
+#include <vector>
+// #include <sstream>
 #include <stddef.h>
 #include <stdint.h>
-
+#include <algorithm>
 #include "Dispatch.h"
 
 #include "Cryptography.h"
@@ -34,20 +36,19 @@
 #include "exchange/token_object.h"
 #include "medperf/token_object.h"
 
+
 static KeyValueStore dataset_TO_store("dataset_TO_store");
 static const std::string dataset_id_KEY("dataset_id");
 static const std::string experiment_id_KEY("experiment_id");
-static const std::string associated_model_ids_KEY("associated_model_ids_json_string");
-// static const std::string hfmodel_user_inputs_schema_KEY("hfmodel_user_inputs_schema");
-// static const std::string hfmodel_request_payload_type_KEY("hfmodel_request_payload_type");
-// static const std::string hfmodel_usage_info_KEY("hfmodel_usage_info");
+static const std::string associated_model_ids_KEY("associated_model_ids");
+static const std::string associated_model_tags_KEY("associated_model_tags");
 static const std::string dataset_max_use_count_KEY("dataset_max_use_count");
 static const std::string dataset_current_use_count_KEY("dataset_current_use_count");
+static const std::string pdo_challenge_KEY("pdo_challenge");
 
 static const std::string dataset_use_capability_kv_store_encryption_key_KEY("dataset_use_capability_kv_store_encryption_key");
 static const std::string dataset_use_capability_kv_store_root_block_hash_KEY("dataset_use_capability_kv_store_root_block_hash");
 static const std::string dataset_use_capability_kv_store_input_key_KEY("dataset_use_capability_kv_store_input_key");
-// static const std::string dataset_use_capability_user_inputs_KEY("dataset_use_capability_user_inputs");
 
 //
 
@@ -74,21 +75,12 @@ bool ww::medperf::token_object::initialize(const Message &msg, const Environment
 
     // Get the params to be stored in dataset_TO_store
     const std::string dataset_id_value(msg.get_string("dataset_id"));
-    const std::string experiment_id_value(msg.get_string("experiment_id"));
-    const std::string associated_model_ids_value(msg.get_string("associated_model_ids"));
-    // const std::string hfmodel_user_inputs_schema_value(msg.get_string("user_inputs_schema"));
-    // const std::string hfmodel_request_payload_type_value(msg.get_string("payload_type"));
-    // const std::string hfmodel_usage_info_value(msg.get_string("hfmodel_usage_info"));
-    const uint32_t dataset_max_use_count_value = (uint32_t)msg.get_number("max_use_count");
 
     // Store params from msg in dataset_TO_store
     ASSERT_SUCCESS(rsp, dataset_TO_store.set(dataset_id_KEY, dataset_id_value), "failed to store dataset_id");
-    ASSERT_SUCCESS(rsp, dataset_TO_store.set(experiment_id_KEY, experiment_id_value), "failed to store experiment_id");
-    ASSERT_SUCCESS(rsp, dataset_TO_store.set(associated_model_ids_KEY, associated_model_ids_value), "failed to store associated_model_ids");
-    // ASSERT_SUCCESS(rsp, dataset_TO_store.set(hfmodel_user_inputs_schema_KEY, hfmodel_user_inputs_schema_value), "failed to store hfmodel_user_inputs_schema");
-    // // // ASSERT_SUCCESS(rsp, dataset_TO_store.set(hfmodel_request_payload_type_KEY, hfmodel_request_payload_type_value), "failed to store hfmodel_request_payload_type");
-    // ASSERT_SUCCESS(rsp, dataset_TO_store.set(hfmodel_usage_info_KEY, hfmodel_usage_info_value), "failed to store hfmodel_usage_info");
-    ASSERT_SUCCESS(rsp, dataset_TO_store.set(dataset_max_use_count_KEY, dataset_max_use_count_value), "failed to store dataset_max_use_count");
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.set(experiment_id_KEY, "none"), "failed to store experiment_id");
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.set(associated_model_ids_KEY, "none"), "failed to store associated_model_ids");
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.set(dataset_max_use_count_KEY, 0), "failed to store dataset_max_use_count");
 
     // Set current use count to 0
     ASSERT_SUCCESS(rsp, dataset_TO_store.set(dataset_current_use_count_KEY, (uint32_t)0), "failed to store dataset_current_use_count");
@@ -109,6 +101,15 @@ bool ww::medperf::token_object::initialize(const Message &msg, const Environment
     return ww::exchange::token_object::initialize(to_message, env, rsp);
 }
 
+
+// update_policy attaches the policy 
+// bool ww::medperf::token_object::update_policy(const Message &msg, const Environment &env, Response &rsp)
+// {
+//     // only the owner can 
+//     ASSERT_SENDER_IS_CREATOR(env, rsp);
+//     ASSERT_UNINITIALIZED(rsp);
+// }
+
 // -----------------------------------------------------------------
 // METHOD: get_dataset_info
 //
@@ -127,32 +128,32 @@ bool ww::medperf::token_object::get_dataset_info(
     Response &rsp)
 {
     ASSERT_INITIALIZED(rsp);
-    ww::value::Structure v(DATASET_INFO_SCHEMA);
+    // ww::value::Structure v(DATASET_INFO_SCHEMA);
+    ww::value::Object v;
 
     // Get the dataset_id
     std::string dataset_id_string;
     ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_id_KEY, dataset_id_string), "failed to retrieve dataset_id");
     ASSERT_SUCCESS(rsp, v.set_string("dataset_id", dataset_id_string.c_str()), "failed to set return value for dataset_id");
 
-    // Get the fixed model parameters
+
     std::string associated_model_ids_string;
     ASSERT_SUCCESS(rsp, dataset_TO_store.get(associated_model_ids_KEY, associated_model_ids_string), "failed to retrieve associated_model_ids");
     ASSERT_SUCCESS(rsp, v.set_string("associated_model_ids", associated_model_ids_string.c_str()), "failed to set return value for associated_model_ids");
 
-    // Get the schema for user-specified inputs (used only when payload type is json)
-    // std::string hfmodel_user_inputs_schema_string;
-    // ASSERT_SUCCESS(rsp, dataset_TO_store.get(hfmodel_user_inputs_schema_KEY, hfmodel_user_inputs_schema_string), "failed to retrieve hfmodel_user_inputs_schema");
-    // ASSERT_SUCCESS(rsp, v.set_string("user_inputs_schema", hfmodel_user_inputs_schema_string.c_str()), "failed to set return value for hfmodel_user_inputs_schema");
 
-    // Get the model metadata
     std::string experiment_id_string;
     ASSERT_SUCCESS(rsp, dataset_TO_store.get(experiment_id_KEY, experiment_id_string), "failed to retrieve experiment_id_string");
     ASSERT_SUCCESS(rsp, v.set_string("experiment_id", experiment_id_string.c_str()), "failed to set return value for experiment_id_string");
 
-    // // Get the max use count
-    // uint32_t dataset_max_use_count_value;
-    // ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_max_use_count_KEY, dataset_max_use_count_value), "failed to retrieve dataset_max_use_count");
-    // ASSERT_SUCCESS(rsp, v.set_number("max_use_count", dataset_max_use_count_value), "failed to set return value for max_use_count");
+    std::string associated_model_tags_string;
+    ASSERT_SUCCESS(rsp, dataset_TO_store.get(associated_model_tags_KEY, associated_model_tags_string), "failed to retrieve associated_model_tags");
+    ASSERT_SUCCESS(rsp, v.set_string("associated_model_tags", associated_model_tags_string.c_str()), "failed to set return value for associated_model_tags");
+
+    // Get the max use count
+    uint32_t dataset_max_use_count_value;
+    ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_max_use_count_KEY, dataset_max_use_count_value), "failed to retrieve dataset_max_use_count");
+    ASSERT_SUCCESS(rsp, v.set_number("max_use_count", dataset_max_use_count_value), "failed to set return value for max_use_count");
 
     return rsp.value(v, false);
 }
@@ -166,7 +167,7 @@ bool ww::medperf::token_object::get_dataset_info(
 //        kvstore_encryption_key
 //        kvstore_root_block_hash
 //        kvstore_input_key
-//        user_inputs
+//        model_ids_to_evaluate
 // The first 3 parameters provide flexibility to use large inputs for the model via the kv_store attached to the guardian.
 // Only TO may invoke method
 // -----------------------------------------------------------------
@@ -180,19 +181,75 @@ bool ww::medperf::token_object::use_dataset(
 
     ASSERT_SUCCESS(rsp, msg.validate_schema(USE_DATASET_SCHEMA), "invalid request, missing required parameters");
 
+    const std::string dataset_id(msg.get_string("dataset_id"));
+    std::string dataset_id_store;
+    ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_id_KEY, dataset_id_store), "fail to retrieve dataset_id");
+    ASSERT_SUCCESS(rsp, dataset_id == dataset_id_store, "dataset does not exist");
+
     const std::string kvstore_encryption_key(msg.get_string("kvstore_encryption_key"));
     const std::string kvstore_root_block_hash(msg.get_string("kvstore_root_block_hash"));
     const std::string kvstore_input_key(msg.get_string("kvstore_input_key"));
-    // const std::string user_inputs(msg.get_string("user_inputs"));
 
-    // check that current count <  max count. Increment the current count.
-    // Note that we use < instead of <= since current count starts at 0.
+    
+    std::string associated_model_ids_string;
+    ASSERT_SUCCESS(rsp, dataset_TO_store.get(associated_model_ids_KEY, associated_model_ids_string), "failed to retrieve associated_model_ids");
+    uint32_t associated_model_ids = std::stoi(associated_model_ids_string);
+    
+    std::string model_ids_to_evaluate_string(msg.get_string("model_ids_to_evaluate"));
+    const uint32_t model_ids_to_evaluate = std::stoi(model_ids_to_evaluate_string) - 1;
+    ASSERT_SUCCESS(rsp, model_ids_to_evaluate < associated_model_ids, "model is not associated with the dataset");
+
+    std::string associated_model_tags_string;
+    ASSERT_SUCCESS(rsp, dataset_TO_store.get(associated_model_tags_KEY, associated_model_tags_string), "failed to retrieve associated_model_tags");
+    ww::types::StringArray associated_model_tags_vec(associated_model_tags_string);
+    ASSERT_SUCCESS(rsp, associated_model_tags_vec[model_ids_to_evaluate] == '0', "model has already been scheduled or used"); 
+                                                                          
     uint32_t dataset_current_use_count_value;
     uint32_t dataset_max_use_count_value;
     ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_current_use_count_KEY, dataset_current_use_count_value), "failed to retrieve dataset_current_use_count");
     ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_max_use_count_KEY, dataset_max_use_count_value), "failed to retrieve dataset_max_use_count");
-    ASSERT_SUCCESS(rsp, dataset_current_use_count_value < dataset_max_use_count_value, "max use count is reached, cannot use dataset");
+    ASSERT_SUCCESS(rsp, dataset_current_use_count_value + 1 <= dataset_max_use_count_value, "max use count is reached, cannot use dataset");
+
+    // '1' represents that the model is scheduled for evaluation
+    associated_model_tags_vec[model_ids_to_evaluate] = '1';
+    ASSERT_SUCCESS(rsp, dataset_TO_store.set(associated_model_tags_KEY, associated_model_tags_vec.str().c_str()), "failed to update associated_model_tags");
     ASSERT_SUCCESS(rsp, dataset_TO_store.set(dataset_current_use_count_KEY, dataset_current_use_count_value + 1), "failed to update dataset_current_use_count");
+    
+    // ww::types::StringArray model_ids_to_evaluate_vec(model_ids_to_evaluate);
+    // uint32_t num_models_to_evaluate = std::count(model_ids_to_evaluate_vec.begin(), model_ids_to_evaluate_vec.end(), ',') + 1;
+
+    // ASSERT_SUCCESS(rsp, num_models_to_evaluate > 0, "invalid request, no models to evaluate");
+
+    // std::string associated_model_ids_string;
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.get(associated_model_ids_KEY, associated_model_ids_string), "failed to retrieve associated_model_ids");
+    // ww::types::StringArray associated_model_ids_vec(associated_model_ids_string);
+    // uint32_t num_associated_models = std::count(associated_model_ids_vec.begin(), associated_model_ids_vec.end(), ',') + 1;
+
+    // std::vector<std::string> associated_models = stringToVector(associated_model_ids_string);
+    // std::vector<std::string> to_evaluate_models = stringToVector(model_ids_to_evaluate);
+    // std::vector<uint32_t> model_index;
+    // std::string error_message;
+    // for (std::string to_eva_model_id : to_evaluate_models)
+    // {
+    //     error_message = to_eva_model_id + " not associated with the dataset";
+    //     ASSERT_SUCCESS(rsp, std::find(associated_models.begin(), associated_models.end(), to_eva_model_id) != associated_models.end(), error_message.c_str());
+    //     model_index.push_back(std::find(associated_models.begin(), associated_models.end(), to_eva_model_id) - associated_models.begin());
+    // }
+
+    
+    // uint32_t dataset_current_use_count_value;
+    // uint32_t dataset_max_use_count_value;
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_current_use_count_KEY, dataset_current_use_count_value), "failed to retrieve dataset_current_use_count");
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_max_use_count_KEY, dataset_max_use_count_value), "failed to retrieve dataset_max_use_count");
+    // ASSERT_SUCCESS(rsp, dataset_current_use_count_value + num_models_to_evaluate <= dataset_max_use_count_value, "max use count is reached, cannot use dataset");
+    
+    // // Add the counter if the use_dataset is successful
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.set(dataset_current_use_count_KEY, dataset_current_use_count_value + num_models_to_evaluate), "failed to update dataset_current_use_count");
+
+    // // change the status of the model_ids to "scheduled"
+    // // const std::string associated_model_ids_to_be_stored = associated_model_ids_json.dump();
+    // const std::string associated_model_ids_to_be_stored = mapToString(associated_model_ids_map);
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.set(associated_model_ids_KEY, associated_model_ids_to_be_stored), "failed to store associated_model_ids");
 
     // store the parameters required to generate a use_dataset capability
     ASSERT_SUCCESS(rsp, dataset_TO_store.set(dataset_use_capability_kv_store_encryption_key_KEY, kvstore_encryption_key), "failed to store dataset_use_capability_kv_store_enc_key");
@@ -202,8 +259,6 @@ bool ww::medperf::token_object::use_dataset(
 
     return rsp.success(true);
 }
-
-
 
 
 
@@ -224,14 +279,13 @@ bool ww::medperf::token_object::get_capability(
 {
     ASSERT_SENDER_IS_OWNER(env, rsp);
     ASSERT_INITIALIZED(rsp);
-
     ASSERT_SUCCESS(rsp, msg.validate_schema(GET_CAPABILITY_SCHEMA), "invalid request, missing required parameters");
 
     // Ensure that the current use count is greater than 0, so that an attempt to use the model was made.
     // Otherwise, the capability cannot be generated.ls
-    uint32_t dataset_current_use_count_value;
-    ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_current_use_count_KEY, dataset_current_use_count_value), "failed to retrieve dataset_current_use_count");
-    ASSERT_SUCCESS(rsp, dataset_current_use_count_value > 0, "invalid request, capability can be obtained only after use_dataset is called");
+    // uint32_t dataset_current_use_count_value;
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_current_use_count_KEY, dataset_current_use_count_value), "failed to retrieve dataset_current_use_count");
+    // ASSERT_SUCCESS(rsp, dataset_current_use_count_value > 0, "invalid request, capability can be obtained only after use_dataset is called");
 
     // check for proof of commit of current state of the token object before returning capability
     std::string ledger_key;
@@ -268,67 +322,246 @@ bool ww::medperf::token_object::get_capability(
     ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_use_capability_kv_store_input_key_KEY, kvstore_input_key), "failed to retrieve dataset_use_capability_kv_store_input_key");
     ASSERT_SUCCESS(rsp, params.set_string("kvstore_input_key", kvstore_input_key.c_str()), "failed to set return value for kvstore_input_key");
 
-    // Get payload_type from dataset_TO_store
-    // std::string payload_type;
-    // // // ASSERT_SUCCESS(rsp, dataset_TO_store.get(hfmodel_request_payload_type_KEY, payload_type), "failed to retrieve hfmodel_request_payload_type");
-    // ASSERT_SUCCESS(rsp, params.set_string("payload_type", payload_type.c_str()), "failed to set return value for payload_type");
-
-    // Get user_inputs from dataset_TO_store
-    // std::string user_inputs;
-    // ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_use_capability_user_inputs_KEY, user_inputs), "failed to retrieve dataset_use_capability_user_inputs");
-    // ASSERT_SUCCESS(rsp, params.set_string("user_inputs", user_inputs.c_str()), "failed to set return value for user_inputs");
-
     // Get dataset_id from dataset_TO_store
-    std::string dataset_id;
-    ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_id_KEY, dataset_id), "failed to retrieve dataset_id");
-    ASSERT_SUCCESS(rsp, params.set_string("dataset_id", dataset_id.c_str()), "failed to set return value for dataset_id");
-
-    // Get experiment_id from dataset_TO_store
-    std::string experiment_id;
-    ASSERT_SUCCESS(rsp, dataset_TO_store.get(experiment_id_KEY, experiment_id), "failed to retrieve experiment_id");
-    ASSERT_SUCCESS(rsp, params.set_string("experiment_id", experiment_id.c_str()), "failed to set return value for experiment_id");
+    std::string dataset_id_store;
+    ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_id_KEY, dataset_id_store), "failed to retrieve dataset_id");
+    std::string dataset_id_order(msg.get_string("dataset_id"));
+    ASSERT_SUCCESS(rsp, dataset_id_store == dataset_id_order, "dataset does not exist");
+    ASSERT_SUCCESS(rsp, params.set_string("dataset_id", dataset_id_store.c_str()), "failed to set return value for dataset_id");
 
     // Get associated_model_ids from dataset_TO_store
-    std::string associated_model_ids;
-    ASSERT_SUCCESS(rsp, dataset_TO_store.get(associated_model_ids_KEY, associated_model_ids), "failed to retrieve associated_model_ids");
-    ASSERT_SUCCESS(rsp, params.set_string("associated_model_ids", associated_model_ids.c_str()), "failed to set return value for associated_model_ids");
+    std::string associated_model_tags_string;
+    ASSERT_SUCCESS(rsp, dataset_TO_store.get(associated_model_tags_KEY, associated_model_tags_string), "failed to retrieve associated_model_tags");
+    ww::types::StringArray associated_model_tags_vec(associated_model_tags_string);
+    std::string model_id_to_evaluate_string = "";
 
-    // Get user_inputs_schema from dataset_TO_store
-    // std::string user_inputs_schema;
-    // ASSERT_SUCCESS(rsp, dataset_TO_store.get(hfmodel_user_inputs_schema_KEY, user_inputs_schema), "failed to retrieve user_inputs_schema");
-    // ASSERT_SUCCESS(rsp, params.set_string("user_inputs_schema", user_inputs_schema.c_str()), "failed to set return value for user_inputs_schema");
+    for (size_t i = 0; i < associated_model_tags_vec.size(); i++)
+    {
+        if (associated_model_tags_vec[i] == '1')
+        {
+            model_id_to_evaluate_string += std::to_string(i+1) + ",";
+            associated_model_tags_vec[i] = '2';
+        
+        }
+    }
+    model_id_to_evaluate_string.pop_back();
+
+    ASSERT_SUCCESS(rsp, dataset_TO_store.set(associated_model_tags_KEY, associated_model_tags_vec.str().c_str()), "failed to store associated_model_ids");
+    ASSERT_SUCCESS(rsp, params.set_string("model_ids_to_evaluate", model_id_to_evaluate_string.c_str()), "failed to set return value for model_ids_to_evaluate");
+
 
     // Calculate capability
     ww::value::Object result;
     ASSERT_SUCCESS(rsp, ww::exchange::token_object::create_operation_package("use_dataset", params, result),
                    "unexpected error: failed to generate capability");
 
-    // this assumes that generating the capability does not change state, depending on
-    return rsp.value(result, false);
+    // this assumes that generating the capability changes state
+    return rsp.value(result, true);
 }
 
 // -----------------------------------------------------------------
 // Method: return a hello world message
 // -----------------------------------------------------------------
 
-bool ww::medperf::token_object::hello_world(
+bool ww::medperf::token_object::owner_test(
     const Message &msg,
     const Environment &env,
     Response &rsp)
 {
-    ww::value::String result("Hello, World!");
+    // check if this is called by the owner
+    ASSERT_SENDER_IS_OWNER(env, rsp);
+    ww::value::String result("owner!");
     return rsp.value(result, false);
 }
 
 // -----------------------------------------------------------------
-// Method: add simple function to the hello_world
+// Method: check if the sender is the creator
 // -----------------------------------------------------------------
 
-bool ww::medperf::token_object::hello_world_function(
+bool ww::medperf::token_object::update_policy(
     const Message &msg,
     const Environment &env,
     Response &rsp)
 {
-    ww::value::Structure result("{'message':'Hello, World!'}");
-    return rsp.value(result, false);
+    // check if this is called by the creator
+    ASSERT_SENDER_IS_CREATOR(env, rsp);
+
+    // schema validation
+    ASSERT_SUCCESS(rsp, msg.validate_schema(UPDATE_POLICY_SCHEMA), "invalid request, missing required parameters");
+
+    ww::value::Structure result(DATASET_INFO_SCHEMA);
+
+
+    const std::string dataset_id_value(msg.get_string("dataset_id"));
+    std::string dataset_id_value_from_store;
+    ASSERT_SUCCESS(rsp, dataset_TO_store.get(dataset_id_KEY, dataset_id_value_from_store), "failed to retrieve dataset_id");
+    ASSERT_SUCCESS(rsp, dataset_id_value_from_store == dataset_id_value, "dataset does not exist");
+    ASSERT_SUCCESS(rsp, result.set_string("dataset_id", dataset_id_value.c_str()), "failed to set return value for dataset_id");
+
+    std::string experiment_id_value(msg.get_string("experiment_id"));
+    // ASSERT_SUCCESS(rsp, msg.get_string("experiment_id", experiment_id_value), "failed to retrieve experiment_id");
+    ASSERT_SUCCESS(rsp, dataset_TO_store.set(experiment_id_KEY, experiment_id_value), "failed to store experiment_id");
+    ASSERT_SUCCESS(rsp, result.set_string("experiment_id", experiment_id_value.c_str()), "failed to set return value for experiment_id");
+
+    const std::string associated_model_ids_value(msg.get_string("associated_model_ids"));
+    ASSERT_SUCCESS(rsp, dataset_TO_store.set(associated_model_ids_KEY, associated_model_ids_value), "failed to store associated_model_ids");
+    ASSERT_SUCCESS(rsp, result.set_string("associated_model_ids", associated_model_ids_value.c_str()), "failed to set return value for associated_model_ids");
+    
+    // size_t model_count;
+    // ww::types::StringArray associated_model_ids_for_tag_string(associated_model_ids_value);
+    // model_count = std::count(associated_model_ids_for_tag_string.begin(), associated_model_ids_for_tag_string.end(), ',') + 1; 
+
+    size_t model_count = std::stoi(associated_model_ids_value);
+    const std::string associated_model_tags_value(model_count, '0');
+    ASSERT_SUCCESS(rsp, dataset_TO_store.set(associated_model_tags_KEY, associated_model_tags_value.c_str()), "failed to store associated_model_tags");
+    ASSERT_SUCCESS(rsp, result.set_string("associated_model_tags", associated_model_tags_value.c_str()), "failed to set return value for associated_model_tags");
+    // ww::value::Array associated_model_ids_array = splitString(associated_model_ids_value.c_str(), ',');
+    
+
+    // std::vector<std::string> associated_model_vec = stringToVector(associated_model_ids_value);
+    // set the associated_model_tag for each model_id in associated_model_ids to '0'
+    // std::vector<std::string> associated_model_tags_vec(associated_model_vec.size(), '0');
+    // const std::string associated_model_tags_value = vectorToString(associated_model_tags_vec);
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.set(associated_model_tags_KEY, associated_model_tags_value), "failed to store associated_model_tags");
+
+    // removed for testing
+    // =============================================
+    // std::vector<std::string> associated_model_ids = stringToVector(associated_model_ids_value);
+    // std::map<std::string, std::string> associated_model_ids_map;
+    // for (auto model_id : associated_model_ids)
+    // {
+    //     associated_model_ids_map[model_id] = "not used";
+    // }
+    // const std::string associated_model_to_be_stored = mapToString(associated_model_ids_map);
+    // ASSERT_SUCCESS(rsp, dataset_TO_store.set(associated_model_ids_KEY, associated_model_to_be_stored), "failed to store associated_model_ids");
+
+    const uint32_t dataset_max_use_count_value = (uint32_t)msg.get_number("max_use_count");
+    ASSERT_SUCCESS(rsp, dataset_TO_store.set(dataset_max_use_count_KEY, dataset_max_use_count_value), "failed to store dataset_max_use_count");
+    ASSERT_SUCCESS(rsp, result.set_number("max_use_count", dataset_max_use_count_value), "failed to set return value for max_use_count");
+    // ww::value::String result("Policy updated!");
+
+    return rsp.value(result, true);
+    // return rsp.success(true);
+}
+
+
+
+std::string mapToString(const std::map<std::string, std::string>& myMap) {
+    std::ostringstream oss;  // Create a string stream
+    oss << "{";
+    for (auto it = myMap.begin(); it != myMap.end(); ++it) {
+        oss << "\"" << it->first << "\": \"" << it->second << "\"";
+        if (std::next(it) != myMap.end()) {
+            oss << ", "; // Add a comma, except for the last item
+        }
+    }
+    oss << "}";
+    return oss.str(); // Return the formatted string
+}
+
+std::map<std::string, std::string> stringToMap(const std::string& str) {
+    std::map<std::string, std::string> myMap;
+    size_t start = 0;
+    size_t end = 0;
+
+    // Check if the string starts with '{' and ends with '}'
+    if (str.front() == '{' && str.back() == '}') {
+        start = 1;  // Skip '{'
+        end = str.size() - 1;  // Calculate end position
+    } else {
+        return myMap; // Return an empty map if format is incorrect
+    }
+
+    while (start < end) {
+        size_t colonPos = str.find(':', start); // Find the position of ':'
+        size_t keyStart = str.find('"', start) + 1; // Find the key start position
+        size_t keyEnd = str.find('"', keyStart); // Find the key end position
+        
+        if (keyEnd == std::string::npos || colonPos == std::string::npos || keyEnd > colonPos) {
+            break; // Exit if format is incorrect
+        }
+
+        std::string key = str.substr(keyStart, keyEnd - keyStart); // Get the key
+        size_t valueStart = colonPos + 1; // Start position of value
+        size_t valueEnd = str.find(',', valueStart); // Find the next ',' position
+        
+        if (valueEnd == std::string::npos) {
+            valueEnd = end; // If no ',' found, set to the end
+        }
+
+        // Remove whitespace after ':' and before the starting quote of the value
+        size_t valueQuoteStart = str.find('"', valueStart);
+        size_t valueQuoteEnd = str.find('"', valueQuoteStart + 1); // Find the value end
+
+        std::string value = str.substr(valueQuoteStart + 1, valueQuoteEnd - valueQuoteStart - 1); // Get value
+
+        myMap[key] = value; // Add to the map
+        start = valueEnd + 1; // Update the start position
+    }
+
+    return myMap; // Return the constructed map
+}
+
+std::vector<std::string> stringToVector(const std::string& str) {
+    std::vector<std::string> result;
+    std::string::size_type start = 0;
+    std::string::size_type end = str.find(',');
+
+    while (end != std::string::npos) {
+        result.push_back(str.substr(start, end - start));
+        start = end + 1;
+        end = str.find(',', start);
+    }
+    result.push_back(str.substr(start));
+
+    return result;
+}
+
+std::string vectorToString(const std::vector<std::string>& vec) {
+    std::string result = "{";
+    for (size_t i = 0; i < vec.size(); ++i) {
+        result += "\"" + vec[i] + "\"";
+        if (i < vec.size() - 1) {
+            result += ", ";
+        }
+    }
+    result += "}";
+    return result;
+}
+
+// // splitString takes a string and a delimiter character and returns a ww::value::Array
+// ww::value::Array splitString(const std::string& str, char delimiter) {
+//     ww::value::Array result;
+//     ww::value::Object model_map;
+//     std::stringstream ss(str);
+//     std::string item;
+
+//     while (std::getline(ss, item, delimiter)) {
+//         model_map.set_value(item.c_str(), ww::value::String("not used"));
+//         result.append_value(model_map);
+//     }
+
+//     return result;
+// }
+
+
+std::vector<ww::types::StringArray> splitForTags(const std::string& str) {
+    std::vector<ww::types::StringArray> result;
+    std::stringstream ss(str);
+    std::string item;
+
+    while (std::getline(ss, item, ',')) {
+        result.push_back('0');
+    }
+
+    return result;
+}
+
+std::string joinString(const std::vector<std::string>& vec, char delimiter) {
+    std::string result;
+    for (const auto& item : vec) {
+        result += item + delimiter;
+    }
+
+    return result;
 }
