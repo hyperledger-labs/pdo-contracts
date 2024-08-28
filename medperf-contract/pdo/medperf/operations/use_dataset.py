@@ -95,12 +95,18 @@ class DataOperation(object) :
         # get the parameters
         kvstore_encryption_key = params['kvstore_encryption_key']
         kvstore_root_block_hash = params['kvstore_root_block_hash']
+        # used as a challenge to sign the result for now
         kvstore_input_key = params['kvstore_input_key']
         dataset_id = params['dataset_id']
         model_ids_to_evaluate = params['model_ids_to_evaluate']
+        result_path = "~/.medperf_test_results"
+        # if result_path does not exist, create it
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
         
-        mlcube_script_path = "/home/wenyi1/medperf/test_resource/test.sh"
-        result_path = "/home/wenyi1/medperf/test_resource/test_results"
+        # path issue, turned off for now
+        # mlcube_script_path = "~/test_resource/test.sh"
+
 
         test_message = "Hello from the guardian service."
         # put the parameters in test_message and return
@@ -116,20 +122,21 @@ class DataOperation(object) :
         model_ids = [int(i) for i in model_ids]
         
         for model in model_ids:
-            if model == 1 or model == 2:
-                print(f"Cubes available for model {model}, running the MLCube script...")
-                # run the MLCube script with parameter model
-                # os.system(f"bash {mlcube_script_path} {model}")
-                output_result = subprocess.run(["bash", mlcube_script_path, str(model)], capture_output=True, text=True)
-                print(output_result.stdout)
-            else:
-                print(f"Model {model} not available. Generating simulated data...")
-                # generate simulated data
-                sim_data = {'AUC': random.uniform(0.5, 1), 'Accuracy': random.uniform(0.5, 1)} 
-                with open(f"{result_path}/{str(model)}.yaml", 'w') as file:
-                    yaml.dump(sim_data, file)
-                print(f"Simulated data for model {model} generated successfully.")
-        
+            # path issue, turned off for now
+            # if model == 1 or model == 2:
+            #     print(f"Cubes available for model {model}, running the MLCube script...")
+            #     # run the MLCube script with parameter model
+            #     # os.system(f"bash {mlcube_script_path} {model}")
+            #     output_result = subprocess.run(["bash", mlcube_script_path, str(model)], capture_output=True, text=True)
+            #     print(output_result.stdout)
+            # else:
+            print(f"Model {model} not available. Generating simulated data...")
+            # generate simulated data
+            sim_data = {'AUC': random.uniform(0.5, 1), 'Accuracy': random.uniform(0.5, 1)} 
+            with open(f"{result_path}/{str(model)}.yaml", 'w') as file:
+                yaml.dump(sim_data, file)
+            print(f"Simulated data for model {model} generated successfully.")
+    
         print("================================================")
         print("Signing each file with simple SHA256 and challenge...")
         # handle each model result
@@ -138,7 +145,7 @@ class DataOperation(object) :
                 with open(f"{result_path}/{str(model)}.yaml", 'r+') as file:
                     result_data = yaml.safe_load(file)
                     hash_result = self.simpleSHA256withChallenge(kvstore_input_key, result_data)
-                    new_data = {"hash": hash_result}
+                    new_data = {"signature": hash_result}
                     yaml.dump(new_data, file)
                     print(f"Model {model} result signed successfully.")
             except Exception as e:

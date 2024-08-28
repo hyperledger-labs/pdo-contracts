@@ -6,3 +6,5 @@ dist
 *.ipynb_checkpoints
 *.pyc
 quick_*.sh
+settings.sh
+hfmodels-contract/

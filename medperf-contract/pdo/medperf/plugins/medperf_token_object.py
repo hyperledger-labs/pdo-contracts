@@ -577,6 +577,7 @@ class cmd_experiment_order(pcommand.contract_command_base) :
             type=str)
 
 
+
     @classmethod
     def invoke(cls, state, context, **kwargs) :
         save_file = pcontract_cmd.get_contract_from_context(state, context)
@@ -595,11 +596,14 @@ class cmd_experiment_order(pcommand.contract_command_base) :
             state, context, session,
             state_attestation['signature'],
             **kwargs)
+
+        medperf_sqlite_path = kwargs.get('medperf_sqlite_path')
         try:
+            # simulating the posting of the order to the MedPerf server
             data_json = {}
             data_json["order"] = json.dumps(capability)
             print(data_json)
-            conn = sqlite3.connect("/home/wenyi1/medperf/server/db.sqlite3")
+            conn = sqlite3.connect(medperf_sqlite_path)
             cur = conn.cursor()
             # insert new result record to the table
             for i in range(10):

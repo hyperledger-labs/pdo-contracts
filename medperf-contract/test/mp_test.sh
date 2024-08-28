@@ -19,6 +19,9 @@
 : "${PDO_LEDGER_URL?Missing environment variable PDO_LEDGER_URL}"
 : "${PDO_HOME?Missing environment variable PDO_HOME}"
 : "${PDO_SOURCE_ROOT?Missing environment variable PDO_SOURCE_ROOT}"
+: "${MEDPERF_SQLITE_PATH?Missing environment variable MEDPERF_SQLITE_PATH}"
+: "${MEDPERF_VENV_PATH?Missing environment variable MEDPERF_VENV_PATH}"
+: "${MEDPERF_HOME?Missing environment variable MEDPERF_HOME}"
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
 source ${PDO_HOME}/bin/lib/common.sh
@@ -208,12 +211,10 @@ echo -e "${GREEN}===========================${RESET}"
 echo -e "${GREEN}=== Preparing MedPerf ===${RESET}"
 echo -e "${GREEN}===========================${RESET}"
 
-medperf_home="/home/wenyi1/medperf"
-# deactivate virtual environment
 deactivate
 
-source "/home/wenyi1/medperf/venv/bin/activate"
-cd ${medperf_home}
+source $MEDPERF_VENV_PATH'/bin/activate'
+cd ${MEDPERF_HOME}
 rm -fr medperf_tutorial
 cd server
 sh reset_db.sh
@@ -236,13 +237,12 @@ medperf dataset prepare --data_uid 1
 echo -e "${GREEN}Putting some dummy models assosciated with experiment..."
 read -p "Press enter to continue >>"
 python record_writer/fake_model.py
+# clear
 
-
-
-echo -e "${RED}======================================================${RESET}"
-echo -e "${RED}The next commmand will set the dataset as operational.${RESET}"
-echo -e "${RED}This is a good time to mint a token for the dataset.${RESET}"
-echo -e "${RED}======================================================${RESET}"
+echo -e "${YELLOW}======================================================${RESET}"
+echo -e "${YELLOW}The next commmand will set the dataset as operational.${RESET}"
+echo -e "${YELLOW}This is a good time to mint a token for the dataset.${RESET}"
+echo -e "${YELLOW}======================================================${RESET}"
 read -p "Press enter to continue >>"
 
 medperf dataset set_operational --data_uid 1
@@ -258,46 +258,49 @@ try medperf_token mint_dataset_tokens ${OPTS} --contract token.test1.token_objec
 
 
 deactivate
-source "/home/wenyi1/medperf/venv/bin/activate"
+source $MEDPERF_VENV_PATH'/bin/activate'
 
-echo -e "${RED}=======================================================================${RESET}"
-echo -e "${RED}The next command will associate the dataset with experiment.${RESET}"
-echo -e "${RED}This is a good time to update the token policy for the experiment.${RESET}"
-echo -e "${RED}The policy specifies the dataowner only allows 2 models to be evaluated${RESET}"
-echo -e "${RED}========================================================================${RESET}"
+clear
+
+echo -e "${YELLOW}=======================================================================${RESET}"
+echo -e "${YELLOW}The next command will associate the dataset with experiment.${RESET}"
+echo -e "${YELLOW}This is a good time to update the token policy for the dataset.${RESET}"
+echo -e "${YELLOW}The experiment is associated with 10 models marked from 1-10 ${RESET}"
+echo -e "${YELLOW}The policy specifies the dataowner only allows 3 models to be evaluated${RESET}"
+echo -e "${YELLOW}========================================================================${RESET}"
 read -p "Press enter to continue >>"
 
-medperf dataset associate --benchmark_uid 1 --data_uid 1
+medperf dataset associate --benchmark_uid 1 --data_uid 1 > /dev/null
 
 deactivate
 source ${PDO_INSTALL_ROOT}'/bin/activate'
 
 # update token policy here
-yell the owner of the dataset token updates the policy by adding an experiment id and a list of associated models with the experiment id
-yell the experiment contains 10 models, but the dataset can be used only 5 times
+yell the owner of the dataset token updates the policy by adding an experiment id and a list of associated models
+yell the experiment contains 10 models, but the dataset can be used only 3 times
 try medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
     --dataset_id "mytestdata" \
     --experiment_id "chestxray" \
     --associated_model_ids "10" \
-    --max_use_count 5
+    --max_use_count 3
 
 # check token policy here
 # yell get dataset and policy info from the token object
 # try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
 
+# clear
 
-
-echo -e "${RED}============================================================${RESET}"
-echo -e "${RED}The dataowner can transfer the token to experiment committee${RESET}"
-echo -e "${RED}============================================================${RESET}"
+echo -e "${YELLOW}============================================================${RESET}"
+echo -e "${YELLOW}The dataowner can transfer the token to experiment committee${RESET}"
+echo -e "${YELLOW}============================================================${RESET}"
 read -p "Press enter to continue >>"
 
 # transfer token here
-yell the owner transfers the token to token_holder1
+yell the owner transfers the token to token_holder1 '(experiment committee)'
 try medperf_token transfer ${OPTS} --contract token.test1.token_object.token_1 \
     --new-owner token_holder1
 
-echo -e "${RED} Update policy is not allowed from the experiment committee${RESET}"
+# echo -e "${YELLOW} Update policy is not allowed from the experiment committee${RESET}"
 # update token policy here
 yell the experiment committee tries to update the policy to a maximum 10 uese, but fails
 medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
@@ -307,23 +310,25 @@ medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1
     --max_use_count 10 \
     --identity token_holder1
 
-echo -e "${RED} Update policy is not allowed from the experiment committee${RESET}"
-yell the token_issuer tries to update the policy to a maximum 2 uses
-try medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
-    --experiment_id "chestxray" \
-    --dataset_id "mytestdata" \
-    --associated_model_ids "10" \
-    --max_use_count 2 
+# echo -e "${YELLOW} Update policy is not allowed from the experiment committee${RESET}"
+# yell the token_issuer tries to update the policy to a maximum 2 uses
+# try medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
+#     --experiment_id "chestxray" \
+#     --dataset_id "mytestdata" \
+#     --associated_model_ids "10" \
+#     --max_use_count 2 
 
-yell Check the new policy
-try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
-    --identity token_holder1
+# yell Check the new policy
+# try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
+#     --identity token_holder1
 
-echo -e "${RED}============================================================${RESET}"
-echo -e "${RED} Experiment committee can choose which 2 models to use.${RESET}"
-echo -e "${RED} These models are marked scheduled in PDO contract. ${RESET}"
-echo -e "${RED}============================================================${RESET}"
-read -p "Press enter to continue >>"
+
+# clear
+echo -e "${YELLOW}============================================================${RESET}"
+echo -e "${YELLOW} Experiment committee can choose which models to use.${RESET}"
+echo -e "${YELLOW} These models are marked scheduled in PDO contract. ${RESET}"
+echo -e "${YELLOW}============================================================${RESET}"
+# read -p "Press enter to continue >>"
 
 yell Try to use model 3, it works
 medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
@@ -332,7 +337,7 @@ medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
     --model_ids_to_evaluate '3'
 # out of range not allowed
 
-read -p "Press enter to continue >>"
+# read -p "Press enter to continue >>"
 yell Try use a model 15 that is not associated with the experiment, but fails
 medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
     --identity token_holder1 \
@@ -340,36 +345,45 @@ medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
     --model_ids_to_evaluate '15'
 
 # two
-read -p "Press enter to continue >>"
-yell Try to use model 5, it works
-try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
-    --identity token_holder1 \
-    --dataset_id "mytestdata" \
-    --model_ids_to_evaluate '1'
-
-# three not allowed 
-read -p "Press enter to continue >>"
-yell Try to use model 4, it fails because the maximum use count is 2
+# read -p "Press enter to continue >>"
+yell Try to use model 4, it works
 try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
     --identity token_holder1 \
     --dataset_id "mytestdata" \
     --model_ids_to_evaluate '4'
 
-read -p "Press enter to continue >>"
-yell check the token policy status again
-try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
-    --identity token_holder1
+yell Try to use model 5, it works
+try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
+    --identity token_holder1 \
+    --dataset_id "mytestdata" \
+    --model_ids_to_evaluate '5'
 
-echo -e "${RED}============================================================${RESET}"
-echo -e "${RED}The experiment committee can pack all scheduled models into ${RESET}"
-echo -e "${RED}a single work order send it to the medperf server.${RESET}"
-echo -e "${RED}============================================================${RESET}"
+# three not allowed 
+# read -p "Press enter to continue >>"
+yell Try to use model 6, it fails because the maximum use count is 3
+try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
+    --identity token_holder1 \
+    --dataset_id "mytestdata" \
+    --model_ids_to_evaluate '6'
+
+# read -p "Press enter to continue >>"
+# yell check the token policy status again
+# try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
+#     --identity token_holder1
+
+read -p "Press enter to continue >>"
+# clear
+echo -e "${YELLOW}============================================================${RESET}"
+echo -e "${YELLOW}The experiment committee can pack all scheduled models into ${RESET}"
+echo -e "${YELLOW}a single experiment workorder send it to the medperf server.${RESET}"
+echo -e "${YELLOW}============================================================${RESET}"
 read -p "Press enter to continue >>"
 
 yell Experiment Committee gets a packed workorder and submit to the MedPerf server
 medperf_token experiment_order ${OPTS} --contract token.test1.token_object.token_1 \
     --identity token_holder1 \
     --dataset_id "mytestdata" \
+    --medperf_sqlite_path
 
 
 
@@ -377,119 +391,20 @@ yell Check the token policy status again
 try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
     --identity token_holder1
 
+read -p "Press enter to check the results >>"
 
+echo -e "${YELLOW}============================================================${RESET}"
+echo -e "${YELLOW}The results of the experiment look like this.${RESET}"
+echo -e "${YELLOW}============================================================${RESET}"
+# 
+for i in {3,4,5};
+do
+    # echo -e "${YELLOW}============================================================${RESET}"
+    echo -e "${YELLOW}Model $i${RESET}"
+    # echo -e "${YELLOW}============================================================${RESET}"
+    cat $MEDPERF_HOME/test_resource/test_results/$i*
+done
 read -p "Press enter to quit"
 
 exit
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # yell get dataset and policy info from the token object
-# # try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
-    
-# yell the owner of the token updates the policy by adding an experiment id and a list of associated models with the experiment id
-# yell the experiment contains 5 models, but the dataset can be used only 5 times
-# try medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
-#     --dataset_id "test_dataset_1" \
-#     --experiment_id "test_experiment_1" \
-#     --associated_model_ids "5" \
-#     --max_use_count 5
-
-# yell get dataset and policy info from the token object
-# try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
-
-
-# yell the owner transfers the token to token_holder1
-# try medperf_token transfer ${OPTS} --contract token.test1.token_object.token_1 \
-#     --new-owner token_holder1
-
-# yell the token_holder1 tries to update the policy to a maximum 10 uese, but fails
-# medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
-#     --experiment_id "test_experiment_1" \
-#     --dataset_id "test_dataset_1" \
-#     --associated_model_ids "10" \
-#     --max_use_count 10 \
-#     --identity token_holder1
-
-# yell the token_issuer tries to update the policy to a maximum 2 uses
-# try medperf_token update_policy ${OPTS}  --contract token.test1.token_object.token_1 \
-#     --experiment_id "test_experiment_1" \
-#     --dataset_id "test_dataset_1" \
-#     --associated_model_ids "10" \
-#     --max_use_count 2 
-
-# yell the token_holder1 tries to check the policy again
-# try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
-#     --identity token_holder1
-
-
-# yell the token_holder1 tries to use the dataset with the first models, this time works
-# medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
-#     --identity token_holder1 \
-#     --dataset_id "test_dataset_1" \
-#     --model_ids_to_evaluate '3'
-
-# yell check the policy again
-# try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
-#     --identity token_holder1
-
-
-# yell the token_holder1 tries to use a model that is not associated with the experiment, but fails
-# medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
-#     --identity token_holder1 \
-#     --dataset_id "test_dataset_1" \
-#     --model_ids_to_evaluate '15'
-
-# yell the token_holder1 tries to use the dataset with the second model, this time works
-# try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
-#     --identity token_holder1 \
-#     --dataset_id "test_dataset_1" \
-#     --model_ids_to_evaluate '5'
-
-# # yell the token_holder1 tries to use the dataset with the third model, this time fails
-# # try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1 \
-# #     --identity token_holder1 \
-# #     --dataset_id "test_dataset_1" \
-# #     --model_ids_to_evaluate '4'
-
-# # yell check the policy again
-# # try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
-# #     --identity token_holder1
-
-# yell get experiment order and submit to the guardian service
-# try medperf_token experiment_order ${OPTS} --contract token.test1.token_object.token_1 \
-#     --identity token_holder1 \
-#     --dataset_id "test_dataset_1" \
-
-# yell check the policy again
-# try medperf_token get_dataset_info ${OPTS} --contract token.test1.token_object.token_1 \
-#     --identity token_holder1
-
-# # yell a test call of the hello world method in the contract
-# # try medperf_token owner_test ${OPTS} --contract token.test1.token_object.token_1
-
-# # yell use the dataset for a model, this is the first usage prior to transfer
-# # try medperf_token use_dataset ${OPTS}  --contract token.test1.token_object.token_1
-#     # --user_inputs '{"inputs": "Can you please let us know more details about yourself ?"}'
-
-# # yell a test call of the hello world method in the contract
-# # try medperf_token owner_test ${OPTS} --contract token.test1.token_object.token_1
-
-# read -p "Press enter to quit"
-
-# exit
