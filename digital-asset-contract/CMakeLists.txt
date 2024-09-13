@@ -12,28 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-# This is necessary to get at the definitions necessary
-# for the std::string class
-INCLUDE(exchange_common)
-LIST(APPEND WASM_LIBRARIES ${EXCHANGE_LIB})
-LIST(APPEND WASM_INCLUDES ${EXCHANGE_INCLUDES})
-
-INCLUDE(da_common)
-LIST(APPEND WASM_LIBRARIES ${DIGITAL_ASSET_LIB})
-LIST(APPEND WASM_INCLUDES ${DIGITAL_ASSET_INCLUDES})
+INCLUDE(exchange-contract/methods)
+INCLUDE(methods.cmake)
 
 # -----------------------------------------------------------------
 ADD_LIBRARY(${DIGITAL_ASSET_LIB} STATIC ${DIGITAL_ASSET_SOURCES})
 TARGET_INCLUDE_DIRECTORIES(${DIGITAL_ASSET_LIB} PUBLIC ${DIGITAL_ASSET_INCLUDES})
+TARGET_INCLUDE_DIRECTORIES(${DIGITAL_ASSET_LIB} PUBLIC ${EXCHANGE_INCLUDES})
+TARGET_INCLUDE_DIRECTORIES(${DIGITAL_ASSET_LIB} PUBLIC ${WASM_INCLUDES})
 
 SET_PROPERTY(TARGET ${DIGITAL_ASSET_LIB} APPEND_STRING PROPERTY COMPILE_OPTIONS "${WASM_BUILD_OPTIONS}")
 SET_PROPERTY(TARGET ${DIGITAL_ASSET_LIB} APPEND_STRING PROPERTY LINK_OPTIONS "${WASM_LINK_OPTIONS}")
 SET_TARGET_PROPERTIES(${DIGITAL_ASSET_LIB} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 # -----------------------------------------------------------------
-BUILD_CONTRACT(da_guardian contracts/guardian.cpp)
-BUILD_CONTRACT(da_token_object contracts/token_object.cpp)
+BUILD_CONTRACT(da_guardian contracts/guardian.cpp
+  HEADERS ${EXCHANGE_INCLUDES} ${DIGITAL_ASSET_INCLUDES}
+  LIBRARIES ${EXCHANGE_LIB} ${DIGITAL_ASSET_LIB})
+
+BUILD_CONTRACT(da_token_object contracts/token_object.cpp
+  HEADERS ${EXCHANGE_INCLUDES} ${DIGITAL_ASSET_INCLUDES}
+  LIBRARIES ${EXCHANGE_LIB} ${DIGITAL_ASSET_LIB})
 
 # -----------------------------------------------------------------
 INCLUDE(Python)
