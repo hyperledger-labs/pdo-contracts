@@ -15,8 +15,7 @@
 # ---------------------------------------------
 # Set up the include list
 # ---------------------------------------------
-SET (EXCHANGE_INCLUDES ${WASM_INCLUDES})
-LIST(APPEND EXCHANGE_INCLUDES ${CMAKE_CURRENT_LIST_DIR})
+SET(EXCHANGE_INCLUDES ${CMAKE_CURRENT_LIST_DIR})
 
 # ---------------------------------------------
 # Set up the default source list

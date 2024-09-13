@@ -15,9 +15,9 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.16 FATAL_ERROR)
 
 PROJECT(pdo-contracts)
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}")
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/exchange-contract")
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/digital-asset-contract")
+
 INCLUDE(ProjectVariables)
 
 LIST(APPEND CMAKE_MODULE_PATH "${PDO_SOURCE_ROOT}/contracts/wawaka")
@@ -27,11 +27,18 @@ INCLUDE(wawaka_common)
 LIST(APPEND WASM_LIBRARIES ${WW_COMMON_LIB})
 LIST(APPEND WASM_INCLUDES ${WW_COMMON_INCLUDES})
 
-SET(CONTRACT_FAMILIES exchange-contract digital-asset-contract inference-contract)
+FILE(GLOB CONTRACT_FAMILIES "*-contract")
 
 # A local cmake file (Local.cmake) allows for local overrides of
 # variables. In particular, this is useful to set CONTRACT_FAMILIES
 # to just the subset that you want to build/test.
+#
+# For example, if you place this line in Local.cmake then only the
+# exchange and digital asset contract families will be built:
+#
+# SET(CONTRACT_FAMILIES exchange-contract digital-asset-contract)
+#
+
 INCLUDE(Local.cmake OPTIONAL)
 
 ENABLE_TESTING()
