@@ -1,0 +1,12 @@
+MANIFEST.in
+setup.py
+context/counter.toml
+etc/example.toml
+pdo/__init__.py
+pdo/example/__init__.py
+pdo/example/plugins/__init__.py
+pdo/example/plugins/counter.py
+pdo/example/resources/__init__.py
+pdo/example/resources/resources.py
+pdo/example/scripts/__init__.py
+pdo/example/scripts/scripts.py
