@@ -1,0 +1,5 @@
+# -----------------------------------------------------------------
+# Example contract family contract source
+# -----------------------------------------------------------------
+[ContractFamily.Example]
+counter = { source = "${home}/contracts/example/_example_counter.b64" }
