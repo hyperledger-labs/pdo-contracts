@@ -25,9 +25,15 @@ CONTRACTS_USER_UID ?= $(shell id -u)
 CONTRACTS_GROUP_UID ?= $(shell id -g)
 
 DOCKER_COMMAND ?= docker
+
 DOCKER_COMPOSE_COMMAND ?= docker-compose
-# to work with upstream docker and docker compose plugin, redefine above
-# as `DOCKER_COMPOSE_COMMAND=docker compose` in your `make.loc`
+ifndef DOCKER_COMPOSE_COMMAND
+  DOCKER_COMPOSE_COMMAND := $(shell command -v docker-compose 2> /dev/null)
+  ifndef DOCKER_COMPOSE_COMMAND
+    $(warning "docker-compose command is not available, using docker compose")
+    DOCKER_COMPOSE_COMMAND := $(DOCKER_COMMAND) compose
+  endif
+endif
 
 # Turns out that setting the script directory from the Makefile's name
 # does not work very well if the path contains spaces in the name; in
