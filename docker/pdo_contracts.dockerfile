@@ -56,7 +56,8 @@ ARG UID=1000
 ARG GID=${UID}
 USER ${UID}:${GID}
 RUN --mount=type=cache,uid=${UID},gid=${GID},target=/project/pdo/.cache/pip \
-    /project/pdo/run/bin/pip install notebook papermill ipywidgets jupytext
+    /project/pdo/run/bin/pip install notebook papermill ipywidgets jupytext bash_kernel
+RUN /project/pdo/run/bin/python -m bash_kernel.install
 
 # -----------------------------------------------------------------
 # Set up the contract source and configure for specified tests
