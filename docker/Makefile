@@ -14,6 +14,9 @@
 # limitations under the License.
 # ------------------------------------------------------------------------------
 
+# Ensure that the default target builds the contracts
+all : build_contracts
+
 # Include local customizations if they are available
 -include make.loc
 
@@ -26,7 +29,6 @@ CONTRACTS_GROUP_UID ?= $(shell id -g)
 
 DOCKER_COMMAND ?= docker
 
-DOCKER_COMPOSE_COMMAND ?= docker-compose
 ifndef DOCKER_COMPOSE_COMMAND
   DOCKER_COMPOSE_COMMAND := $(shell command -v docker-compose 2> /dev/null)
   ifndef DOCKER_COMPOSE_COMMAND
@@ -87,8 +89,6 @@ CONTRACT_FAMILIES ?= $(notdir $(wildcard $(CONTRACTS_SOURCE_ROOT)/*-contract))
 # PDO contracts has changed
 TIMESTAMP := $(shell /bin/date "+%Y%m%d%H%M%S")
 
-all : build_contracts
-
 rebuild_contracts : repository models
 	$(DOCKER_COMMAND) build $(DOCKER_ARGS) \
 		--build-arg REBUILD=$(TIMESTAMP) \
@@ -97,6 +97,7 @@ rebuild_contracts : repository models
 
 build_contracts : DOCKER_BUILDARGS+=--build-arg CONTRACT_FAMILIES="$(CONTRACT_FAMILIES)"
 build_contracts : repository models
+	- echo "Build contract families: $(CONTRACT_FAMILIES)"
 	$(DOCKER_COMMAND) build $(DOCKER_ARGS) \
 		--tag pdo_contracts:$(CONTRACTS_VERSION) \
 		--file $(DOCKER_DIR)/pdo_contracts.dockerfile .
@@ -240,6 +241,41 @@ test_multiuser_jupyter : clean_config clean_repository build_contracts
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_MULTIUSER_COMPOSE_ARGS) down
 
+# The example target builds and runs only the example contract family. This
+# is intended to be a very simple way to test drive PDO contracts as a user
+# and as a contract developer.
+
+example : CONTRACT_FAMILIES=example-contract
+example : clean_config clean_repository build_contracts
+	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		CONTRACTS_SOURCE_ROOT=$(CONTRACTS_SOURCE_ROOT) \
+		$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) up --abort-on-container-exit
+	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) down
+
+example_jupyter : CONTRACT_FAMILIES=exchange-contract example-contract
+example_jupyter : clean_config clean_repository build_contracts
+	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		CONTRACTS_SOURCE_ROOT=$(CONTRACTS_SOURCE_ROOT) \
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) up --abort-on-container-exit
+	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
+
+# The developer target creates a container with no contracts built or
+# installed. When the container starts, the current contract source
+# root is mounted at /project/pdo/dev.  In addition, a Jupyter server
+# is started. The Jupyter launcher provides a shell window that can be
+# used to interact with the PDO installation to build and install
+# contracts.
+DEVELOP_COMPOSE_ARGS += -f test_dev.yaml
+developer : CONTRACT_FAMILIES=
+developer : clean_config build_contracts
+	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		CONTRACTS_SOURCE_ROOT=$(CONTRACTS_SOURCE_ROOT) \
+		$(DOCKER_COMPOSE_COMMAND) $(DEVELOP_COMPOSE_ARGS) up --abort-on-container-exit
+	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
+
 # -----------------------------------------------------------------
 # Cleaning is a bit interesting because the containers don't go away
 # unless they are told to very nicely. Until they go away they hold onto
@@ -257,7 +293,7 @@ clean_config :
 	@ rm -f $(DOCKER_DIR)/xfer/services/keys/*.pem $(DOCKER_DIR)/xfer/services/etc/*.toml
 	@ rm -f $(DOCKER_DIR)/xfer/services/etc/site.psh
 
-clean : clean_images clean_config clean_repository clean_models
+clean : clean_images clean_config clean_repository
 
 .PHONY: clean clean_images clean_config clean_repository clean_models
 .PHONY: test
