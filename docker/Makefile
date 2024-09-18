@@ -97,6 +97,7 @@ rebuild_contracts : repository models
 
 build_contracts : DOCKER_BUILDARGS+=--build-arg CONTRACT_FAMILIES="$(CONTRACT_FAMILIES)"
 build_contracts : repository models
+	- echo "Build contract families: $(CONTRACT_FAMILIES)"
 	$(DOCKER_COMMAND) build $(DOCKER_ARGS) \
 		--tag pdo_contracts:$(CONTRACTS_VERSION) \
 		--file $(DOCKER_DIR)/pdo_contracts.dockerfile .
@@ -239,6 +240,23 @@ test_multiuser_jupyter : clean_config clean_repository build_contracts
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_MULTIUSER_COMPOSE_ARGS) $(COMPOSE_PROFILES) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_MULTIUSER_COMPOSE_ARGS) down
+
+# The example target builds and runs only the example contract family. This
+# is intended to be a very simple way to test drive PDO contracts as a user
+# and as a contract developer.
+example : CONTRACT_FAMILIES=example-contract
+example : clean_config clean_repository build_contracts
+	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) up --abort-on-container-exit
+	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) down
+
+example_jupyter : CONTRACT_FAMILIES=exchange-contract example-contract
+example_jupyter : clean_config clean_repository build_contracts
+	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) up --abort-on-container-exit
+	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
 
 # -----------------------------------------------------------------
 # Cleaning is a bit interesting because the containers don't go away
