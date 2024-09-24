@@ -42,31 +42,26 @@ from .utility import *
 # the single jupyter module. for example, ex_asset_type will provide
 # access to the exchange family asset type plugin module.
 # -----------------------------------------------------------------
-_contract_families_ = {
-    'digital_asset' : 'da',
-    'exchange' : 'ex',
-    'inference' : 'ml',
-}
+def load_contract_families(**families) :
+    for cf, cs in families.items() :
+        try :
+            # attempt to load the jupyter module from the contract family
+            # not a problem if this fails
+            jupyter_name = 'pdo.{}.jupyter'.format(cf)
+            jupyter_module = importlib.import_module(jupyter_name)
+            globals()['{}_jupyter'.format(cs)] = jupyter_module
+        except Exception as e :
+            raise ImportError('Failed to import module for contract family {}; {}'.format(cf, e))
 
-for cf, cs in _contract_families_.items() :
-    try :
-        # attempt to load the jupyter module from the contract family
-        # not a problem if this fails
-        jupyter_name = 'pdo.{}.jupyter'.format(cf)
-        jupyter_module = importlib.import_module(jupyter_name)
-        globals()['{}_jupyter'.format(cs)] = jupyter_module
-    except Exception as e :
-        raise ImportError('Failed to import module for contract family {}; {}'.format(cf, e))
+        # load the plugins module for the contract family, this
+        # should provide a list of all the plugins in the family
+        # (in the __all__ variable)
+        try :
+            family_name = 'pdo.{}.plugins'.format(cf)
+            family_module = importlib.import_module(family_name)
 
-    # load the plugins module for the contract family, this
-    # should provide a list of all the plugins in the family
-    # (in the __all__ variable)
-    try :
-        family_name = 'pdo.{}.plugins'.format(cf)
-        family_module = importlib.import_module(family_name)
-
-        for plugin_name in family_module.__all__ :
-            plugin_module = importlib.import_module('{}.{}'.format(family_name, plugin_name))
-            globals()['{}_{}'.format(cs, plugin_name)] = plugin_module
-    except Exception as e :
-        raise ImportError('Failed to import plugins module for contract family {}; {}'.format(cf, e))
+            for plugin_name in family_module.__all__ :
+                plugin_module = importlib.import_module('{}.{}'.format(family_name, plugin_name))
+                globals()['{}_{}'.format(cs, plugin_name)] = plugin_module
+        except Exception as e :
+            raise ImportError('Failed to import plugins module for contract family {}; {}'.format(cf, e))

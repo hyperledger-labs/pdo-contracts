@@ -44,6 +44,7 @@ import pdo.contracts.jupyter as pc_jupyter
 import IPython.display as ip_display
 import ipywidgets
 
+pc_jupyter.load_contract_families(exchange='ex')
 pc_jupyter.load_ipython_extension(get_ipython())
 
 # %% [markdown]
