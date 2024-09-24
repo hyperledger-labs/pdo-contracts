@@ -109,4 +109,3 @@ class ImageClassification(ModelScoringScriptBase) :
         result['image_class'] = classification_label
 
         return result
-

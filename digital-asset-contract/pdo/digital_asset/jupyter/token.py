@@ -25,6 +25,8 @@ import pdo.contracts.jupyter as pc_jupyter
 import pdo.contracts.jupyter.keys as jp_keys
 import pdo.contracts.jupyter.utility as jp_util
 
+pc_jupyter.load_contract_families(digital_asset='da', exchange='ex')
+
 _logger = logging.getLogger(__name__)
 
 __all__ = [

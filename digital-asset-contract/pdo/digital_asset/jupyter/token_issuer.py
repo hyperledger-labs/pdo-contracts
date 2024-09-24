@@ -24,6 +24,8 @@ import pdo.contracts.jupyter as pc_jupyter
 from pdo.contracts.jupyter.keys import PrivateKeySelectionWidget
 from pdo.contracts.jupyter.groups import ServiceGroupSelectionWidget
 
+pc_jupyter.load_contract_families(digital_asset='da', exchange='ex')
+
 _logger = logging.getLogger(__name__)
 
 __all__ = [
