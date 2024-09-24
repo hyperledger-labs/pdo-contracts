@@ -77,6 +77,12 @@ DOCKER_BUILDARGS += --build-arg PDO_VERSION=$(PDO_VERSION)
 DOCKER_BUILDARGS += --build-arg PDO_REPOSITORY=$(PDO_REPOSITORY)
 DOCKER_ARGS = $(DOCKER_BUILDARGS)
 
+# The CONTRACT_FAMILIES variable contains a list of contract families
+# to build into the container. Note that there is no versioning of
+# containers for the contract families they contain. This can be
+# overridden in make.loc
+CONTRACT_FAMILIES ?= $(notdir $(wildcard $(CONTRACTS_SOURCE_ROOT)/*-contract))
+
 # for the most part this is just used to force rebuild when the
 # PDO contracts has changed
 TIMESTAMP := $(shell /bin/date "+%Y%m%d%H%M%S")
@@ -89,6 +95,7 @@ rebuild_contracts : repository models
 		--tag pdo_contracts:$(CONTRACTS_VERSION) \
 		--file $(DOCKER_DIR)/pdo_contracts.dockerfile .
 
+build_contracts : DOCKER_BUILDARGS+=--build-arg CONTRACT_FAMILIES="$(CONTRACT_FAMILIES)"
 build_contracts : repository models
 	$(DOCKER_COMMAND) build $(DOCKER_ARGS) \
 		--tag pdo_contracts:$(CONTRACTS_VERSION) \
@@ -198,6 +205,14 @@ clean_repository :
 # build instead of being included in the docker-compose.
 # -----------------------------------------------------------------
 
+# The docker compose files use a special profile to run the openvino and
+# guardian services. If the inference contract family is to be built
+# and tested, then add the profile to run the two extra containers.
+COMPOSE_PROFILES ?=
+ifeq ($(findstring inference-contract,$(CONTRACT_FAMILIES)),inference-contract)
+	COMPOSE_PROFILES += --profile inference
+endif
+
 # TEST_ARGS provides additional parameters for the compose
 # operations for running the test environment; generally
 # this would set in a make.loc
@@ -205,7 +220,7 @@ TEST_COMPOSE_ARGS += -f test.yaml
 
 test : clean_config clean_repository build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-	 	$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) up --abort-on-container-exit
+		$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) $(COMPOSE_PROFILES) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 	 	$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) down
 
@@ -213,7 +228,7 @@ JUPYTER_COMPOSE_ARGS += -f test_jupyter.yaml
 
 test_jupyter : clean_config clean_repository build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) up --abort-on-container-exit
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) $(COMPOSE_PROFILES) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
 
@@ -221,7 +236,7 @@ JUPYTER_MULTIUSER_COMPOSE_ARGS += -f test_multiuser_jupyter.yaml
 
 test_multiuser_jupyter : clean_config clean_repository build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_MULTIUSER_COMPOSE_ARGS) up --abort-on-container-exit
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_MULTIUSER_COMPOSE_ARGS) $(COMPOSE_PROFILES) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_MULTIUSER_COMPOSE_ARGS) down
 

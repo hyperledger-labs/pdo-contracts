@@ -44,13 +44,14 @@ services:
     volumes:
       - ./models/:/models/
     command: --model_path /models/ --model_name resnet --port 9000 --shape auto --grpc_bind_address 127.0.0.1
+    profiles:
+      - inference
 
   contracts_container:
     image: pdo_contracts:${CONTRACTS_VERSION}
     container_name: contracts_container
     depends_on:
       - services_container
-      - openvino_container
     network_mode: "host"
     volumes:
       - ./xfer/:/project/pdo/xfer/
