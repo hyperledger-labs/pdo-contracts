@@ -47,6 +47,8 @@ services:
     volumes:
       - ./models/:/models/
     command: --model_path /models/ --model_name resnet --port 9000 --shape auto --grpc_bind_address 127.0.0.1
+    profiles:
+      - inference
 
   guardian_container:
     image: pdo_contracts:${CONTRACTS_VERSION}
@@ -58,14 +60,14 @@ services:
     volumes:
       - ./xfer/:/project/pdo/xfer/
     entrypoint: /project/pdo/tools/run_guardian_tests.sh -i localhost -l http://127.0.0.1:6600
+    profiles:
+      - inference
 
   container_1:
     image: pdo_contracts:${CONTRACTS_VERSION}
     container_name: container_1
     depends_on:
       - services_container
-      - openvino_container
-      - guardian_container
     network_mode: "host"
     volumes:
       - ./xfer/:/project/pdo/xfer/
