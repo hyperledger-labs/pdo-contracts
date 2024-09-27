@@ -12,25 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-INCLUDE(exchange_common)
-LIST(APPEND WASM_LIBRARIES ${EXCHANGE_LIB})
-LIST(APPEND WASM_INCLUDES ${EXCHANGE_INCLUDES})
-
-INCLUDE(identity_common.cmake)
-LIST(APPEND WASM_LIBRARIES ${IDENTITY_LIB})
-LIST(APPEND WASM_INCLUDES ${IDENTITY_INCLUDES})
+INCLUDE(exchange-contract/methods)
+INCLUDE(methods.cmake)
 
 # -----------------------------------------------------------------
 ADD_LIBRARY(${IDENTITY_LIB} STATIC ${IDENTITY_SOURCES})
 TARGET_INCLUDE_DIRECTORIES(${IDENTITY_LIB} PUBLIC ${IDENTITY_INCLUDES})
+TARGET_INCLUDE_DIRECTORIES(${IDENTITY_LIB} PUBLIC ${EXCHANGE_INCLUDES})
+TARGET_INCLUDE_DIRECTORIES(${IDENTITY_LIB} PUBLIC ${WASM_INCLUDES})
 
 SET_PROPERTY(TARGET ${IDENTITY_LIB} APPEND_STRING PROPERTY COMPILE_OPTIONS "${WASM_BUILD_OPTIONS}")
 SET_PROPERTY(TARGET ${IDENTITY_LIB} APPEND_STRING PROPERTY LINK_OPTIONS "${WASM_LINK_OPTIONS}")
 SET_TARGET_PROPERTIES(${IDENTITY_LIB} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 # -----------------------------------------------------------------
-BUILD_CONTRACT(signature_authority contracts/signature_authority.cpp)
-BUILD_CONTRACT(identity contracts/identity.cpp)
+BUILD_CONTRACT(signature_authority contracts/signature_authority.cpp
+  HEADERS ${EXCHANGE_INCLUDES} ${IDENTITY_INCLUDES}
+  LIBRARIES ${EXCHANGE_LIB} ${IDENTITY_LIB})
+
+BUILD_CONTRACT(identity contracts/identity.cpp
+  HEADERS ${EXCHANGE_INCLUDES} ${IDENTITY_INCLUDES}
+  LIBRARIES ${EXCHANGE_LIB} ${IDENTITY_LIB})
 
 # -----------------------------------------------------------------
 INCLUDE(Python)
