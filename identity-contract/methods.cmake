@@ -20,7 +20,7 @@ ENDIF()
 # Set up the include list
 # ---------------------------------------------
 SET (IDENTITY_INCLUDES ${WASM_INCLUDES})
-LIST(APPEND DIGITAL_ASSET_INCLUDES ${EXCHANGE_INCLUDES})
+LIST(APPEND IDENTITY_INCLUDES ${EXCHANGE_INCLUDES})
 LIST(APPEND IDENTITY_INCLUDES ${CMAKE_CURRENT_LIST_DIR})
 
 # ---------------------------------------------
