@@ -1,0 +1,11 @@
+MANIFEST.in
+setup.py
+pdo/__init__.py
+pdo/contracts/common.py
+pdo/contracts/__init__.py
+pdo/contracts/jupyter/services.py
+pdo/contracts/jupyter/groups.py
+pdo/contracts/jupyter/common_widgets.py
+pdo/contracts/jupyter/utility.py
+pdo/contracts/jupyter/keys.py
+pdo/contracts/jupyter/__init__.py
