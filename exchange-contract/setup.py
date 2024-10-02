@@ -82,6 +82,7 @@ setup(
         'pdo-client>=' + pdo_client_version,
         'pdo-common-library>=' + pdo_client_version,
         'pdo-sservice>=' + pdo_client_version,
+        'pdo-contracts>=' + pdo_contracts_version,
     ],
     entry_points = {
         'console_scripts' : [
