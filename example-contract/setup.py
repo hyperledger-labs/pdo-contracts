@@ -19,6 +19,25 @@ import sys
 import subprocess
 import warnings
 
+## -----------------------------------------------------------------
+# Change values of the following variables to customize your
+# contract family; the contract_scripts variable is a list of
+# bash commands that will be created in the python wheel. See
+# ./pdo/{contract_family}/scripts/scripts.py for more information
+# on building command line scripts.
+## -----------------------------------------------------------------
+contract_family = 'example'
+contract_scripts = [ 'example_counter' ]
+
+author = 'Mic Bowman, Intel Labs'
+author_email = 'mic.bowman@intel.com'
+author_url = 'http://www.intel.com'
+
+## -----------------------------------------------------------------
+# Unless you change the standard behavior or layout of the contract
+# there should be no changes required below
+## -----------------------------------------------------------------
+
 # this should only be run with python3
 if sys.version_info[0] < 3:
     print('ERROR: must run with python3')
@@ -49,42 +68,37 @@ except Exception as e :
 ## -----------------------------------------------------------------
 ## -----------------------------------------------------------------
 setup(
-    name='pdo_digital_asset',
+    name=f'pdo_{contract_family}',
     version=pdo_contracts_version,
-    description='Contract and support scripts for building PDO digital assets',
-    author='Mic Bowman, Intel Labs',
-    author_email='mic.bowman@intel.com',
-    url='http://www.intel.com',
+    description='Contract and support scripts for a PDO contract',
+    author=author,
+    author_email=author_email,
+    url=author_url,
     package_dir = {
         'pdo' : 'pdo',
-        'pdo.digital_asset.resources.etc' : 'etc',
-        'pdo.digital_asset.resources.context' : 'context',
-        'pdo.digital_asset.resources.contracts' : '../build/digital-asset-contract',
+        f'pdo.{contract_family}.resources.etc' : 'etc',
+        f'pdo.{contract_family}.resources.context' : 'context',
+        f'pdo.{contract_family}.resources.contracts' : f'../build/{contract_family}-contract',
     },
     packages = [
         'pdo',
-        'pdo.digital_asset',
-        'pdo.digital_asset.jupyter',
-        'pdo.digital_asset.plugins',
-        'pdo.digital_asset.scripts',
-        'pdo.digital_asset.resources',
-        'pdo.digital_asset.resources.etc',
-        'pdo.digital_asset.resources.context',
-        'pdo.digital_asset.resources.contracts',
+        f'pdo.{contract_family}',
+        f'pdo.{contract_family}.jupyter',
+        f'pdo.{contract_family}.plugins',
+        f'pdo.{contract_family}.scripts',
+        f'pdo.{contract_family}.resources',
+        f'pdo.{contract_family}.resources.etc',
+        f'pdo.{contract_family}.resources.context',
+        f'pdo.{contract_family}.resources.contracts',
     ],
     include_package_data=True,
     install_requires = [
         'colorama',
         'pdo-client>=' + pdo_client_version,
         'pdo-common-library>=' + pdo_client_version,
-        'pdo-sservice>=' + pdo_client_version,
         'pdo-contracts>=' + pdo_contracts_version,
-        'pdo-exchange>=' + pdo_contracts_version,
     ],
     entry_points = {
-        'console_scripts' : [
-            'da_token=pdo.digital_asset.scripts.scripts:da_token',
-            'da_guardian=pdo.digital_asset.scripts.scripts:da_guardian',
-        ]
+        'console_scripts' : list(map(lambda s : f'{s}=pdo.{contract_family}.scripts.scripts:{s}', contract_scripts)),
     }
 )
