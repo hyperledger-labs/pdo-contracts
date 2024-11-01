@@ -86,11 +86,15 @@ def __save_image__(state, session, result, filename) :
     if not eservice_client :
         raise Exception('unknown eservice {}'.format(session.eservice_url))
 
-    kv = KeyValueStore(parsed_result['encryption_key'])
-    _ = kv.sync_from_block_store(parsed_result['state_hash'], eservice_client)
+    try :
+        kv = KeyValueStore(parsed_result['encryption_key'])
+        _ = kv.sync_from_block_store(parsed_result['state_hash'], eservice_client)
 
-    with kv :
-        image_data = kv.get(parsed_result['transfer_key'], output_encoding='raw')
+        with kv :
+            image_data = kv.get(parsed_result['transfer_key'], output_encoding='raw')
+    except Exception as e :
+        logger.exception('SAVE IMAGE')
+        raise e
 
     with open(filename, 'wb') as fp:
         fp.write(bytes(image_data))
