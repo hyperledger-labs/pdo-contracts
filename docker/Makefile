@@ -247,6 +247,7 @@ test_multiuser_jupyter : clean_config clean_repository build_contracts
 example : CONTRACT_FAMILIES=example-contract
 example : clean_config clean_repository build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		CONTRACTS_SOURCE_ROOT=$(CONTRACTS_SOURCE_ROOT) \
 		$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) down
@@ -254,6 +255,7 @@ example : clean_config clean_repository build_contracts
 example_jupyter : CONTRACT_FAMILIES=exchange-contract example-contract
 example_jupyter : clean_config clean_repository build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		CONTRACTS_SOURCE_ROOT=$(CONTRACTS_SOURCE_ROOT) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
@@ -275,7 +277,7 @@ clean_config :
 	@ rm -f $(DOCKER_DIR)/xfer/services/keys/*.pem $(DOCKER_DIR)/xfer/services/etc/*.toml
 	@ rm -f $(DOCKER_DIR)/xfer/services/etc/site.psh
 
-clean : clean_images clean_config clean_repository clean_models
+clean : clean_images clean_config clean_repository
 
 .PHONY: clean clean_images clean_config clean_repository clean_models
 .PHONY: test
