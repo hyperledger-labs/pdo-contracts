@@ -27,7 +27,7 @@ INCLUDE(wawaka_common)
 LIST(APPEND WASM_LIBRARIES ${WW_COMMON_LIB})
 LIST(APPEND WASM_INCLUDES ${WW_COMMON_INCLUDES})
 
-FILE(GLOB CONTRACT_FAMILIES "*-contract")
+FILE(GLOB CONTRACT_FAMILIES RELATIVE ${CMAKE_SOURCE_DIR} "*-contract")
 
 # A local cmake file (Local.cmake) allows for local overrides of
 # variables. In particular, this is useful to set CONTRACT_FAMILIES
@@ -42,6 +42,15 @@ FILE(GLOB CONTRACT_FAMILIES "*-contract")
 INCLUDE(Local.cmake OPTIONAL)
 
 ENABLE_TESTING()
+
+# Contract families must contain common-contract and
+# it should be the first built; this just makes sure
+# it is include
+
+LIST(REMOVE_ITEM CONTRACT_FAMILIES common-contract)
+LIST(PREPEND CONTRACT_FAMILIES common-contract)
+
+MESSAGE(STATUS "BUILD CONTRACT FAMILIES ${CONTRACT_FAMILIES}")
 
 FOREACH(FAMILY IN ITEMS ${CONTRACT_FAMILIES})
   ADD_SUBDIRECTORY(${FAMILY})
