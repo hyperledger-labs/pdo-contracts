@@ -113,6 +113,7 @@ try ${PDO_INSTALL_ROOT}/bin/pdo-configure-users -t ${PDO_SOURCE_ROOT}/build/temp
 # -----------------------------------------------------------------
 yell start the jupyter server
 # -----------------------------------------------------------------
+export SHELL=/bin/bash          # make bash the default shell for jupyter launcher
 export PDO_JUPYTER_ROOT=${PDO_INSTALL_ROOT}/opt/pdo/notebooks
 
 cd ${PDO_JUPYTER_ROOT}
