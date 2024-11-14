@@ -244,10 +244,10 @@ test_multiuser_jupyter : clean_config clean_repository build_contracts
 # The example target builds and runs only the example contract family. This
 # is intended to be a very simple way to test drive PDO contracts as a user
 # and as a contract developer.
+
 example : CONTRACT_FAMILIES=example-contract
 example : clean_config clean_repository build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-		CONTRACTS_SOURCE_ROOT=$(CONTRACTS_SOURCE_ROOT) \
 		$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(TEST_COMPOSE_ARGS) down
@@ -255,8 +255,22 @@ example : clean_config clean_repository build_contracts
 example_jupyter : CONTRACT_FAMILIES=exchange-contract example-contract
 example_jupyter : clean_config clean_repository build_contracts
 	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
-		CONTRACTS_SOURCE_ROOT=$(CONTRACTS_SOURCE_ROOT) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) up --abort-on-container-exit
+	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
+
+# The develop target creates a container with only the example
+# contract built and installed. When the container starts, the
+# current contract source root is mounted at /project/pdo/dev.
+# In addition, a Jupyter server is started. The Jupyter launcher
+# provides a shell window that can be used to interact with the
+# PDO installation to build and install contracts.
+DEVELOP_COMPOSE_ARGS += -f test_dev.yaml
+develop : CONTRACT_FAMILIES=
+develop : clean_config build_contracts
+	- PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
+		CONTRACTS_SOURCE_ROOT=$(CONTRACTS_SOURCE_ROOT) \
+		$(DOCKER_COMPOSE_COMMAND) $(DEVELOP_COMPOSE_ARGS) up --abort-on-container-exit
 	PDO_VERSION=$(PDO_VERSION) CONTRACTS_VERSION=$(CONTRACTS_VERSION) \
 		$(DOCKER_COMPOSE_COMMAND) $(JUPYTER_COMPOSE_ARGS) down
 
