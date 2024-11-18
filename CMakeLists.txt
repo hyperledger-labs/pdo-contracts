@@ -43,6 +43,13 @@ INCLUDE(Local.cmake OPTIONAL)
 
 ENABLE_TESTING()
 
+# Contract families must contain common-contract and
+# it should be the first built; this just makes sure
+# it is include
+
+LIST(REMOVE_ITEM CONTRACT_FAMILIES common-contract)
+LIST(PREPEND CONTRACT_FAMILIES common-contract)
+
 FOREACH(FAMILY IN ITEMS ${CONTRACT_FAMILIES})
   ADD_SUBDIRECTORY(${FAMILY})
 ENDFOREACH()
