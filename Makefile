@@ -30,6 +30,7 @@ TEST_LOG_LEVEL ?= warn
 TEST_LOG_FILE ?= __screen__
 TEST_SERVICE_HOST ?= $(PDO_HOSTNAME)
 TEST_LEDGER ?= $(PDO_LEDGER_URL)
+TEST_LIST ?= ^system
 
 VERSION=${shell ${SOURCE_ROOT}/bin/get_version}
 
@@ -51,7 +52,7 @@ test : install
 		-DTEST_LOG_FILE=$(TEST_LOG_FILE) \
 		-DTEST_LEDGER=$(TEST_LEDGER) \
 		-DTEST_SERVICE_HOST=$(TEST_SERVICE_HOST)
-	@ make -C build test ARGS='-V'
+	@ make -C build test ARGS='-V -R "$(TEST_LIST)"'
 
 clean :
 	@ echo Remove build directory
