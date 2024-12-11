@@ -24,7 +24,7 @@ version: "3.4"
 
 services:
   ccf_container:
-    image: ${PDO_REPOSITORY:-}pdo_ccf:${PDO_VERSION:-latest}
+    image: ${PDO_REGISTRY:-}pdo_ccf:${PDO_VERSION:-latest}
     container_name: ccf_container
     network_mode: "host"
     volumes:
@@ -32,7 +32,7 @@ services:
     entrypoint: /project/pdo/tools/start_ccf.sh -m build -i localhost --start
 
   services_container:
-    image: ${PDO_REPOSITORY:-}pdo_services:${PDO_VERSION:-latest}
+    image: ${PDO_REGISTRY:-}pdo_services:${PDO_VERSION:-latest}
     container_name: services_container
     depends_on: [ ccf_container ]
     network_mode: "host"
