@@ -68,7 +68,7 @@ PDO_VERSION ?= $$(									\
 		echo "latest";								\
 	fi )
 
-PDO_REPSITORY ?= ''
+PDO_REGISTRY ?= ''
 
 # DOCKER BUILD
 DOCKER_USERNAME = $(LOGNAME)
@@ -76,7 +76,7 @@ DOCKER_BUILDARGS += --build-arg UID=$(CONTRACTS_USER_UID)
 DOCKER_BUILDARGS += --build-arg GID=$(CONTRACTS_GROUP_UID)
 DOCKER_BUILDARGS += --build-arg CONTRACTS_VERSION=$(CONTRACTS_VERSION)
 DOCKER_BUILDARGS += --build-arg PDO_VERSION=$(PDO_VERSION)
-DOCKER_BUILDARGS += --build-arg PDO_REPOSITORY=$(PDO_REPOSITORY)
+DOCKER_BUILDARGS += --build-arg PDO_REGISTRY=$(PDO_REGISTRY)
 DOCKER_ARGS = $(DOCKER_BUILDARGS)
 
 # The CONTRACT_FAMILIES variable contains a list of contract families
@@ -121,7 +121,6 @@ build_pdo_images : repository
 		make -C $(DOCKER_DIR)/repository/private-data-objects/docker all
 	PDO_SOURCE_ROOT=$(DOCKER_DIR)/repository/private-data-objects \
 		make -C $(DOCKER_DIR)/repository/private-data-objects/docker clean_repository
-
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
