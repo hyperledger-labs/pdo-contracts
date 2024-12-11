@@ -59,7 +59,7 @@ Four configuration variables should be set as necessary:
   user.
 * `PDO_VERSION` -- the version identifier for PDO images; this
   defaults to `latest`.
-* `PDO_REPOSITORY` -- the docker repository from which PDO docker images
+* `PDO_REGISTRY` -- the docker repository from which PDO docker images
   may be retrieved; this defaults to `""` so that local images will be
   used by default.
 * `CONTRACTS_VERSION` -- the version that will be used to tag the PDO
