@@ -34,27 +34,57 @@
 
 # PURPOSE: develop and test contracts with clean
 
-ARG PDO_REGISTRY
-ARG PDO_VERSION
+ARG PDO_REGISTRY=
+ARG PDO_VERSION=latest
 FROM ${PDO_REGISTRY}pdo_client:${PDO_VERSION}
 
 # -----------------------------------------------------------------
-# Install the necessary dependencies
+# Install the necessary system dependencies
 # -----------------------------------------------------------------
-USER 0:0
-ENV DEBIAN_FRONTEND "noninteractive"
-RUN apt-get update \
+USER root
+ENV DEBIAN_FRONTEND="noninteractive"
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update \
     && apt-get install -y -q \
-    libgl1
+        libgl1
+
+# -----------------------------------------------------------------
+# Create a user account from the specification
+# -----------------------------------------------------------------
+ARG UNAME=pdo_contract
+ENV UNAME=${UNAME}
+
+ARG UID=1000
+ARG GID=${UID}
+
+# Create a group for the UID/GID if it does not already exist, rename
+# it to the correct group if it does exist
+RUN if getent group ${GID} > /dev/null 2>&1 ; then \
+        groupmod -n ${UNAME} $(getent group ${GID} | cut -d: -f1) ; \
+    else \
+        groupadd -f -g ${GID} -o ${UNAME} ; \
+    fi
+
+# Create a user for the UID/GID if it does not already exist, rename
+# it to the correct login if it does exist
+RUN if getent passwd ${UID} > /dev/null 2>&1 ; then \
+        usermod -l ${UNAME} $(getent passwd ${UID} | cut -d: -f1) ; \
+    else \
+        useradd -m -u ${UID} -g ${GID} -d /project/pdo -o -s /bin/bash $UNAME ; \
+    fi
+
+# Reassign ownership of the PDO directory tree to the user:group
+RUN chown --recursive $UNAME:$UNAME /project/pdo
+
+# Use the user account for the rest of the installation process
+USER $UNAME
 
 # Many of the dependencies should be addressed with the installation
 # of the PDO client including the common contracts, the wasi toolkit
 # and all of the WAMR toolchain
 
 # This should set up all we need for the jupyter server
-ARG UID=1000
-ARG GID=${UID}
-USER ${UID}:${GID}
 RUN --mount=type=cache,uid=${UID},gid=${GID},target=/project/pdo/.cache/pip \
     /project/pdo/run/bin/pip install notebook papermill ipywidgets jupytext bash_kernel
 RUN /project/pdo/run/bin/python -m bash_kernel.install
@@ -82,8 +112,6 @@ WORKDIR /project/pdo/tools
 COPY --chown=${UNAME}:${UNAME} tools/*.sh ./
 
 # build it!!!
-ARG UID=1000
-ARG GID=${UID}
 RUN --mount=type=cache,uid=${UID},gid=${GID},target=/project/pdo/.cache/pip \
     /project/pdo/tools/build_contracts.sh
 
