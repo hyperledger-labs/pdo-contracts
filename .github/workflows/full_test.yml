@@ -1,0 +1,63 @@
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# This workflow is intended to be used as a validity test for any
+# pull request. That is, this is a minimal functionality that must
+# be successfully executed prior to merging a pull request. Note
+# that this can be overridden by adding '[skip ci]' in the commit
+# name. This should not be done on the main PDO branch.
+
+name: Run full PDO contract tests
+on: [ pull_request ]
+
+jobs:
+    pdo_ci:
+        if: "!contains(github.event.commits[0].message, '[skip ci]')"
+        name: PDO Contracts Full Test
+        runs-on: ubuntu-22.04
+
+        env:
+          REGISTRY: ghcr.io
+          OWNER: ${{ github.repository_owner }}
+          PDO_USER_NAME: pdo_user
+          PDO_USER_UID: 55172
+          PDO_GROUP_UID: 55172
+
+        steps:
+            - name: Check out repo
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+                  fetch-depth: 0
+                  fetch-tags: true
+
+            - name: Set the version
+              run: |
+                echo "PDO_VERSION=$(private-data-objects/bin/get_version -f private-data-objects/VERSION)" >> $GITHUB_ENV
+                echo "PDO_CONTRACTS_VERSION=$(private-data-objects/bin/get_version -f VERSION)" >> $GITHUB_ENV
+
+            - name: Show the version
+              run: |
+                echo "PDO_CONTRACTS_VERSION is $PDO_CONTRACTS_VERSION"
+                echo "PDO_VERSION is $PDO_VERSION"
+
+            - name: Configure PDO and build the base images
+              run: |
+                  if $(./require_pdo_images.sh -r ${REGISTRY}/${OWNER} -v ${PDO_VERSION})
+                  then
+                      echo Using pre-built PDO images
+                  else
+                      echo No pre-built PDO images available for version ${PDO_VERSION} from ${REGISTRY}
+                      echo Please populate the registry and retry
+                      exit -1
+                  fi
+
+            - name: Build and run contract tests
+              run: |
+                   git checkout -b ci-test-branch
+                   chown -R $PDO_USER_NAME:$PDO_USER_NAME docker/xfer
+                   chmod -R g+w docker/xfer
+                   make -C docker test \
+                      CONTRACTS_USER_UID=$PDO_USER_UID CONTRACTS_GROUP_UID=$PDO_GROUP_UID \
+                      PDO_VERSION=$PDO_VERSION PDO_REGISTRY=$REGISTRY/${PDO_OWNER}
