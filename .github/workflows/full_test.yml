@@ -6,10 +6,10 @@
 # pull request. That is, this is a minimal functionality that must
 # be successfully executed prior to merging a pull request. Note
 # that this can be overridden by adding '[skip ci]' in the commit
-# name. This should not be done on the main PDO branch.
+# name.
 
 name: Run full PDO contract tests
-on: [ pull_request ]
+on: [ workflow_dispatch, pull_request ]
 
 jobs:
     pdo_ci:
@@ -20,10 +20,9 @@ jobs:
         env:
           REGISTRY: ghcr.io
           OWNER: ${{ github.repository_owner }}
-          PDO_USER_NAME: pdo_user
           PDO_USER_UID: 55172
           PDO_GROUP_UID: 55172
-
+          PDO_SOURCE_ROOT: private-data-objects
         steps:
             - name: Check out repo
               uses: actions/checkout@v4
@@ -34,8 +33,8 @@ jobs:
 
             - name: Set the version
               run: |
-                echo "PDO_VERSION=$(private-data-objects/bin/get_version -f private-data-objects/VERSION)" >> $GITHUB_ENV
-                echo "PDO_CONTRACTS_VERSION=$(private-data-objects/bin/get_version -f VERSION)" >> $GITHUB_ENV
+                echo "PDO_VERSION=$(${PDO_SOURCE_ROOT}/bin/get_version -f ${PDO_SOURCE_ROOT}/VERSION)" >> $GITHUB_ENV
+                echo "PDO_CONTRACTS_VERSION=$(bin/get_version)" >> $GITHUB_ENV
 
             - name: Show the version
               run: |
@@ -44,7 +43,7 @@ jobs:
 
             - name: Configure PDO and build the base images
               run: |
-                  if $(./require_pdo_images.sh -r ${REGISTRY}/${OWNER} -v ${PDO_VERSION})
+                  if $(docker/require_pdo_images.sh -r ${REGISTRY}/${OWNER} -v ${PDO_VERSION})
                   then
                       echo Using pre-built PDO images
                   else
@@ -56,8 +55,8 @@ jobs:
             - name: Build and run contract tests
               run: |
                    git checkout -b ci-test-branch
-                   chown -R $PDO_USER_NAME:$PDO_USER_NAME docker/xfer
-                   chmod -R g+w docker/xfer
+                   sudo chown -R $PDO_USER_UID:$PDO_GROUP_UID docker/xfer
+                   sudo chmod -R g+w docker/xfer
                    make -C docker test \
                       CONTRACTS_USER_UID=$PDO_USER_UID CONTRACTS_GROUP_UID=$PDO_GROUP_UID \
-                      PDO_VERSION=$PDO_VERSION PDO_REGISTRY=$REGISTRY/${PDO_OWNER}
+                      PDO_VERSION=$PDO_VERSION PDO_REGISTRY=$REGISTRY/$OWNER
