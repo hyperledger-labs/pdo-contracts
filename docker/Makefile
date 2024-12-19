@@ -21,9 +21,11 @@ all : build_contracts
 -include make.loc
 
 # CONTRACTS_USER_UID, CONTRACTS_GROUP_UID --
-#   The UID/GID for the user accounts that will be created in the container; this is
-#   important especially when the containers are being used for development; note
-#   that the user/group identifiers need to have write access to the xfer directory
+#   The UID/GID for the user accounts that will be created in the
+#   container; this is important especially when the containers are
+#   being used for development; note that the user/group identifiers
+#   need to have write access to the xfer directory
+
 CONTRACTS_USER_UID ?= $(shell id -u)
 CONTRACTS_GROUP_UID ?= $(shell id -g)
 CONTRACTS_USER_NAME ?= $(shell whoami)
