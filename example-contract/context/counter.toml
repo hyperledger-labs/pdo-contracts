@@ -1,8 +1,0 @@
-# -----------------------------------------------------------------
-# counter ${counter}
-# -----------------------------------------------------------------
-[counter.${counter}]
-module = "pdo.example.plugins.counter"
-identity = "user1"
-source = "${ContractFamily.Example.counter.source}"
-name = "${counter}"
