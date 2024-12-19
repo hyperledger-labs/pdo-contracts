@@ -61,4 +61,4 @@ jobs:
                    sudo chmod -R g+w docker/xfer
                    make -C docker test \
                       CONTRACTS_USER_UID=$PDO_USER_UID CONTRACTS_GROUP_UID=$PDO_GROUP_UID \
-                      PDO_VERSION=$PDO_VERSION PDO_REGISTRY=$REGISTRY/${PDO_OWNER}
+                      PDO_VERSION=$PDO_VERSION PDO_REGISTRY=$REGISTRY/$OWNER
