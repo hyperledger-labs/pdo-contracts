@@ -4,8 +4,6 @@ context/counter.toml
 etc/example.toml
 pdo/__init__.py
 pdo/example/__init__.py
-pdo/example/jupyter/__init__.py
-pdo/example/jupyter/context.py
 pdo/example/plugins/__init__.py
 pdo/example/plugins/counter.py
 pdo/example/resources/__init__.py
