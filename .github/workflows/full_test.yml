@@ -20,10 +20,9 @@ jobs:
         env:
           REGISTRY: ghcr.io
           OWNER: ${{ github.repository_owner }}
-          PDO_USER_NAME: pdo_user
           PDO_USER_UID: 55172
           PDO_GROUP_UID: 55172
-
+          PDO_SOURCE_ROOT: private-data-objects
         steps:
             - name: Check out repo
               uses: actions/checkout@v4
@@ -34,8 +33,8 @@ jobs:
 
             - name: Set the version
               run: |
-                echo "PDO_VERSION=$(private-data-objects/bin/get_version -f private-data-objects/VERSION)" >> $GITHUB_ENV
-                echo "PDO_CONTRACTS_VERSION=$(private-data-objects/bin/get_version -f VERSION)" >> $GITHUB_ENV
+                echo "PDO_VERSION=$(${PDO_SOURCE_ROOT}/bin/get_version -f ${PDO_SOURCE_ROOT}/VERSION)" >> $GITHUB_ENV
+                echo "PDO_CONTRACTS_VERSION=$(bin/get_version)" >> $GITHUB_ENV
 
             - name: Show the version
               run: |
@@ -56,7 +55,7 @@ jobs:
             - name: Build and run contract tests
               run: |
                    git checkout -b ci-test-branch
-                   chown -R $PDO_USER_NAME:$PDO_USER_NAME docker/xfer
+                   chown -R $PDO_USER_UID:$PDO_GROUP_UID docker/xfer
                    chmod -R g+w docker/xfer
                    make -C docker test \
                       CONTRACTS_USER_UID=$PDO_USER_UID CONTRACTS_GROUP_UID=$PDO_GROUP_UID \
