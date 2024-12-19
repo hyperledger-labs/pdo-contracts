@@ -44,7 +44,7 @@ jobs:
 
             - name: Configure PDO and build the base images
               run: |
-                  if $(./require_pdo_images.sh -r ${REGISTRY}/${OWNER} -v ${PDO_VERSION})
+                  if $(docker/require_pdo_images.sh -r ${REGISTRY}/${OWNER} -v ${PDO_VERSION})
                   then
                       echo Using pre-built PDO images
                   else
