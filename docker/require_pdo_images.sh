@@ -15,7 +15,7 @@
 # limitations under the License.
 
 SCRIPT_NAME=$(basename ${BASH_SOURCE[-1]} )
-source ${PDO_HOME}/bin/lib/common.sh
+source ${PDO_SOURCE_ROOT}/bin/lib/common.sh
 
 # -----------------------------------------------------------------
 # Process command line arguments
