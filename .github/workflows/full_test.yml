@@ -40,6 +40,8 @@ jobs:
               run: |
                 echo "PDO_CONTRACTS_VERSION is $PDO_CONTRACTS_VERSION"
                 echo "PDO_VERSION is $PDO_VERSION"
+                whoami
+                groups
 
             - name: Configure PDO and build the base images
               run: |
@@ -55,8 +57,8 @@ jobs:
             - name: Build and run contract tests
               run: |
                    git checkout -b ci-test-branch
-                   chown -R $PDO_USER_UID:$PDO_GROUP_UID docker/xfer
-                   chmod -R g+w docker/xfer
+                   sudo chown -R $PDO_USER_UID:$PDO_GROUP_UID docker/xfer
+                   sudo chmod -R g+w docker/xfer
                    make -C docker test \
                       CONTRACTS_USER_UID=$PDO_USER_UID CONTRACTS_GROUP_UID=$PDO_GROUP_UID \
                       PDO_VERSION=$PDO_VERSION PDO_REGISTRY=$REGISTRY/${PDO_OWNER}
