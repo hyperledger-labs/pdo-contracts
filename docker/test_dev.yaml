@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------------------------
-version: "3.4"
 
 # This compose file provides a means of starting the basic services
 # necessary for developing the contracts image. These can be started
@@ -22,7 +21,7 @@ version: "3.4"
 
 services:
   ccf_container:
-    image: ${PDO_REPOSITORY:-}pdo_ccf:${PDO_VERSION:-latest}
+    image: ${PDO_REGISTRY:-}pdo_ccf:${PDO_VERSION:-latest}
     container_name: ccf_container
     network_mode: "host"
     volumes:
@@ -30,7 +29,7 @@ services:
     entrypoint: /project/pdo/tools/start_ccf.sh -m build -i localhost --start
 
   services_container:
-    image: ${PDO_REPOSITORY:-}pdo_services:${PDO_VERSION:-latest}
+    image: ${PDO_REGISTRY:-}pdo_services:${PDO_VERSION:-latest}
     container_name: services_container
     depends_on: [ ccf_container ]
     network_mode: "host"
@@ -45,3 +44,16 @@ services:
     volumes:
       - ./models/:/models/
     command: --model_path /models/ --model_name resnet --port 9000 --shape auto --grpc_bind_address 127.0.0.1
+    profiles:
+      - inference
+
+  contracts_container:
+    image: pdo_contracts:${CONTRACTS_VERSION}
+    container_name: contracts_container
+    depends_on:
+      - services_container
+    network_mode: "host"
+    volumes:
+      - ./xfer/:/project/pdo/xfer/
+      - ${CONTRACTS_SOURCE_ROOT:-./repository}:/project/pdo/dev/
+    entrypoint: /project/pdo/tools/run_jupyter_tests.sh -i localhost -l http://127.0.0.1:6600 -s localhost
