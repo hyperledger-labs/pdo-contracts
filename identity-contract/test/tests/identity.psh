@@ -51,7 +51,7 @@ if -o ${_error_code_} 0
 fi
 
 ## =================================================================
-echo ${HEADER} test key creation, these should succeed ${ENDC}
+echo ${HEADER} test key creation, normal keys, these should succeed ${ENDC}
 ## =================================================================
 identity_wallet_contract register_signing_context -w -f ${_contract_} \
     -d "test1 context" --fixed -p "test1"
@@ -89,7 +89,45 @@ if -o ${_error_code_} 0
 fi
 
 ## =================================================================
-echo ${HEADER} test key description, these should succeed ${ENDC}
+echo ${HEADER} test key creation, hardened keys, these should succeed ${ENDC}
+## =================================================================
+identity_wallet_contract register_signing_context -w -f ${_contract_} \
+    -d "#test1 context" --fixed -p "#test1"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to save signing context test1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+identity_wallet_contract register_signing_context -w -f ${_contract_} \
+    -d "#test2 context" --fixed -p "#test2"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to save signing context test2 ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+identity_wallet_contract register_signing_context -w -f ${_contract_} \
+    -d "#test1.1 context" --fixed -p "#test1" "#test1.1"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to save signing context test1 test1.1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+identity_wallet_contract register_signing_context -w -f ${_contract_} \
+    -d "#test2.1 context" --fixed -p "#test2" "#test2.1"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to save signing context test2 test2.1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+identity_wallet_contract register_signing_context -w -f ${_contract_} \
+    -d "#test3 extensible context" --extensible -p "#test3"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to save extensible signing context test3 ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+## =================================================================
+echo ${HEADER} test key description, normal keys, these should succeed ${ENDC}
 ## =================================================================
 identity_wallet_contract describe_signing_context -f ${_contract_} -s _description_ -p "test1"
 if -o ${_error_code_} 0
@@ -134,7 +172,52 @@ fi
 echo TEST3 KEY : ${_key_}
 
 ## =================================================================
-echo ${HEADER} test key signing/verification, these should succeed ${ENDC}
+echo ${HEADER} test key description, hardened keys, these should succeed ${ENDC}
+## =================================================================
+identity_wallet_contract describe_signing_context -f ${_contract_} -s _description_ -p "#test1"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch signing context test1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST1 DESCRIPTION : ${_description_}
+
+identity_wallet_contract get_verifying_key -f ${_contract_} -s _key_ -p "#test1"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch verifying key test1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST1 KEY : ${_key_}
+
+identity_wallet_contract describe_signing_context -f ${_contract_} -s _description_ -p "#test1" "#test1.1"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch signing context test1 test1.1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST1 TEST1.1 DESCRIPTION : ${_description_}
+
+identity_wallet_contract get_verifying_key -f ${_contract_} -s _key_ -p "#test1" "#test1.1"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch verifying key test1 test1.1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST1 TEST1.1 KEY : ${_key_}
+
+identity_wallet_contract describe_signing_context -f ${_contract_} -s _description_ -p "#test3"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch extensible signing context test3 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST3 DESCRIPTION : ${_description_}
+
+identity_wallet_contract get_verifying_key -f ${_contract_} -s _key_ -p "#test3"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch verifying key test3 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST3 KEY : ${_key_}
+
+## =================================================================
+echo ${HEADER} test key signing/verification, normal keys, these should succeed ${ENDC}
 ## =================================================================
 echo Test simple key verification
 identity_wallet_contract sign -f ${_contract_} -s _sig_ -p test1 -m 'this is a test'
@@ -172,6 +255,51 @@ if -o ${_error_code_} 0
 fi
 
 identity_wallet_contract verify -f ${_contract_} -s _v_ -p test3 test3.1 test3.1.1 -m 'this is a test' --signature ${_sig_}
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to verify signature ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo verified: ${_v_}
+
+## =================================================================
+echo ${HEADER} test key signing/verification, hardened keys, these should succeed ${ENDC}
+## =================================================================
+echo Test simple key verification
+identity_wallet_contract sign -f ${_contract_} -s _sig_ -p '#test1' -m 'this is a test'
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to sign message using signing context #test1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+identity_wallet_contract verify -f ${_contract_} -s _v_ -p '#test1' -m 'this is a test' --signature ${_sig_}
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to verify signature ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo verified: ${_v_}
+
+echo Test second level key verification
+identity_wallet_contract sign -f ${_contract_} -s _sig_ -p '#test1' '#test1.1' -m 'this is a test'
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to sign message using signing context #test1 #test1.1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+identity_wallet_contract verify -f ${_contract_} -s _v_ -p '#test1' '#test1.1' -m 'this is a test' --signature ${_sig_}
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to verify signature ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo verified: ${_v_}
+
+echo Test extensible key verification
+identity_wallet_contract sign -f ${_contract_} -s _sig_ -p '#test3' '#test3.1' '#test3.1.1' -m 'this is a test'
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to sign message using extensible context #test3 #test3.1 #test3.1.1. ${ENDC}
+   exit -v ${_error_code_}
+fi
+
+identity_wallet_contract verify -f ${_contract_} -s _v_ -p '#test3' '#test3.1' '#test3.1.1' -m 'this is a test' --signature ${_sig_}
 if -o ${_error_code_} 0
    echo ${ERROR} [Error ${_error_code_}] failed to verify signature ${ENDC}
    exit -v ${_error_code_}
