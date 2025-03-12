@@ -26,11 +26,13 @@ LIST(APPEND IDENTITY_INCLUDES ${CMAKE_CURRENT_LIST_DIR})
 # ---------------------------------------------
 # Set up the default source list
 # ---------------------------------------------
-FILE(GLOB IDENTITY_COMMON_SOURCE ${CMAKE_CURRENT_LIST_DIR}/identity/common/*.cpp)
-FILE(GLOB IDENTITY_CONTRACT_SOURCE ${CMAKE_CURRENT_LIST_DIR}/identity/contracts/*.cpp)
+FILE(GLOB IDENTITY_COMMON_SOURCE ${CMAKE_CURRENT_LIST_DIR}/identity/common/[A-Za-z]*.cpp)
+FILE(GLOB IDENTITY_CRYPTO_SOURCE ${CMAKE_CURRENT_LIST_DIR}/identity/crypto/[A-Za-z]*.cpp)
+FILE(GLOB IDENTITY_CONTRACT_SOURCE ${CMAKE_CURRENT_LIST_DIR}/identity/contracts/[A-Za-z]*.cpp)
 
 SET (IDENTITY_SOURCES)
 LIST(APPEND IDENTITY_SOURCES ${IDENTITY_COMMON_SOURCE})
+LIST(APPEND IDENTITY_SOURCES ${IDENTITY_CRYPTO_SOURCE})
 LIST(APPEND IDENTITY_SOURCES ${IDENTITY_CONTRACT_SOURCE})
 
 # ---------------------------------------------

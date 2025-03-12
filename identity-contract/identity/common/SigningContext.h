@@ -21,6 +21,8 @@
 #include "Value.h"
 
 #include "exchange/common/Common.h"
+#include "identity/crypto/PrivateKey.h"
+
 
 #define SIGNING_CONTEXT_SCHEMA                  \
     "{"                                         \
@@ -65,9 +67,12 @@
 // https://en.wikipedia.org/wiki/P-384
 #ifdef USE_SECP384R1
 #define EXTENDED_KEY_SIZE	48
-#define BIGNUM_TYPE		ww::types::BigNum384
-#define HASH_FUNCTION		ww::crypto::hash::sha384_hash
+#define HASH_FUNCTION		pdo_contracts::crypto::SHA384Hash
+#define CURVE_NID               NID_secp384r1
 #define CURVE_ORDER		"//////////////////////////////////////////7/////AAAAAAAAAAD/////"
+
+// #define HASH_FUNCTION		ww::crypto::hash::sha384_hash
+
 #endif
 
 namespace ww
@@ -86,6 +91,8 @@ namespace identity
         std::vector<std::string> subcontexts_;         // registered subcontexts
 
     public:
+        static const std::string index_base;
+
         static bool sign_message(
             const ww::types::ByteArray& root_key,
             const std::vector<std::string>& context_path,
@@ -101,8 +108,14 @@ namespace identity
         static bool generate_keys(
             const ww::types::ByteArray& root_key, // base64 encoded representation of 48 byte random array
             const std::vector<std::string>& context_path,
-            std::string& private_key,     // PEM encoded ECDSA private and public keys
-            std::string& public_key);
+            std::string& private_key,     // PEM encoded ECDSA private key
+            std::string& public_key);     // PEM encoded ECDSA public key
+
+        static bool generate_keys(
+            const ww::types::ByteArray& root_key, // base64 encoded representation of 48 byte random array
+            const std::vector<std::string>& context_path,
+            pdo_contracts::crypto::signing::PrivateKey& private_key, // PEM encoded ECDSA private and public keys
+            ww::types::ByteArray& chain_code);
 
         // SerializeableObject virtual methods
         static bool verify_schema(const ww::value::Object& deserialized_object)
