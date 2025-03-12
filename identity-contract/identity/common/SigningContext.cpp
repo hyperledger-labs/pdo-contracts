@@ -17,15 +17,17 @@
 #include <string>
 #include <vector>
 
+#include "Cryptography.h"
 #include "Types.h"
 #include "Value.h"
-#include "WasmExtensions.h"
-
-#include "Cryptography.h"
 
 #include "exchange/common/Common.h"
-#include "identity/common/BigNum.h"
+#include "identity/crypto/Crypto.h"
+#include "identity/crypto/PrivateKey.h"
+#include "identity/crypto/PublicKey.h"
 #include "identity/common/SigningContext.h"
+
+const std::string ww::identity::SigningContext::index_base = "PDO SigningContext:";
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 // Class: ww::identity::SigningContext
@@ -136,101 +138,82 @@ bool ww::identity::SigningContext::verify_signature(
 // the main difference is that this implementation currently only performs
 // hardened derivations (private key) and it focuses on the secp384r1
 // curve rather than the bitcoin focused secp256k1 curve.
-
-#define CHUNK_HASH_FUNCTION ww::crypto::hash::sha256_hmac
-#define EXTENDED_CHUNK_SIZE 16
-
-const std::string index_base("PDO SigningContext:");
-
-#ifdef DEBUG_BIGNUM
-void DumpByteArray(const char* msg, const ww::types::ByteArray ba)
-{
-    std::string s;
-    ww::crypto::b64_encode(ba, s);
-    CONTRACT_SAFE_LOG(3, "[BA] %s: %s", msg, s.c_str());
-}
-
-void DumpBigNum(const char* msg, BIGNUM_TYPE bn)
-{
-    std::string s;
-    bn.encode(s);
-    CONTRACT_SAFE_LOG(3, "[BN] %s: %s", msg, s.c_str());
-}
-#endif
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
 
 // -----------------------------------------------------------------
+// -----------------------------------------------------------------
 bool ww::identity::SigningContext::generate_keys(
-    const ww::types::ByteArray& root_key, // base64 encoded representation of 48 byte random array
-    const std::vector<std::string>& context_path,
+    const ww::types::ByteArray& root_chain_code, // array of random bytes, EXTENDED_KEY_SIZE
+    const std::vector<std::string>& context_path, // array of strings, path to the current key
     std::string& private_key,     // PEM encoded ECDSA private and public keys
     std::string& public_key)
 {
-    // Root key must contain EXTENDED_KEY_SIZE bytes
-    if (root_key.size() != EXTENDED_KEY_SIZE)
+    pdo_contracts::crypto::signing::PrivateKey extended_private_key;
+    ww::types::ByteArray extended_chain_code;
+
+    if (! ww::identity::SigningContext::generate_keys(
+            root_chain_code, context_path, extended_private_key, extended_chain_code))
         return false;
 
-    // Create the initial extended key, this is a fixed value based on the
-    // index_base strings
+    if (! extended_private_key.Serialize(private_key))
+        return false;
+
+    pdo_contracts::crypto::signing::PublicKey extended_public_key(extended_private_key);
+    if (! extended_public_key.Serialize(public_key))
+        return false;
+
+    return true;
+}
+
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
+bool ww::identity::SigningContext::generate_keys(
+    const ww::types::ByteArray& root_chain_code, // array of random bytes, EXTENDED_KEY_SIZE
+    const std::vector<std::string>& context_path, // array of strings, path to the current key
+    pdo_contracts::crypto::signing::PrivateKey& private_key,
+    ww::types::ByteArray& chain_code)
+{
+    ERROR_IF(context_path.size() == 0, "Invalid empty context path");
+    ERROR_IF(root_chain_code.size() != EXTENDED_KEY_SIZE, "Invalid root chain code size");
+
+    // Root key --> fixed value derived from a common string
     ww::types::ByteArray base(index_base.begin(), index_base.end());
-    ww::types::ByteArray hashed_base;
-    if (! HASH_FUNCTION(base, hashed_base))
-        return false;
+    ww::types::ByteArray root_key;
 
-    // CURVE_ORDER is a base64 encoded number
-    const BIGNUM_TYPE curve_order(CURVE_ORDER);
-    BIGNUM_TYPE extended_key;
-    if (! extended_key.decode(hashed_base))
-        return false;
+    int res = HASH_FUNCTION(base, root_key);
+    ERROR_IF(res <= 0, "Failed to hash base string");
 
-    // Decode the root key, this is the chain code for the first iteration
-    ww::types::ByteArray extended_chain_code = root_key;
+    // And start processing the context path. The context path is a list of strings
+    ww::types::ByteArray parent_chain_code = root_chain_code;
+    pdo_contracts::crypto::signing::PrivateKey parent_key(CURVE_NID, root_key);
     std::vector<const std::string>::iterator path_element;
-    for ( path_element = context_path.begin(); path_element < context_path.end(); path_element++)
+
+    ww::types::ByteArray child_chain_code;
+    pdo_contracts::crypto::signing::PrivateKey child_key(CURVE_NID);
+
+    for (path_element = context_path.begin(); path_element < context_path.end(); path_element++)
     {
-        // For the purpose of the hashing, we are concatenating the index and the parent private key
-        size_t path_hash = std::hash<std::string>{}(*path_element);
-
-        ww::types::ByteArray ba_extended_key;
-        extended_key.encode(ba_extended_key);
-
-        ww::types::ByteArray index;
-        index.push_back(0x00);  // this is part of the BIP32 specification for extended keys
-        index.insert(index.end(), ba_extended_key.begin(), ba_extended_key.end());
-        auto ptr = reinterpret_cast<uint8_t*>(&path_hash);
-        index.insert(index.end(), ptr, ptr + sizeof(size_t));
-
-        ww::types::ByteArray child_key_ba;
-        ww::types::ByteArray child_chain_code;
-
-        for (int i = 0; i < EXTENDED_KEY_SIZE / EXTENDED_CHUNK_SIZE; i++) {
-            const size_t seg_start = i * EXTENDED_CHUNK_SIZE;
-            const size_t seg_end = (i + 1) * EXTENDED_CHUNK_SIZE;
-            ww::types::ByteArray chain_code_segment(
-                extended_chain_code.begin() + seg_start, extended_chain_code.begin() + seg_end);
-
-            ww::types::ByteArray hmac;
-            CHUNK_HASH_FUNCTION(index, chain_code_segment, hmac);
-            if (hmac.size() != 2 * EXTENDED_CHUNK_SIZE)
-                return false;
-
-            child_key_ba.insert(child_key_ba.end(), hmac.begin(), hmac.begin() + EXTENDED_CHUNK_SIZE);
-            child_chain_code.insert(child_chain_code.end(), hmac.begin() + EXTENDED_CHUNK_SIZE, hmac.end());
+        if ((*path_element)[0] == '#')
+        {
+            //CONTRACT_SAFE_LOG(3, "generate hardened key for element %s", (*path_element).c_str());
+            ERROR_IF(! parent_key.DeriveHardenedKey(parent_chain_code, *path_element, child_key, child_chain_code),
+                "Failed to generate hardened child keys");
+        }
+        else
+        {
+            //CONTRACT_SAFE_LOG(3, "generate normal key for element %s", (*path_element).c_str());
+            ERROR_IF(! parent_key.DeriveNormalKey(parent_chain_code, *path_element, child_key, child_chain_code),
+                "Failed to generate normal child keys");
         }
 
-        // Add the extended key to the value created...
-        BIGNUM_TYPE child_key;
-        if (! child_key.decode(child_key_ba))
-            return false;
-
-        extended_key = (extended_key + child_key) % curve_order;
-        extended_chain_code = child_chain_code;
+        // Prepare for the next iteration
+        parent_key = child_key;
+        parent_chain_code = child_chain_code;
     }
 
-    // now convert the extended_key into an ECDSA key, for the moment the key
-    // generation function only understands byte arrays
-    ww::types::ByteArray extended_key_ba;
-    if (! extended_key.encode(extended_key_ba))
-        return false;
+    private_key = parent_key;
+    chain_code = parent_chain_code;
 
-    return ww::crypto::ecdsa::generate_keys(extended_key_ba, private_key, public_key);
+    return true;
 }
