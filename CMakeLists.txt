@@ -24,6 +24,10 @@ LIST(APPEND CMAKE_MODULE_PATH "${PDO_SOURCE_ROOT}/contracts/wawaka")
 INCLUDE(contract-build)
 INCLUDE(wawaka_common)
 
+# This switch is necessary in general. However, it is
+# extremely helpful for reducing the size of large contracts
+LIST(APPEND WASM_LINK_OPTIONS "-Wl,--strip-all")
+
 LIST(APPEND WASM_LIBRARIES ${WW_COMMON_LIB})
 LIST(APPEND WASM_INCLUDES ${WW_COMMON_INCLUDES})
 
