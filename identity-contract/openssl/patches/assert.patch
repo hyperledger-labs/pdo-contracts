@@ -1,0 +1,13 @@
+diff --git a/include/openssl/crypto.h.in b/include/openssl/crypto.h.in
+index b2d691b..3e74c1d 100644
+--- a/include/openssl/crypto.h.in
++++ b/include/openssl/crypto.h.in
+@@ -394,7 +394,6 @@ ossl_noreturn void OPENSSL_die(const char *assertion, const char *file, int line
+ # ifndef OPENSSL_NO_DEPRECATED_1_1_0
+ #  define OpenSSLDie(f,l,a) OPENSSL_die((a),(f),(l))
+ # endif
+-# define OPENSSL_assert(e) \
+-    (void)((e) ? 0 : (OPENSSL_die("assertion failed: " #e, OPENSSL_FILE, OPENSSL_LINE), 1))
++# define OPENSSL_assert(e)
+
+ int OPENSSL_isservice(void);
