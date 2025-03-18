@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+INCLUDE(family.cmake)
+
 IF(NOT DEFINED EXCHANGE_INCLUDES)
   MESSAGE(FATAL_ERROR "EXCHANGE_INCLUDES is not defined")
 ENDIF()
@@ -19,23 +21,23 @@ ENDIF()
 # ---------------------------------------------
 # Set up the include list
 # ---------------------------------------------
-SET (IDENTITY_INCLUDES ${WASM_INCLUDES})
-LIST(APPEND IDENTITY_INCLUDES ${EXCHANGE_INCLUDES})
-LIST(APPEND IDENTITY_INCLUDES ${CMAKE_CURRENT_LIST_DIR})
+SET (${CF_HANDLE}_INCLUDES ${WASM_INCLUDES})
+LIST(APPEND ${CF_HANDLE}_INCLUDES ${EXCHANGE_INCLUDES})
+LIST(APPEND ${CF_HANDLE}_INCLUDES ${CMAKE_CURRENT_LIST_DIR}/src)
 
 # ---------------------------------------------
 # Set up the default source list
 # ---------------------------------------------
-FILE(GLOB IDENTITY_COMMON_SOURCE ${CMAKE_CURRENT_LIST_DIR}/identity/common/[A-Za-z]*.cpp)
-FILE(GLOB IDENTITY_CRYPTO_SOURCE ${CMAKE_CURRENT_LIST_DIR}/identity/crypto/[A-Za-z]*.cpp)
-FILE(GLOB IDENTITY_CONTRACT_SOURCE ${CMAKE_CURRENT_LIST_DIR}/identity/contracts/[A-Za-z]*.cpp)
+FILE(GLOB ${CF_HANDLE}_COMMON_SOURCE ${CMAKE_CURRENT_LIST_DIR}/src/common/[A-Za-z]*.cpp)
+FILE(GLOB ${CF_HANDLE}_CRYPTO_SOURCE ${CMAKE_CURRENT_LIST_DIR}/src/crypto/[A-Za-z]*.cpp)
+FILE(GLOB ${CF_HANDLE}_CONTRACT_SOURCE ${CMAKE_CURRENT_LIST_DIR}/src/methods/[A-Za-z]*.cpp)
 
-SET (IDENTITY_SOURCES)
-LIST(APPEND IDENTITY_SOURCES ${IDENTITY_COMMON_SOURCE})
-LIST(APPEND IDENTITY_SOURCES ${IDENTITY_CRYPTO_SOURCE})
-LIST(APPEND IDENTITY_SOURCES ${IDENTITY_CONTRACT_SOURCE})
+SET (${CF_HANDLE}_SOURCES)
+LIST(APPEND ${CF_HANDLE}_SOURCES ${${CF_HANDLE}_COMMON_SOURCE})
+LIST(APPEND ${CF_HANDLE}_SOURCES ${${CF_HANDLE}_CRYPTO_SOURCE})
+LIST(APPEND ${CF_HANDLE}_SOURCES ${${CF_HANDLE}_CONTRACT_SOURCE})
 
 # ---------------------------------------------
 # Build the wawaka contract common library
 # ---------------------------------------------
-SET(IDENTITY_LIB ww_identity)
+SET(${CF_HANDLE}_LIB ww_${CF_NAME})
