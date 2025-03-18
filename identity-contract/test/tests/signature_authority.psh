@@ -40,7 +40,7 @@ set -s _owner_ -v user1
 
 identity -n ${_owner_}
 
-contract create -c signature_authority --source ${contracts}/_signature_authority -f ${_contract_}
+contract create -c identity_signature_authority --source ${contracts}/_identity_signature_authority -f ${_contract_}
 if -o ${_error_code_} 0
    echo ${ERROR} [Error ${_error_code_}] failed to create the signature authority contract ${ENDC}
    exit -v ${_error_code_}

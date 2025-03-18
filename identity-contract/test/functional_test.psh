@@ -29,12 +29,18 @@ script -f ${_bin_}/init.psh
 
 trap_error
 
+## =================================================================
+echo ${HEADER} run identity contract tests ${ENDC}
+## =================================================================
 script -f ${_path_}/tests/identity.psh
 if -o ${_error_code_} 0
    echo ${ERROR} [ERROR ${_error_code_}] identity test failed; ${_error_message_}
    exit -v ${_error_code_}
 fi
 
+## =================================================================
+echo ${HEADER} run signature_authority contract tests ${ENDC}
+## =================================================================
 script -f ${_path_}/tests/signature_authority.psh
 if -o ${_error_code_} 0
    echo ${ERROR} [ERROR ${_error_code_}] signature_authority test failed; ${_error_message_}
