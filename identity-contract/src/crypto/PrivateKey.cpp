@@ -376,9 +376,9 @@ bool signing::PrivateKey::GetNumericKey(ww::types::ByteArray& numeric_key) const
 
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
-bool signing::PrivateKey::DeriveHardenedKey(
+bool signing::PrivateKey::DeriveKey(
     const ww::types::ByteArray& parent_chain_code, // array of random bytes, EXTENDED_KEY_SIZE
-    const std::string& path_element, // array of strings, path to the current key
+    const ww::types::ByteArray& data,
     signing::PrivateKey& extended_key,
     ww::types::ByteArray& extended_chain_code) const
 {
@@ -410,20 +410,6 @@ bool signing::PrivateKey::DeriveHardenedKey(
     // BIP: HMAC-SHA512(Key = cpar, Data = 0x00 || ser256(kpar) || ser32(i)).
 
     const BIGNUM *parent_key_ptr = EC_KEY_get0_private_key(key_);
-
-    // Convert the parent key into a byte array
-    ww::types::ByteArray parent_key;
-    ERROR_IF(! GetNumericKey(parent_key), "Crypto Error (PrivateKey::DeriveHardenedKey): Failed to get parent key");
-
-    ww::types::ByteArray data;
-    data.push_back(0x00);  // this is part of the BIP32 specification for extended keys
-    data.insert(data.end(), parent_key.begin(), parent_key.end());
-
-    // Append the current context key to the material to be hashed
-    size_t path_hash = std::hash<std::string>{}(path_element);
-    path_hash = path_hash | 0x80000000; // this is part of the BIP32 specification for hardened keys
-    auto ptr = reinterpret_cast<uint8_t*>(&path_hash);
-    data.insert(data.end(), ptr, ptr + sizeof(size_t));
 
     // Next step is to compute the HMAC in order to derive the child key and chain code
     // BIP: Split I into two 32-byte sequences, IL and IR.
@@ -458,6 +444,33 @@ bool signing::PrivateKey::DeriveHardenedKey(
 
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
+bool signing::PrivateKey::DeriveHardenedKey(
+    const ww::types::ByteArray& parent_chain_code, // array of random bytes, EXTENDED_KEY_SIZE
+    const std::string& path_element, // array of strings, path to the current key
+    signing::PrivateKey& extended_key,
+    ww::types::ByteArray& extended_chain_code) const
+{
+    ERROR_IF_NULL(key_, "Crypto Error (PrivateKey::DeriveHardenedKey): Key not initialized");
+
+    // Convert the parent key into a byte array
+    ww::types::ByteArray parent_key;
+    ERROR_IF(! GetNumericKey(parent_key), "Crypto Error (PrivateKey::DeriveHardenedKey): Failed to get parent key");
+
+    ww::types::ByteArray data;
+    data.push_back(0x00);  // this is part of the BIP32 specification for extended keys
+    data.insert(data.end(), parent_key.begin(), parent_key.end());
+
+    // Append the current context key to the material to be hashed
+    size_t path_hash = std::hash<std::string>{}(path_element);
+    path_hash = path_hash | 0x80000000; // this is part of the BIP32 specification for hardened keys
+    auto ptr = reinterpret_cast<uint8_t*>(&path_hash);
+    data.insert(data.end(), ptr, ptr + sizeof(size_t));
+
+    return DeriveKey(parent_chain_code, data, extended_key, extended_chain_code);
+}
+
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
 bool signing::PrivateKey::DeriveNormalKey(
     const ww::types::ByteArray& parent_chain_code, // array of random bytes, EXTENDED_KEY_SIZE
     const std::string& path_element, // array of strings, path to the current key
@@ -465,33 +478,6 @@ bool signing::PrivateKey::DeriveNormalKey(
     ww::types::ByteArray& extended_chain_code) const
 {
     ERROR_IF_NULL(key_, "Crypto Error (PrivateKey::DeriveNormalKey): Key not initialized");
-
-    int res;
-
-    // --------------- Setup the big number context  ---------------
-
-    BN_CTX_ptr ctx(BN_CTX_new(), BN_CTX_free);
-    ERROR_IF_NULL(ctx, "Crypto Error (PrivateKey::DeriveNormalKey): Failed to create BN context");
-
-    // --------------- Get curve information ---------------
-
-    const EC_GROUP *ec_group = EC_KEY_get0_group(key_);
-
-    BIGNUM_ptr curve_order_ptr(BN_new(), BN_free);
-    ERROR_IF_NULL(curve_order_ptr, "Crypto Error (PrivateKey::DeriveNormalKey): Failed to create curve order bignum");
-
-    res = EC_GROUP_get_order(ec_group, curve_order_ptr.get(), ctx.get());
-    ERROR_IF(res <= 0, "Crypto Error (PrivateKey::DeriveNormalKey): Failed to get curve order");
-
-    // make sure the chain code is the correct size
-    ERROR_IF(parent_chain_code.size() != BN_num_bytes(curve_order_ptr.get()), "Invalid parent chain code size");
-
-    // --------------- Start the derivation process ----------------
-
-    // First step is to build the data array to be hashed
-    // BIP: HMAC-SHA512(Key = cpar, Data = serP(point(kpar)) || ser32(i))
-
-    const BIGNUM *parent_key_ptr = EC_KEY_get0_private_key(key_);
 
     signing::PublicKey public_key;
     ERROR_IF(! GetPublicKey(public_key), "Crypto Error (PrivateKey::DeriveNormalKey): Failed to get public key");
@@ -507,33 +493,5 @@ bool signing::PrivateKey::DeriveNormalKey(
     auto ptr = reinterpret_cast<uint8_t*>(&path_hash);
     data.insert(data.end(), ptr, ptr + sizeof(size_t));
 
-    // Next step is to compute the HMAC in order to derive the child key and chain code
-    // BIP: Split I into two 32-byte sequences, IL and IR.
-    ww::types::ByteArray child_key;
-    ww::types::ByteArray child_chain_code;
-    if (! DeriveChildKey(parent_chain_code, data, child_key, child_chain_code))
-        return false;
-
-    // The final step is to add the child key to the parent key to get the next extended key
-    // BIP: The returned child key ki is parse256(IL) + kpar (mod n).
-    BIGNUM_ptr child_key_ptr(BN_bin2bn((const unsigned char*)child_key.data(), child_key.size(), NULL), BN_free);
-    ERROR_IF_NULL(child_key_ptr, "Crypto Error (PrivateKey::DeriveNormalKey): Failed to create child key bignum");
-
-    res = BN_mod_add(
-        child_key_ptr.get(), // destination
-        child_key_ptr.get(),    // value 2
-        parent_key_ptr, // value 1
-        curve_order_ptr.get(),  // modulus
-        ctx.get());
-    ERROR_IF(res <= 0, "Crypto Error (PrivateKey::DeriveNormalKey): Failed to add child key to parent key");
-
-    // Write the updated child key back to a byte array
-    res = BN_bn2bin(child_key_ptr.get(), child_key.data());
-    ERROR_IF(res <= 0, "Crypto Error (PrivateKey::DeriveNormalKey): Failed to convert child key to byte array");
-
-    // --------------- Create the return values ----------------
-    extended_key = signing::PrivateKey(curve_, child_key);
-    extended_chain_code = child_chain_code;
-
-    return true;
+    return DeriveKey(parent_chain_code, data, extended_key, extended_chain_code);
 }

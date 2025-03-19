@@ -40,6 +40,12 @@ namespace crypto
             bool InitializeFromNumericKey(const ww::types::ByteArray& numeric_key);
             bool InitializeFromPrivateKey(const PrivateKey& privateKey);
 
+            bool DeriveKey(
+                const ww::types::ByteArray& parent_chain_code, // array of random bytes, EXTENDED_KEY_SIZE
+                const ww::types::ByteArray& data,
+                signing::PrivateKey& extended_key,
+                ww::types::ByteArray& extended_chain_code) const;
+
         public:
             PrivateKey(const int curve = NID_undef) : Key(curve) {};
             PrivateKey(const int curve, const ww::types::ByteArray& numeric_key);
