@@ -23,6 +23,7 @@
 #include "Value.h"
 #include "WasmExtensions.h"
 
+#include "exchange/common/Common.h"
 #include "identity/common/SigningContext.h"
 #include "identity/common/SigningContextManager.h"
 
@@ -30,29 +31,48 @@
 // Class: ww::identity::SigningContextManager
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 const std::string ww::identity::SigningContextManager::root_key_("__ROOT__");
+const std::string ww::identity::SigningContextManager::key_separator_("$$$");
 
 // -----------------------------------------------------------------
 bool ww::identity::SigningContextManager::initialize(void)
 {
     ww::identity::SigningContext root_context;
 
-    std::vector<std::string> root_path;
-    return root_context.save_to_datastore(store_, make_key(root_path));
+    return root_context.save_to_datastore(store_, root_key_);
 }
 
 // -----------------------------------------------------------------
-std::string ww::identity::SigningContextManager::make_key(
-    const std::vector<std::string>& context_path)
+// make_key
+//
+// make a string that can be used to identify the signing context in the
+// key value store; the key must be unique for each signing context
+// -----------------------------------------------------------------
+bool ww::identity::SigningContextManager::make_key(
+    const std::vector<std::string>& context_path,
+    std::string& key)
 {
-    std::string p(root_key_);
+    key = root_key_;
 
     std::vector<const std::string>::iterator path_element;
     for ( path_element = context_path.begin(); path_element < context_path.end(); path_element++)
-        p += "." + (*path_element);
+    {
+        // make sure that the path element does not contain the key separator
+        ERROR_IF((*path_element).find(key_separator_) != std::string::npos,
+                 "path element contains the key separator");
 
-    return p;
+        key += key_separator_ + (*path_element);
+    }
+
+    return true;
 }
 
+// -----------------------------------------------------------------
+// add_context
+//
+// Add a new signing context to the context tree. The context path
+// can only extend an existing context by a single path element. And
+// it may not point to an extensible context. That is, there can be
+// no registered contexts beneath an extensible context.
 // -----------------------------------------------------------------
 bool ww::identity::SigningContextManager::add_context(
     const std::vector<std::string>& context_path,
@@ -62,7 +82,10 @@ bool ww::identity::SigningContextManager::add_context(
     if (context_path.size() < 1)
         return false;
 
+    // new_context_name is the name of the new context relative to the parent
     const std::string new_context_name = context_path.back();
+
+    // parent_path is the path to the parent context that will be extended
     const std::vector<std::string> parent_path(context_path.begin(), context_path.end() - 1);
 
     ww::identity::SigningContext parent;
@@ -71,21 +94,21 @@ bool ww::identity::SigningContextManager::add_context(
         return false;
 
     // make sure the context path terminates in a signing context
-    if (extended_path.size() > 0)
-        return false;
+    ERROR_IF(extended_path.size() > 0, "context path extends an extensible context");
 
     // make sure the parent context is not extensible; if it is extensible
     // then all paths are legitimate and none may have signing contexts
-    if (parent.extensible_)
-        return false;
+    ERROR_IF(parent.extensible_, "parent context is extensible");
 
     // make sure the new context does not already exist
-    if (parent.contains(new_context_name))
-        return false;
+    ERROR_IF(parent.contains(new_context_name), "context already exists");
 
     // looks like all tests pass, now update the parent
     parent.subcontexts_.push_back(new_context_name);
-    const std::string pkey = make_key(parent_path);
+
+    std::string pkey;
+    ERROR_IF_NOT(make_key(parent_path, pkey), "failed to make the parent storage key");
+
     if (! parent.save_to_datastore(store_, pkey))
         return false;
 
@@ -93,7 +116,9 @@ bool ww::identity::SigningContextManager::add_context(
     // assume that the new context has been correctly
     // initialized; specifically, the subcontexts vector
     // should be empty on the initial save
-    const std::string ckey = make_key(context_path);
+    std::string ckey;
+    ERROR_IF_NOT(make_key(context_path, ckey), "failed to make the child storage key");
+
     if (! new_context.save_to_datastore(store_, ckey))
         return false;
 
@@ -101,12 +126,25 @@ bool ww::identity::SigningContextManager::add_context(
 }
 
 // -----------------------------------------------------------------
+// remove_context
+//
+// not implemented
+// -----------------------------------------------------------------
 bool ww::identity::SigningContextManager::remove_context(
     const std::vector<std::string>& context_path)
 {
     return true;
 }
 
+// -----------------------------------------------------------------
+// find_context
+//
+// Given a context path, find the context with the longest matching
+// path prefix. If the matching context is extensible, then the
+// remaining path elements are placed in the extended_path vector. If
+// the context is not extensible, then the extended_path vector will
+// be empty and there must be an exact match between the context path
+// and the context.
 // -----------------------------------------------------------------
 bool ww::identity::SigningContextManager::find_context(
     const std::vector<std::string>& context_path,
@@ -117,37 +155,28 @@ bool ww::identity::SigningContextManager::find_context(
 
     // empty path should point to the root context
     std::vector<std::string> path;
-    if (! context.get_from_datastore(store_, make_key(path)))
-    {
-        // this shouldn't happen unless the data store has been corrupted
-        CONTRACT_SAFE_LOG(3, "failed to locate the root context\n");
-        return false;
-    }
+    std::string key;
+
+    ERROR_IF_NOT(make_key(path, key), "failed to make the storage key");
+    ERROR_IF_NOT(context.get_from_datastore(store_, key), "failed to locate the root context");
 
     // walk the tree of contexts and verify that they exist and are not extensible
     for (auto path_element = context_path.begin(); path_element < context_path.end(); path_element++)
     {
         // make sure that the path element is in the current context, that is, verify
-        // that the context path is valid
-        if (! context.contains(*path_element))
-        {
-            CONTRACT_SAFE_LOG(3, "failed to find a path element %s\n", path_element->c_str());
-            return false;
-        }
+        // that the context path is valid, this can fail if there is an attempt to
+        // extend a context that is not extensible or if the path is simply invalid
+        ERROR_IF_NOT(context.contains(*path_element),
+                     "failed to find a path element %s", path_element->c_str());
 
         // create the path to retrieve the next context in the path
         path.push_back(*path_element);
 
-        const std::string key = make_key(path);
-        if (! context.get_from_datastore(store_, key))
-        {
-            // this shouldn't happen unless the data store has been corrupted
-            CONTRACT_SAFE_LOG(3, "failed to find the context from the path\n");
-            return false;
-        }
+        ERROR_IF_NOT(make_key(path, key), "failed to make the storage key");
+        ERROR_IF_NOT(context.get_from_datastore(store_, key), "failed to find the context from the path");
 
-        // if the current context is extensible then we copy whatever is left in the context path
-        // into the extended path
+        // if the current context is extensible then we copy whatever
+        // is left in the context path into the extended path
         if (context.extensible_)
         {
             for (path_element++; path_element < context_path.end(); path_element++)

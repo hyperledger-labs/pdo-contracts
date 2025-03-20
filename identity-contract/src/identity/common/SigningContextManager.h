@@ -31,10 +31,12 @@ namespace identity
     private:
         KeyValueStore store_;
 
-        static std::string make_key(
-            const std::vector<std::string>& context_path);
+        static bool make_key(
+            const std::vector<std::string>& context_path,
+            std::string& key);
 
         static const std::string root_key_;
+        static const std::string key_separator_;
 
     public:
         bool add_context(
