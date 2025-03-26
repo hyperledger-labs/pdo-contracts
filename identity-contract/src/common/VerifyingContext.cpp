@@ -59,26 +59,24 @@ bool ww::identity::VerifyingContext::serialize(ww::value::Value& serialized_cont
 }
 
 // -----------------------------------------------------------------
-// validate
+// initialize
 //
 // Validate the format of the public key and chain code. This is
 // intended to provide a means of checking input from the user.
 // -----------------------------------------------------------------
-bool ww::identity::VerifyingContext::is_valid(void) const
+bool ww::identity::VerifyingContext::initialize(
+    const std::string& encoded_public_key, // PEM encoded public key
+    const std::string& encoded_chain_code) // base64 encoded chaincode
 {
-    ERROR_IF(public_key_.empty(), "Public key is empty");
-    ERROR_IF(chain_code_.empty(), "Chain code is empty");
-
-    // Validate the public key
     pdo_contracts::crypto::signing::PublicKey public_key;
-    ERROR_IF_NOT(public_key.Deserialize(public_key_), "Invalid public key");
+    ERROR_IF_NOT(public_key.Deserialize(encoded_public_key), "Invalid public key");
 
-    // Validate the chain code
     ww::types::ByteArray chain_code;
-    if (! get_chain_code(chain_code))
-        return false;
-
+    ERROR_IF_NOT(ww::crypto::b64_decode(encoded_chain_code, chain_code), "Invalid chain code");
     ERROR_IF(chain_code.size() != EXTENDED_KEY_SIZE, "Invalid chain code size");
+
+    public_key_ = encoded_public_key;
+    chain_code_ = encoded_chain_code;
 
     return true;
 }
@@ -90,14 +88,13 @@ bool ww::identity::VerifyingContext::is_valid(void) const
 // path. The assumption is that the context path has been validated.
 // -----------------------------------------------------------------
 bool ww::identity::VerifyingContext::verify_signature(
-    const std::vector<std::string>& context_path,
     const ww::types::ByteArray& message,
     const ww::types::ByteArray& signature) const
 {
     pdo_contracts::crypto::signing::PublicKey public_key;
     ww::types::ByteArray chain_code;
 
-    if (! generate_key(context_path, public_key, chain_code))
+    if (! generate_keys(public_key, chain_code))
         return false;
 
     return public_key.VerifySignature(message, signature, HASH_FUNCTION);
@@ -106,8 +103,7 @@ bool ww::identity::VerifyingContext::verify_signature(
 
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
-bool ww::identity::VerifyingContext::generate_key(
-    const std::vector<std::string>& context_path,
+bool ww::identity::VerifyingContext::generate_keys(
     pdo_contracts::crypto::signing::PublicKey& public_key,
     ww::types::ByteArray& chain_code) const
 {
@@ -120,7 +116,7 @@ bool ww::identity::VerifyingContext::generate_key(
     ww::types::ByteArray extended_chain_code;
     pdo_contracts::crypto::signing::PublicKey extended_key(CURVE_NID);
 
-    for (path_element = context_path.begin(); path_element < context_path.end(); path_element++)
+    for (path_element = context_path_.begin(); path_element < context_path_.end(); path_element++)
     {
         ERROR_IF((*path_element)[0] == '#', "Hardened keys are not supported");
         ERROR_IF(! parent_public_key.DerivePublicKey(parent_chain_code, *path_element, extended_key, extended_chain_code),

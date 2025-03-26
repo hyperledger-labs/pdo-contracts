@@ -37,18 +37,17 @@ namespace identity
     // -----------------------------------------------------------------
     class VerifyingContext : public ww::identity::BaseVerifyingContext
     {
-    public:
-        bool is_valid(void) const;
-
-        bool verify_signature(
-            const std::vector<std::string>& context_path,
-            const ww::types::ByteArray& message,
-            const ww::types::ByteArray& signature) const override;
-
-        bool generate_key(
-            const std::vector<std::string>& context_path,
+    protected:
+        bool generate_keys(
             pdo_contracts::crypto::signing::PublicKey& public_key,
             ww::types::ByteArray& chain_code) const;
+
+    public:
+        bool initialize(const std::string& public_key, const std::string& chain_code);
+
+        bool verify_signature(
+            const ww::types::ByteArray& message,
+            const ww::types::ByteArray& signature) const override;
 
         // SerializeableObject virtual methods
         static bool verify_schema(const ww::value::Object& deserialized_object)
@@ -68,48 +67,5 @@ namespace identity
         };
     };
 
-#if 0
-    class VerifyingContext : public ww::exchange::SerializeableObject
-    {
-    protected:
-        std::string public_key_;                    // PEM encoded ECDSA public key
-        std::string chain_code_;                    // base64 encoded representation of 48 byte random array
-
-    public:
-        bool verify_signature(
-            const std::vector<std::string>& context_path,
-            const ww::types::ByteArray& message,
-            const ww::types::ByteArray& signature) const;
-
-        static bool generate_key(
-            const std::string& encoded_public_key, // PEM encoded public key
-            const std::string& encoded_chain_code, // Base64 encoded chain code
-            const std::vector<std::string>& context_path,
-            std::string& derived_public_key); // PEM encoded public key returned
-
-        // SerializeableObject virtual methods
-        static bool verify_schema(const ww::value::Object& deserialized_object)
-        {
-            return ww::exchange::SerializeableObject::verify_schema_actual(
-                deserialized_object, VERIFYING_CONTEXT_SCHEMA);
-        }
-
-        bool deserialize(const ww::value::Object& request);
-        bool serialize(ww::value::Value& serialized_request) const;
-        bool is_valid(void) const;
-
-        VerifyingContext(const ww::value::Object& context)
-        {
-            deserialize(context);
-        };
-
-        VerifyingContext(const std::string& public_key, const std::string& chain_code)
-            : public_key_(public_key), chain_code_(chain_code)
-        { };
-
-        VerifyingContext(void) : VerifyingContext("", "")
-        { };
-    };
-#endif
 }; // identity
 }  // ww

@@ -64,8 +64,19 @@ bool ww::identity::signature_authority::sign_credential(const Message& msg, cons
 
     // Pull together the information needed to build the vc
     const ww::identity::IdentityKey identity(env.contract_id_, context_path);
-    const ww::identity::SigningContextManager signing_context_manager =
-        ww::identity::identity::get_context_manager();
+    const ww::identity::SigningContextManager manager = ww::identity::identity::get_context_manager();
+
+    ww::identity::SigningContext context;
+    std::vector<std::string> extended_path;
+
+    ASSERT_SUCCESS(rsp, manager.find_context(context_path, extended_path, context),
+                   "invalid request, unable to locate context");
+    ASSERT_SUCCESS(rsp, context.is_extensible() || extended_path.size() == 0,
+                   "invalid request, extensible paths not allowed");
+
+    // The context that will be used to sign the message is found context
+    // extended with the path from the message
+    context.set_context_path(extended_path);
 
     // And build the veriable credential; just wanted to note that it would be
     // completely appropriate to make a constructor for VC's that took the
@@ -73,7 +84,7 @@ bool ww::identity::signature_authority::sign_credential(const Message& msg, cons
     // WASM interpreter so failure in the constructor would be a catastrophic
     // failure for the contract
     ww::identity::VerifiableCredential vc;
-    ASSERT_SUCCESS(rsp, vc.build(credential, identity, signing_context_manager),
+    ASSERT_SUCCESS(rsp, vc.build(credential, identity, context),
                    "invalid request, ill-formed credential");
 
     // Finally pull the serialized verifiable credential and send it back
@@ -111,10 +122,22 @@ bool ww::identity::signature_authority::verify_credential(const Message& msg, co
     ASSERT_SUCCESS(rsp, vc.proof_.verificationMethod_.id_ == env.contract_id_,
                    "invalid request, wrong verifier");
 
-    // Pull together the information needed to build the vc
-    const ww::identity::SigningContextManager signing_context_manager =
-        ww::identity::identity::get_context_manager();
-    bool verified = vc.check(signing_context_manager);
+    // Build the context needed to verify the credential
+    const ww::identity::SigningContextManager manager = ww::identity::identity::get_context_manager();
+
+    ww::identity::SigningContext context;
+    std::vector<std::string> extended_path;
+
+    ASSERT_SUCCESS(rsp, manager.find_context(vc.proof_.verificationMethod_.context_path_, extended_path, context),
+                   "invalid request, unable to locate context");
+    ASSERT_SUCCESS(rsp, context.is_extensible() || extended_path.size() == 0,
+                   "invalid request, extensible paths not allowed");
+
+    // The context that will be used to sign the message is found context
+    // extended with the path from the message
+    context.set_context_path(extended_path);
+
+    bool verified = vc.check(context);
 
     // ---------- RETURN ----------
     ww::value::Boolean result(verified);
