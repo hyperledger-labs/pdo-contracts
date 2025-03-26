@@ -37,8 +37,16 @@
 static KeyValueStore identity_metadata_store("key_store");
 static KeyValueStore signing_context_store("signing_context");
 
-static const std::string md_extended_key_seed("extend_key_seed");
 static const std::string md_description("description");
+
+// -----------------------------------------------------------------
+// FUNCTION: get_context_manager
+// -----------------------------------------------------------------
+ww::identity::SigningContextManager ww::identity::identity::get_context_manager(void)
+{
+    ww::identity::SigningContextManager manager(signing_context_store);
+    return manager;
+}
 
 // -----------------------------------------------------------------
 // FUNCTION: get_context_path
@@ -67,29 +75,6 @@ bool ww::identity::identity::get_context_path(const Message& msg, std::vector<st
 }
 
 // -----------------------------------------------------------------
-// FUNCTION: validate_context_path
-// -----------------------------------------------------------------
-bool ww::identity::identity::validate_context_path(std::vector<std::string>& context_path)
-{
-    // Attempt to find the context, this will tell us whether
-    // the path is valid... that is, it meets the extensibility
-    // criteria for all registered contexts
-    ww::identity::SigningContextManager manager(signing_context_store);
-    ww::identity::SigningContext context;
-    std::vector<std::string> extended_path;
-
-    return manager.find_context(context_path, extended_path, context);
-}
-
-// -----------------------------------------------------------------
-// FUNCTION: get_extended_key_seed
-// -----------------------------------------------------------------
-bool ww::identity::identity::get_extended_key_seed(ww::types::ByteArray& extended_key_seed)
-{
-    return identity_metadata_store.get(md_extended_key_seed, extended_key_seed);
-}
-
-// -----------------------------------------------------------------
 // METHOD: initialize_contract
 //   contract initialization method
 //
@@ -105,20 +90,10 @@ bool ww::identity::identity::initialize_contract(const Environment& env)
     if (! ww::contract::base::initialize_contract(env))
         return false;
 
-    // ---------- create the extended key seed ----------
-    ww::types::ByteArray extended_key_seed(EXTENDED_KEY_SIZE);
-    if (! ww::crypto::random_identifier(extended_key_seed))
-        return false;
-
-    if (! identity_metadata_store.set(md_extended_key_seed, extended_key_seed))
-        return false;
-
     // ---------- prime signing context store ----------
     ww::identity::SigningContextManager manager(signing_context_store);
     if (! manager.initialize())
         return false;
-
-    // ---------- prime the credential store ----------
 
     // ---------- other metadata ----------
     if (! identity_metadata_store.set(md_description, "identity object"))
@@ -183,8 +158,7 @@ bool ww::identity::identity::register_signing_context(
     const bool extensible(msg.get_boolean("extensible"));
 
     ww::identity::SigningContextManager manager(signing_context_store);
-    ww::identity::SigningContext context(extensible, description);
-    ASSERT_SUCCESS(rsp, manager.add_context(context_path, context),
+    ASSERT_SUCCESS(rsp, manager.add_context(extensible, description, context_path),
                    "failed to register the new context");
 
     // ---------- RETURN ----------
@@ -244,33 +218,39 @@ bool ww::identity::identity::sign(const Message& msg, const Environment& env, Re
     ASSERT_SENDER_IS_OWNER(env, rsp);
     ASSERT_INITIALIZED(rsp);
 
+    // Process the input parameters
     ASSERT_SUCCESS(rsp, msg.validate_schema(IDENTITY_SIGN_PARAM_SCHEMA),
                    "invalid request, missing required parameters");
 
     std::vector<std::string> context_path;
     ASSERT_SUCCESS(rsp, get_context_path(msg, context_path),
                    "invalid request, ill-formed context path");
-    ASSERT_SUCCESS(rsp, validate_context_path(context_path),
-                   "invalid request, ill-formed context path");
-
-    ww::types::ByteArray extended_key_seed;
-    ASSERT_SUCCESS(rsp, get_extended_key_seed(extended_key_seed),
-                   "unexpected error, failed to retrieve extended key seed");
 
     const std::string b64_message(msg.get_string("message"));
     ww::types::ByteArray message;
     ASSERT_SUCCESS(rsp, ww::crypto::b64_decode(b64_message, message),
                    "invalid request, failed to decode message");
 
+    // Find the signing context referenced by the context path
+    ww::identity::SigningContextManager manager(signing_context_store);
+    ww::identity::SigningContext context;
+    std::vector<std::string> extended_path;
+
+    ASSERT_SUCCESS(rsp, manager.find_context(context_path, extended_path, context),
+                   "invalid request, unable to locate context");
+    ASSERT_SUCCESS(rsp, context.is_extensible() || extended_path.size() == 0,
+                   "invalid request, extensible paths not allowed");
+
     ww::types::ByteArray signature;
-    ASSERT_SUCCESS(rsp, ww::identity::SigningContext::sign_message(extended_key_seed, context_path, message, signature),
+    ASSERT_SUCCESS(rsp, context.sign_message(extended_path, message, signature),
                    "unexpected error, signature failed");
 
+    // Encode the signature
     std::string b64_signature;
     ASSERT_SUCCESS(rsp, ww::crypto::b64_encode(signature, b64_signature),
                    "unexpected error: failed to encode signature");
 
-        // ---------- RETURN ----------
+    // ---------- RETURN ----------
     ww::value::String s(b64_signature.c_str());
     return rsp.value(s, false);
 }
@@ -294,12 +274,6 @@ bool ww::identity::identity::verify(const Message& msg, const Environment& env, 
     std::vector<std::string> context_path;
     ASSERT_SUCCESS(rsp, get_context_path(msg, context_path),
                    "invalid request, ill-formed context path");
-    ASSERT_SUCCESS(rsp, validate_context_path(context_path),
-                   "invalid request, ill-formed context path");
-
-    ww::types::ByteArray extended_key_seed;
-    ASSERT_SUCCESS(rsp, get_extended_key_seed(extended_key_seed),
-                   "unexpected error, failed to retrieve extended key seed");
 
     const std::string b64_message(msg.get_string("message"));
     ww::types::ByteArray message;
@@ -311,11 +285,21 @@ bool ww::identity::identity::verify(const Message& msg, const Environment& env, 
     ASSERT_SUCCESS(rsp, ww::crypto::b64_decode(b64_signature, signature),
                    "invalid request, failed to decode signature");
 
-    bool success = ww::identity::SigningContext::verify_signature(
-        extended_key_seed, context_path, message, signature);
+    // Find the signing context referenced by the context path
+    ww::identity::SigningContextManager manager(signing_context_store);
+    ww::identity::SigningContext context;
+    std::vector<std::string> extended_path;
+
+    ASSERT_SUCCESS(rsp, manager.find_context(context_path, extended_path, context),
+                   "invalid request, unable to locate context");
+    ASSERT_SUCCESS(rsp, context.is_extensible() || extended_path.size() == 0,
+                   "invalid request, extensible paths not allowed");
+
+    ASSERT_SUCCESS(rsp, context.verify_signature(extended_path, message, signature),
+                   "unexpected error, signature failed");
 
     // ---------- RETURN ----------
-    ww::value::Boolean b(success);
+    ww::value::Boolean b(true);
     return rsp.value(b, false);
 }
 
@@ -344,16 +328,19 @@ bool ww::identity::identity::get_verifying_key(const Message& msg, const Environ
     std::vector<std::string> context_path;
     ASSERT_SUCCESS(rsp, get_context_path(msg, context_path),
                    "invalid request, ill-formed context path");
-    ASSERT_SUCCESS(rsp, validate_context_path(context_path),
-                   "invalid request, ill-formed context path");
 
-    // Get the keys associated with the context path
-    ww::types::ByteArray root_key;
-    ASSERT_SUCCESS(rsp, get_extended_key_seed(root_key),
-                   "unexpected error, failed to retrieve extended key seed");
+    // Find the signing context referenced by the context path
+    ww::identity::SigningContextManager manager(signing_context_store);
+    ww::identity::SigningContext context;
+    std::vector<std::string> extended_path;
+
+    ASSERT_SUCCESS(rsp, manager.find_context(context_path, extended_path, context),
+                   "invalid request, unable to locate context");
+    ASSERT_SUCCESS(rsp, context.is_extensible() || extended_path.size() == 0,
+                   "invalid request, extensible paths not allowed");
 
     std::string private_key, public_key;
-    ASSERT_SUCCESS(rsp, ww::identity::SigningContext::generate_keys(root_key, context_path, private_key, public_key),
+    ASSERT_SUCCESS(rsp, context.generate_keys(context_path, private_key, public_key),
                    "unexpected error, failed to generate public key");
 
     // ---------- RETURN ----------

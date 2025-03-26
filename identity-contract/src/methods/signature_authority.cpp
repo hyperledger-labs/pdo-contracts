@@ -56,8 +56,6 @@ bool ww::identity::signature_authority::sign_credential(const Message& msg, cons
     std::vector<std::string> context_path;
     ASSERT_SUCCESS(rsp, ww::identity::identity::get_context_path(msg, context_path),
                    "invalid request, ill-formed context path");
-    ASSERT_SUCCESS(rsp, ww::identity::identity::validate_context_path(context_path),
-                   "invalid request, ill-formed context path");
 
     // Get and validate the credential parameter
     ww::value::Object credential;
@@ -65,11 +63,9 @@ bool ww::identity::signature_authority::sign_credential(const Message& msg, cons
                    "missing required parameter; credential");
 
     // Pull together the information needed to build the vc
-    ww::types::ByteArray extended_key_seed;
-    ASSERT_SUCCESS(rsp, ww::identity::identity::get_extended_key_seed(extended_key_seed),
-                   "unexpected error, failed to retrieve extended key seed");
-
     const ww::identity::IdentityKey identity(env.contract_id_, context_path);
+    const ww::identity::SigningContextManager signing_context_manager =
+        ww::identity::identity::get_context_manager();
 
     // And build the veriable credential; just wanted to note that it would be
     // completely appropriate to make a constructor for VC's that took the
@@ -77,7 +73,7 @@ bool ww::identity::signature_authority::sign_credential(const Message& msg, cons
     // WASM interpreter so failure in the constructor would be a catastrophic
     // failure for the contract
     ww::identity::VerifiableCredential vc;
-    ASSERT_SUCCESS(rsp, vc.build(credential, identity, extended_key_seed),
+    ASSERT_SUCCESS(rsp, vc.build(credential, identity, signing_context_manager),
                    "invalid request, ill-formed credential");
 
     // Finally pull the serialized verifiable credential and send it back
@@ -114,15 +110,11 @@ bool ww::identity::signature_authority::verify_credential(const Message& msg, co
                    "invalid request, ill-formed credential");
     ASSERT_SUCCESS(rsp, vc.proof_.verificationMethod_.id_ == env.contract_id_,
                    "invalid request, wrong verifier");
-    ASSERT_SUCCESS(rsp, ww::identity::identity::validate_context_path(vc.proof_.verificationMethod_.context_path_),
-                   "invalid request, unknown context path");
 
     // Pull together the information needed to build the vc
-    ww::types::ByteArray extended_key_seed;
-    ASSERT_SUCCESS(rsp, ww::identity::identity::get_extended_key_seed(extended_key_seed),
-                   "unexpected error, failed to retrieve extended key seed");
-
-    bool verified = vc.check(extended_key_seed);
+    const ww::identity::SigningContextManager signing_context_manager =
+        ww::identity::identity::get_context_manager();
+    bool verified = vc.check(signing_context_manager);
 
     // ---------- RETURN ----------
     ww::value::Boolean result(verified);

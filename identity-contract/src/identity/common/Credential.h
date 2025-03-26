@@ -20,7 +20,9 @@
 #include "Types.h"
 #include "Util.h"
 #include "Value.h"
+
 #include "exchange/common/Common.h"
+#include "identity/common/SigningContextManager.h"
 
 // All PDO contract identifiers are assumed to be of the form:
 //     PDO://<ledger_url>/<contract_identifier>
@@ -285,9 +287,9 @@ namespace identity
         bool build(
             const ww::value::Object& credential,
             const ww::identity::IdentityKey& identity,
-            const ww::types::ByteArray& extended_key_seed);
-        bool check(
-            const ww::types::ByteArray& extended_key_seed) const;
+            const ww::identity::SigningContextManager& signing_context_manager);
+
+        bool check(const ww::identity::SigningContextManager& signing_context_manager) const;
     };
 }
 }
