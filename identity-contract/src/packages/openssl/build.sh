@@ -85,7 +85,11 @@ DISABLE_TESTS="no-tests no-buildtest-c++ no-external-tests no-unit-test"
 # Disable features; these are inspired by the SGX SSL configuration options
 # Earlier versions of openssl can include 'no-atexit' but 3.1.0 requires a
 # different workaround
-DISABLE_FOR_SGX="no-autoalginit no-cms no-dsa no-err no-filenames no-rdrand no-zlib"
+#DISABLE_FOR_SGX="no-autoalginit no-cms no-dsa no-err no-filenames no-rdrand no-zlib"
+DISABLE_FOR_SGX="no-autoalginit no-cms no-dsa no-filenames no-rdrand no-zlib"
+DISABLE_FOR_SGX="${DISABLE_FOR_SGX} no-bf no-cast no-chacha no-comp no-dgram no-dtls"
+DISABLE_FOR_SGX="${DISABLE_FOR_SGX} no-engine no-md4 no-mdc2 no-rc5 no-rfc3779 no-sctp"
+DISABLE_FOR_SGX="${DISABLE_FOR_SGX} no-srtp no-ssl-trace no-ssl3"
 
 # Prep for WASM; these are inspired by https://github.com/jedisct1/openssl-wasm
 DISABLE_FOR_WASM="no-asm no-async no-egd no-ktls no-module no-posix-io no-secure-memory no-shared no-sock"
