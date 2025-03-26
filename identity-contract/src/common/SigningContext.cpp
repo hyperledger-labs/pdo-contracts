@@ -99,14 +99,13 @@ bool ww::identity::SigningContext::serialize(ww::value::Value& serialized_contex
 // the buffer. The assumption is that the context path has been validated.
 // -----------------------------------------------------------------
 bool ww::identity::SigningContext::sign_message(
-    const std::vector<std::string>& context_path,
     const ww::types::ByteArray& message,
     ww::types::ByteArray& signature) const
 {
     pdo_contracts::crypto::signing::PrivateKey private_key;
     ww::types::ByteArray chain_code;
 
-    if (! generate_keys(context_path, private_key, chain_code))
+    if (! generate_keys(private_key, chain_code))
         return false;
 
     return private_key.SignMessage(message, signature, HASH_FUNCTION);
@@ -119,14 +118,13 @@ bool ww::identity::SigningContext::sign_message(
 // path. The assumption is that the context path has been validated.
 // -----------------------------------------------------------------
 bool ww::identity::SigningContext::verify_signature(
-    const std::vector<std::string>& context_path,
     const ww::types::ByteArray& message,
     const ww::types::ByteArray& signature) const
 {
     pdo_contracts::crypto::signing::PrivateKey private_key;
     ww::types::ByteArray chain_code;
 
-    if (! generate_keys(context_path, private_key, chain_code))
+    if (! generate_keys(private_key, chain_code))
         return false;
 
     pdo_contracts::crypto::signing::PublicKey public_key(private_key);
@@ -136,14 +134,13 @@ bool ww::identity::SigningContext::verify_signature(
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
 bool ww::identity::SigningContext::generate_keys(
-    const std::vector<std::string>& context_path, // array of strings, path to the current key
     std::string& private_key_str,     // PEM encoded ECDSA private and public keys
     std::string& public_key_str) const
 {
     pdo_contracts::crypto::signing::PrivateKey private_key;
     ww::types::ByteArray chain_code;
 
-    if (! ww::identity::SigningContext::generate_keys(context_path, private_key, chain_code))
+    if (! ww::identity::SigningContext::generate_keys(private_key, chain_code))
         return false;
 
     pdo_contracts::crypto::signing::PublicKey public_key(private_key);
@@ -157,16 +154,49 @@ bool ww::identity::SigningContext::generate_keys(
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
 bool ww::identity::SigningContext::generate_keys(
-    const std::vector<std::string>& context_path, // array of strings, path to the current key
     pdo_contracts::crypto::signing::PrivateKey& private_key,
     ww::types::ByteArray& chain_code) const
 {
-    ww::types::ByteArray parent_chain_code;
-    if (get_chain_code(parent_chain_code) == false)
+    ww::types::ByteArray root_chain_code;
+    if (! get_chain_code(root_chain_code))
         return false;
 
-    pdo_contracts::crypto::signing::PrivateKey parent_key(CURVE_NID);
-    ERROR_IF_NOT(parent_key.Deserialize(private_key_), "Failed to deserialize private key");
+    pdo_contracts::crypto::signing::PrivateKey root_key(CURVE_NID);
+    if (! get_private_key(root_key))
+        return false;
+
+    return generate_keys(context_path_, root_key, root_chain_code, private_key, chain_code);
+}
+
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
+bool ww::identity::SigningContext::generate_keys(
+    const std::vector<std::string>& context_path,
+    pdo_contracts::crypto::signing::PrivateKey& private_key,
+    ww::types::ByteArray& chain_code) const
+{
+    ww::types::ByteArray root_chain_code;
+    if (! get_chain_code(root_chain_code))
+        return false;
+
+    pdo_contracts::crypto::signing::PrivateKey root_key(CURVE_NID);
+    if (! get_private_key(root_key))
+        return false;
+
+    return generate_keys(context_path, root_key, root_chain_code, private_key, chain_code);
+}
+
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
+bool ww::identity::SigningContext::generate_keys(
+    const std::vector<std::string>& context_path,
+    const pdo_contracts::crypto::signing::PrivateKey& root_key,
+    const ww::types::ByteArray& root_chain_code,
+    pdo_contracts::crypto::signing::PrivateKey& private_key,
+    ww::types::ByteArray& chain_code)
+{
+    ww::types::ByteArray parent_chain_code(root_chain_code);
+    pdo_contracts::crypto::signing::PrivateKey parent_key(root_key);
 
     ww::types::ByteArray child_chain_code;
     pdo_contracts::crypto::signing::PrivateKey child_key(CURVE_NID);

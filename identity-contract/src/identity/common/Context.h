@@ -47,6 +47,7 @@ namespace identity
     protected:
         std::string public_key_; // PEM encoded public key
         std::string chain_code_; // Base64 encoded byte array
+        std::vector<std::string> context_path_;
 
     public:
 
@@ -56,9 +57,15 @@ namespace identity
         bool set_public_key(const pdo_contracts::crypto::signing::PublicKey& key);
         bool get_public_key(pdo_contracts::crypto::signing::PublicKey& key) const;
 
+        void set_context_path(const std::vector<std::string>& context_path) {
+            context_path_ = context_path;
+        };
+
+        void get_context_path(std::vector<std::string>& context_path) const {
+            context_path = context_path_;
+        };
 
         bool virtual verify_signature(
-            const std::vector<std::string>& context_path,
             const ww::types::ByteArray& message,
             const ww::types::ByteArray& signature) const = 0;
     };
@@ -78,7 +85,6 @@ namespace identity
         bool get_private_key(pdo_contracts::crypto::signing::PrivateKey& key) const;
 
         bool virtual sign_message(
-            const std::vector<std::string>& context_path,
             const ww::types::ByteArray& message,
             ww::types::ByteArray& signature) const = 0;
     };

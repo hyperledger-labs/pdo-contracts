@@ -241,8 +241,12 @@ bool ww::identity::identity::sign(const Message& msg, const Environment& env, Re
     ASSERT_SUCCESS(rsp, context.is_extensible() || extended_path.size() == 0,
                    "invalid request, extensible paths not allowed");
 
+    // The context that will be used to sign the message is found context
+    // extended with the path from the message
+    context.set_context_path(extended_path);
+
     ww::types::ByteArray signature;
-    ASSERT_SUCCESS(rsp, context.sign_message(extended_path, message, signature),
+    ASSERT_SUCCESS(rsp, context.sign_message(message, signature),
                    "unexpected error, signature failed");
 
     // Encode the signature
@@ -295,7 +299,11 @@ bool ww::identity::identity::verify(const Message& msg, const Environment& env, 
     ASSERT_SUCCESS(rsp, context.is_extensible() || extended_path.size() == 0,
                    "invalid request, extensible paths not allowed");
 
-    ASSERT_SUCCESS(rsp, context.verify_signature(extended_path, message, signature),
+    // The context that will be used to sign the message is found context
+    // extended with the path from the message
+    context.set_context_path(extended_path);
+
+    ASSERT_SUCCESS(rsp, context.verify_signature(message, signature),
                    "unexpected error, signature failed");
 
     // ---------- RETURN ----------
@@ -339,8 +347,12 @@ bool ww::identity::identity::get_verifying_key(const Message& msg, const Environ
     ASSERT_SUCCESS(rsp, context.is_extensible() || extended_path.size() == 0,
                    "invalid request, extensible paths not allowed");
 
+    // The context that will be used to sign the message is found context
+    // extended with the path from the message
+    context.set_context_path(extended_path);
+
     std::string private_key, public_key;
-    ASSERT_SUCCESS(rsp, context.generate_keys(context_path, private_key, public_key),
+    ASSERT_SUCCESS(rsp, context.generate_keys(private_key, public_key),
                    "unexpected error, failed to generate public key");
 
     // ---------- RETURN ----------

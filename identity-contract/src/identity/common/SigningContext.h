@@ -81,10 +81,12 @@ namespace identity
         std::string description_;                      // human readable description
         std::vector<std::string> subcontexts_;         // registered subcontexts
 
-        bool generate_keys(
-            const std::vector<std::string>& context_path, // array of strings, path to the current key
+        static bool generate_keys(
+            const std::vector<std::string>& context_path,
+            const pdo_contracts::crypto::signing::PrivateKey& root_key,
+            const ww::types::ByteArray& root_chain_code,
             pdo_contracts::crypto::signing::PrivateKey& private_key,
-            ww::types::ByteArray& chain_code) const;
+            ww::types::ByteArray& chain_code);
 
     public:
 
@@ -92,19 +94,25 @@ namespace identity
 
         // Implementation of BaseSigningClass virtual methods
         bool verify_signature(
-            const std::vector<std::string>& context_path,
             const ww::types::ByteArray& message,
             const ww::types::ByteArray& signature) const override;
 
         bool sign_message(
-            const std::vector<std::string>& context_path,
             const ww::types::ByteArray& message,
             ww::types::ByteArray& signature) const override;
 
         bool generate_keys(
-            const std::vector<std::string>& context_path, // array of strings, path to the current key
+            pdo_contracts::crypto::signing::PrivateKey& private_key,
+            ww::types::ByteArray& chain_code) const;
+
+        bool generate_keys(
             std::string& private_key,
             std::string& public_key) const;
+
+        bool generate_keys(
+            const std::vector<std::string>& context_path,
+            pdo_contracts::crypto::signing::PrivateKey& private_key,
+            ww::types::ByteArray& chain_code) const;
 
         // Implementation of SerializeableObject virtual methods
         static bool verify_schema(const ww::value::Object& deserialized_object)
@@ -129,71 +137,6 @@ namespace identity
             : extensible_(extensible), description_(description)
             { subcontexts_.resize(0); };
     };
-
-#if 0
-    class SigningContext : public ww::exchange::SerializeableObject
-    {
-        friend class SigningContextManager;
-
-    protected:
-        bool contains(const std::string& name) const;
-
-        bool extensible_;                              // extensible implies no subcontexts
-        std::string description_;                      // human readable description
-        std::vector<std::string> subcontexts_;         // registered subcontexts
-
-    public:
-        static const std::string index_base;
-
-        static bool sign_message(
-            const ww::types::ByteArray& root_key,
-            const std::vector<std::string>& context_path,
-            const ww::types::ByteArray& message,
-            ww::types::ByteArray& signature);
-
-        static bool verify_signature(
-            const ww::types::ByteArray& root_key,
-            const std::vector<std::string>& context_path,
-            const ww::types::ByteArray& message,
-            const ww::types::ByteArray& signature);
-
-        static bool generate_keys(
-            const ww::types::ByteArray& root_key, // base64 encoded representation of 48 byte random array
-            const std::vector<std::string>& context_path,
-            std::string& private_key,     // PEM encoded ECDSA private key
-            std::string& public_key);     // PEM encoded ECDSA public key
-
-        static bool generate_keys(
-            const ww::types::ByteArray& root_key, // base64 encoded representation of 48 byte random array
-            const std::vector<std::string>& context_path,
-            pdo_contracts::crypto::signing::PrivateKey& private_key, // PEM encoded ECDSA private and public keys
-            ww::types::ByteArray& chain_code);
-
-        // SerializeableObject virtual methods
-        static bool verify_schema(const ww::value::Object& deserialized_object)
-        {
-            return ww::exchange::SerializeableObject::verify_schema_actual(
-                deserialized_object, SIGNING_CONTEXT_SCHEMA);
-        }
-
-        bool deserialize(const ww::value::Object& request);
-        bool serialize(ww::value::Value& serialized_request) const;
-
-        SigningContext(
-            const std::vector<std::string>& subcontexts,
-            const bool extensible,
-            const std::string& description)
-            : subcontexts_(subcontexts), extensible_(extensible), description_(description) { };
-
-        SigningContext(
-            const bool extensible,
-            const std::string& description)
-            : extensible_(extensible), description_(description)
-            { subcontexts_.resize(0); };
-
-        SigningContext(void) : SigningContext(false, "") { };
-    };
-#endif
 
 }; // identity
 }  // ww

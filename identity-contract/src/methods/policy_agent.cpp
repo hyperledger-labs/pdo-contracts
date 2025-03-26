@@ -123,13 +123,14 @@ bool ww::identity::policy_agent::register_trusted_issuer(const Message& msg, con
                    "invalid request, missing required parameters");
 
     const std::string issuer_identity(msg.get_string("issuer_identity"));
-    const std::string public_key(msg.get_string("public_key"));
-    const std::string chain_code(msg.get_string("chain_code"));
+    const std::string public_key_str(msg.get_string("public_key"));
+    const std::string chain_code_str(msg.get_string("chain_code"));
 
-    ww::identity::VerifyingContext vc(public_key, chain_code);
-    ASSERT_SUCCESS(rsp, vc.is_valid(),
-                   "invalid request, bad format key/chain code");
-    ASSERT_SUCCESS(rsp, save_trusted_issuer(issuer_identity, vc),
+    // ---------- create the verifying context ----------
+    ww::identity::VerifyingContext verifier;
+    ASSERT_SUCCESS(rsp, verifier.initialize(public_key_str, chain_code_str),
+                   "invalid request, invalid issuer public key/chain code");
+    ASSERT_SUCCESS(rsp, save_trusted_issuer(issuer_identity, verifier),
                    "unexpected error, failed to save issuer information");
 
     // ---------- RETURN ----------
@@ -165,23 +166,20 @@ bool ww::identity::policy_agent::issue_policy_credential(const Message& msg, con
 
     // The signature was computed over the base64 encoded credential so we
     // do not need to decode the credential before checking the signature
-    ww::types::ByteArray message(vc.serializedCredential_.begin(), vc.serializedCredential_.end());
+    const std::string serialized_credential(vc.get_serialized_credential());
+    ww::types::ByteArray message(serialized_credential.begin(), serialized_credential.end());
 
     ww::types::ByteArray signature;
-    if (! ww::crypto::b64_decode(vc.proof_.proofValue_, signature))
-        return false;
+    ASSERT_SUCCESS(rsp, ww::crypto::b64_decode(vc.proof_.proofValue_, signature),
+                   "invalid request, ill-formed signature");
 
     ww::identity::VerifyingContext verifier;
-    fetch_trusted_issuer(vc.proof_.verificationMethod_.id_, verifier);
+    ASSERT_SUCCESS(rsp, fetch_trusted_issuer(vc.proof_.verificationMethod_.id_, verifier),
+                         "invalid request, unknown issuer");
+    verifier.set_context_path(vc.proof_.verificationMethod_.context_path_);
 
-    vc.verify_signature(vc.proof_.verificationMethod_.context_path_, message, signature);
-
-    // Pull together the information needed to build the vc
-    // ww::types::ByteArray extended_key_seed;
-    // ASSERT_SUCCESS(rsp, ww::identity::identity::get_extended_key_seed(extended_key_seed),
-    //                "unexpected error, failed to retrieve extended key seed");
-
-    // bool verified = vc.check(extended_key_seed);
+    ASSERT_SUCCESS(rsp, verifier.verify_signature(message, signature),
+                         "invalid request, signature verification failed");
 
     // And build the veriable credential; just wanted to note that it would be
     // completely appropriate to make a constructor for VC's that took the

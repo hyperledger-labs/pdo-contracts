@@ -44,32 +44,30 @@ bool ww::identity::BaseVerifyingContext::get_chain_code(ww::types::ByteArray& ch
 
 bool ww::identity::BaseVerifyingContext::set_public_key(const pdo_contracts::crypto::signing::PublicKey& key)
 {
-    ERROR_IF_NOT(key.Serialize(public_key_), "Failed to serialize public key");
+    ERROR_IF_NOT(key.Serialize(public_key_), "failed to serialize public key");
 
     return true;
 }
 
 bool ww::identity::BaseVerifyingContext::get_public_key(pdo_contracts::crypto::signing::PublicKey& key) const
 {
-    ERROR_IF_NOT(key.Deserialize(public_key_), "Failed to deserialize public key");
+    ERROR_IF_NOT(key.Deserialize(public_key_), "failed to deserialize public key; %s", public_key_.c_str());
 
     return true;
 }
 
 bool ww::identity::BaseSigningContext::set_private_key(const pdo_contracts::crypto::signing::PrivateKey& key)
 {
-    ERROR_IF_NOT(key.Serialize(private_key_), "Failed to serialize private key");
+    ERROR_IF_NOT(key.Serialize(private_key_), "failed to serialize private key");
 
     pdo_contracts::crypto::signing::PublicKey public_key(key);
-    ERROR_IF_NOT(public_key.Serialize(public_key_), "Failed to serialize public key");
+    ERROR_IF_NOT(public_key.Serialize(public_key_), "failed to serialize public key");
 
     return true;
 }
 
 bool ww::identity::BaseSigningContext::get_private_key(pdo_contracts::crypto::signing::PrivateKey& key) const
 {
-    ERROR_IF_NOT(key.Deserialize(private_key_), "Failed to deserialize private key");
-    ERROR_IF_NOT(key.Deserialize(public_key_), "Failed to deserialize public key");
-
+    ERROR_IF_NOT(key.Deserialize(private_key_), "Failed to deserialize private key; %s", private_key_.c_str());
     return true;
 }

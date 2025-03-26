@@ -22,7 +22,7 @@
 #include "Value.h"
 
 #include "exchange/common/Common.h"
-#include "identity/common/SigningContextManager.h"
+#include "identity/common/Context.h"
 
 // All PDO contract identifiers are assumed to be of the form:
 //     PDO://<ledger_url>/<contract_identifier>
@@ -275,6 +275,11 @@ namespace identity
         ww::identity::Credential credential_;
         ww::identity::Proof proof_;
 
+        const std::string get_serialized_credential(void) const
+        {
+            return serializedCredential_;
+        }
+
         static bool verify_schema(const ww::value::Object& deserialized_object)
         {
             return ww::exchange::SerializeableObject::verify_schema_actual(
@@ -287,9 +292,9 @@ namespace identity
         bool build(
             const ww::value::Object& credential,
             const ww::identity::IdentityKey& identity,
-            const ww::identity::SigningContextManager& signing_context_manager);
+            const ww::identity::BaseSigningContext& signing_context);
 
-        bool check(const ww::identity::SigningContextManager& signing_context_manager) const;
+        bool check(const ww::identity::BaseVerifyingContext& verifying_context) const;
     };
 }
 }

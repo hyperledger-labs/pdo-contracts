@@ -439,7 +439,7 @@ bool ww::identity::VerifiableCredential::serialize(ww::value::Value& serialized_
 bool ww::identity::VerifiableCredential::build(
     const ww::value::Object& credential,
     const ww::identity::IdentityKey& identity,
-    const ww::identity::SigningContextManager& signing_context_manager)
+    const ww::identity::BaseSigningContext& signing_context)
 {
     // De-serializing the input will check for a schema match and
     // will unpack the expected fields
@@ -465,14 +465,7 @@ bool ww::identity::VerifiableCredential::build(
     ww::types::ByteArray signature_ba;
     ww::types::ByteArray message_ba(serializedCredential_.begin(), serializedCredential_.end());
 
-    ww::identity::SigningContext context;
-    std::vector<std::string> extended_path;
-    ERROR_IF_NOT(signing_context_manager.find_context(identity.context_path_, extended_path, context),
-                 "invalid request, unable to locate context");
-    ERROR_IF_NOT(context.is_extensible() || extended_path.size() == 0,
-                 "invalid request, extensible paths not allowed");
-
-    ERROR_IF_NOT(context.sign_message(extended_path, message_ba, signature_ba),
+    ERROR_IF_NOT(signing_context.sign_message(message_ba, signature_ba),
                  "invalid request, unable to sign message");
 
     // Convert the signature to base64
@@ -492,7 +485,7 @@ bool ww::identity::VerifiableCredential::build(
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
 bool ww::identity::VerifiableCredential::check(
-    const ww::identity::SigningContextManager& signing_context_manager) const
+    const ww::identity::BaseVerifyingContext& verifying_context) const
 {
     // The signature was computed over the base64 encoded credential so we
     // do not need to decode the credential before checking the signature
@@ -502,17 +495,7 @@ bool ww::identity::VerifiableCredential::check(
     if (! ww::crypto::b64_decode(proof_.proofValue_, signature))
         return false;
 
-    ww::identity::SigningContext context;
-    std::vector<std::string> extended_path;
-    ERROR_IF_NOT(signing_context_manager.find_context(proof_.verificationMethod_.context_path_, extended_path, context),
-                 "invalid request, unable to locate context");
-    ERROR_IF_NOT(context.is_extensible() || extended_path.size() == 0,
-                 "invalid request, extensible paths not allowed");
-
-    return context.verify_signature(extended_path, message, signature);
-
-//    return ww::identity::SigningContext::verify_signature(
-//        extended_key_seed, proof_.verificationMethod_.context_path_, message, signature);
+    return verifying_context.verify_signature(message, signature);
 }
 
 // -----------------------------------------------------------------
