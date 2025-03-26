@@ -31,20 +31,22 @@ namespace identity
     private:
         KeyValueStore store_;
 
-        static bool make_key(
+        static bool make_store_key(
             const std::vector<std::string>& context_path,
             std::string& key);
 
-        static const std::string root_key_;
-        static const std::string key_separator_;
+        static const std::string store_key_root_;
+        static const std::string store_key_separator_;
+        static const std::string extended_key_base_;
 
     public:
         bool add_context(
-            const std::vector<std::string>& context_path,
-            const ww::identity::SigningContext& new_context);
+            bool extensible,
+            const std::string& description,
+            const std::vector<std::string>& context_path) const;
 
         bool remove_context(
-            const std::vector<std::string>& context_path);
+            const std::vector<std::string>& context_path) const;
 
         bool find_context(
             const std::vector<std::string>& context_path,

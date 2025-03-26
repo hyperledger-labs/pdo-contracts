@@ -21,14 +21,17 @@
 #include "Value.h"
 
 #include "exchange/common/Common.h"
+#include "identity/common/Context.h"
 #include "identity/crypto/PrivateKey.h"
-
 
 #define SIGNING_CONTEXT_SCHEMA                  \
     "{"                                         \
         SCHEMA_KW(extensible, true) ","         \
         SCHEMA_KW(description, "") ","          \
-        SCHEMA_KW(subcontexts, [ "" ])          \
+        SCHEMA_KW(subcontexts, [ "" ]) ","      \
+        SCHEMA_KW(public_key, "") ","           \
+        SCHEMA_KW(private_key, "") ","          \
+        SCHEMA_KW(chain_code, "")               \
     "}"
 
 // when the extensible flag is true:
@@ -62,23 +65,72 @@
 // * store the full context path here and reconstruct the key from this context
 // *
 
-#define USE_SECP384R1
-
-// https://en.wikipedia.org/wiki/P-384
-#ifdef USE_SECP384R1
-#define EXTENDED_KEY_SIZE	48
-#define HASH_FUNCTION		pdo_contracts::crypto::SHA384Hash
-#define CURVE_NID               NID_secp384r1
-#define CURVE_ORDER		"//////////////////////////////////////////7/////AAAAAAAAAAD/////"
-
-// #define HASH_FUNCTION		ww::crypto::hash::sha384_hash
-
-#endif
-
 namespace ww
 {
 namespace identity
 {
+    // -----------------------------------------------------------------
+    class SigningContext : public ww::identity::BaseSigningContext
+    {
+        friend class SigningContextManager;
+
+    protected:
+        bool contains(const std::string& name) const;
+
+        bool extensible_;                              // extensible implies no subcontexts
+        std::string description_;                      // human readable description
+        std::vector<std::string> subcontexts_;         // registered subcontexts
+
+        bool generate_keys(
+            const std::vector<std::string>& context_path, // array of strings, path to the current key
+            pdo_contracts::crypto::signing::PrivateKey& private_key,
+            ww::types::ByteArray& chain_code) const;
+
+    public:
+
+        bool is_extensible(void) const { return extensible_; };
+
+        // Implementation of BaseSigningClass virtual methods
+        bool verify_signature(
+            const std::vector<std::string>& context_path,
+            const ww::types::ByteArray& message,
+            const ww::types::ByteArray& signature) const override;
+
+        bool sign_message(
+            const std::vector<std::string>& context_path,
+            const ww::types::ByteArray& message,
+            ww::types::ByteArray& signature) const override;
+
+        bool generate_keys(
+            const std::vector<std::string>& context_path, // array of strings, path to the current key
+            std::string& private_key,
+            std::string& public_key) const;
+
+        // Implementation of SerializeableObject virtual methods
+        static bool verify_schema(const ww::value::Object& deserialized_object)
+        {
+            return ww::exchange::SerializeableObject::verify_schema_actual(
+                deserialized_object, SIGNING_CONTEXT_SCHEMA);
+        }
+
+        bool deserialize(const ww::value::Object& serialized_context) override;
+        bool serialize(ww::value::Value& serialized_context) const override;
+
+        // Constructors
+        SigningContext(void) { };
+
+        SigningContext(const ww::value::Object& serialized_context) {
+            deserialize(serialized_context);
+        };
+
+        SigningContext(
+            const bool extensible,
+            const std::string& description)
+            : extensible_(extensible), description_(description)
+            { subcontexts_.resize(0); };
+    };
+
+#if 0
     class SigningContext : public ww::exchange::SerializeableObject
     {
         friend class SigningContextManager;
@@ -141,6 +193,7 @@ namespace identity
 
         SigningContext(void) : SigningContext(false, "") { };
     };
+#endif
 
 }; // identity
 }  // ww
