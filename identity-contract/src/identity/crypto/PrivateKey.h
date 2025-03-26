@@ -47,7 +47,7 @@ namespace crypto
                 ww::types::ByteArray& extended_chain_code) const;
 
         public:
-            PrivateKey(const int curve = NID_undef) : Key(curve) {};
+            PrivateKey(const int curve = DEFAULT_CURVE_NID) : Key(curve) {};
             PrivateKey(const int curve, const ww::types::ByteArray& numeric_key);
             PrivateKey(const PrivateKey& privateKey);
             PrivateKey(PrivateKey&& privateKey);

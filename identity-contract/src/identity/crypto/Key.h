@@ -21,9 +21,9 @@
 #include "Cryptography.h"
 #include "Types.h"
 
-#define CHUNK_HMAC_FUNCTION pdo_contracts::crypto::SHA256HMAC
-// #define CHUNK_HMAC_FUNCTION ww::crypto::hash::sha256_hmac
-#define EXTENDED_CHUNK_SIZE 16
+#define CHUNK_HMAC_FUNCTION pdo_contracts::crypto::SHA384HMAC
+#define EXTENDED_CHUNK_SIZE 24
+#define DEFAULT_CURVE_NID NID_secp384r1
 
 namespace pdo_contracts
 {
@@ -37,7 +37,6 @@ namespace crypto
             EC_KEY* key_;
             int curve_;
 
-
             static bool DeriveChildKey(
                 const ww::types::ByteArray& extended_chain_code, // array of random bytes, EXTENDED_KEY_SIZE
                 const ww::types::ByteArray& data,                // data to be hashed with HMAC
@@ -45,7 +44,7 @@ namespace crypto
                 ww::types::ByteArray& child_chain_code);
 
         public:
-            Key(int curve = NID_undef) {
+            Key(int curve = DEFAULT_CURVE_NID) {
                 key_ = nullptr;
                 curve_ = curve;
             };

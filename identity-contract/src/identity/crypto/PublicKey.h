@@ -54,7 +54,7 @@ namespace crypto
             bool Deserialize(const std::string& encoded);
             bool Serialize(std::string& encoded) const;
 
-            int VerifySignature(
+            bool VerifySignature(
                 const ww::types::ByteArray& message,
                 const ww::types::ByteArray& signature,
                 HashFunctionType hash_function) const;

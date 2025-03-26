@@ -44,6 +44,7 @@ namespace crypto
     typedef std::unique_ptr<EC_POINT, void (*)(EC_POINT*)> EC_POINT_ptr;
     typedef std::unique_ptr<EVP_CIPHER_CTX, void (*)(EVP_CIPHER_CTX*)> CTX_ptr;
     typedef std::unique_ptr<EVP_MD_CTX, void (*)(EVP_MD_CTX*)> EVP_MD_CTX_ptr;
+    typedef std::unique_ptr<EVP_PKEY_CTX, void (*)(EVP_PKEY_CTX*)> EVP_PKEY_CTX_ptr;
     typedef std::unique_ptr<HMAC_CTX, void (*)(HMAC_CTX*)> HMAC_CTX_ptr;
 
     typedef std::unique_ptr<EVP_MAC_CTX, void (*)(EVP_MAC_CTX*)> EVP_MAC_CTX_ptr;

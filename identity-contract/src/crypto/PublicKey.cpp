@@ -93,7 +93,6 @@ void signing::PublicKey::ResetKey(void)
         EC_KEY_free(key_);
 
     key_ = nullptr;
-    curve_ = NID_undef;
 }
 
 // -----------------------------------------------------------------
@@ -291,7 +290,7 @@ bool signing::PublicKey::Serialize(std::string& encoded) const
 // an internal error
 // ***** FIX HASH *****
 // -----------------------------------------------------------------
-int signing::PublicKey::VerifySignature(
+bool signing::PublicKey::VerifySignature(
     const ww::types::ByteArray& message,
     const ww::types::ByteArray& signature,
     HashFunctionType hash_function) const
@@ -299,21 +298,25 @@ int signing::PublicKey::VerifySignature(
     ERROR_IF_NULL(key_, "Crypto Error (PublicKey::VerifySignature): public key not initialized");
 
     ww::types::ByteArray hash;
-    ERROR_IF(! hash_function(message, hash), "Crypto Error (PublicKey::VerifySignature): Could not hash message");
+    ERROR_IF_NOT(hash_function(message, hash), "Crypto Error (PublicKey::VerifySignature): Could not hash message");
 
-    // Decode signature B64 -> DER -> ECDSA_SIG, must be null terminated
-    ERROR_IF(signature.back() != 0, "Crypto Error (PublicKey::VerifySignature): Invalid signature format");
+    // Padding signature with a null byte; this is necessary for the DER decoding
+    ww::types::ByteArray padded_signature(signature);
+    if (padded_signature.back() != 0)
+        padded_signature.push_back(0);
 
-   const unsigned char* der_SIG = (const unsigned char*)signature.data();
+    const unsigned char* der_SIG = (const unsigned char*)padded_signature.data();
     crypto::ECDSA_SIG_ptr sig(
-        d2i_ECDSA_SIG(NULL, (const unsigned char**)(&der_SIG), signature.size()), ECDSA_SIG_free);
-    if (sig == nullptr)
-        return -1;
+        d2i_ECDSA_SIG(NULL, (const unsigned char**)(&der_SIG), padded_signature.size()), ECDSA_SIG_free);
+    ERROR_IF_NULL(sig, "Crypto Error (PublicKey::VerifySignature): Could not decode signature");
 
-    // Verify
     // ECDSA_do_verify() returns 1 for a valid sig, 0 for an invalid sig and -1 on error
-    return ECDSA_do_verify(hash.data(), hash.size(), sig.get(), key_);
-}  // signing::PublicKey::VerifySignature
+    int res = ECDSA_do_verify(hash.data(), hash.size(), sig.get(), key_);
+    ERROR_IF(res < 0,"Crypto Error (PublicKey::VerifySignature): error while verifying signature");
+    ERROR_IF(res == 0, "Crypto Error (PublicKey::VerifySignature): invalid signature");
+
+    return true;
+}
 
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------

@@ -24,6 +24,8 @@
 
 namespace pcrypto = pdo_contracts::crypto;
 
+#define USE_EVP_HASH_FUNCTIONS 1
+
 // -----------------------------------------------------------------
 // Hash Functions
 // -----------------------------------------------------------------

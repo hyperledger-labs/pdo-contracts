@@ -86,7 +86,6 @@ void signing::PrivateKey::ResetKey(void)
         EC_KEY_free(key_);
 
     key_ = nullptr;
-    curve_ = NID_undef;
 }
 
 // -----------------------------------------------------------------
