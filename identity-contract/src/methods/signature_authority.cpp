@@ -47,6 +47,7 @@
 // -----------------------------------------------------------------
 bool ww::identity::signature_authority::sign_credential(const Message& msg, const Environment& env, Response& rsp)
 {
+    ASSERT_SENDER_IS_OWNER(env, rsp);
     ASSERT_INITIALIZED(rsp);
 
     ASSERT_SUCCESS(rsp, msg.validate_schema(SIGNATURE_AUTHORITY_SIGN_CREDENTIAL_PARAM_SCHEMA),
