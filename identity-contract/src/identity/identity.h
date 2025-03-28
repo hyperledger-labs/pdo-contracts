@@ -82,6 +82,12 @@
         SCHEMA_KW(context_path, [ "" ])         \
     "}"
 
+#define IDENTITY_GET_EXTENDED_VERIFYING_KEY_RESULT_SCHEMA       \
+    "{"                                                         \
+        SCHEMA_KW(public_key, "") ","                           \
+        SCHEMA_KW(chain_code, "")                               \
+    "}"
+
 namespace ww
 {
 namespace identity
@@ -95,6 +101,7 @@ namespace identity
     bool sign(const Message& msg, const Environment& env, Response& rsp);
     bool verify(const Message& msg, const Environment& env, Response& rsp);
     bool get_verifying_key(const Message& msg, const Environment& env, Response& rsp);
+    bool get_extended_verifying_key(const Message& msg, const Environment& env, Response& rsp);
 
     bool get_context_path(const Message& msg, std::vector<std::string>& context_path);
     ww::identity::SigningContextManager get_context_manager(void);

@@ -107,7 +107,8 @@ namespace identity
 
         bool generate_keys(
             std::string& private_key,
-            std::string& public_key) const;
+            std::string& public_key,
+            std::string& chain_code) const;
 
         bool generate_keys(
             const std::vector<std::string>& context_path,

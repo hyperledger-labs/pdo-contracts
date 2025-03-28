@@ -96,6 +96,13 @@ if -o ${_error_code_} 0
 fi
 echo TEST1 TEST1.1 KEY : ${_key_}
 
+identity_wallet_contract get_extended_verifying_key -f ${_contract_} -s _extended_key_ -p "test1" "test1.1"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch extended verifying key test1 test1.1 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST1 TEST1.1 KEY : ${_extended_key_}
+
 identity_wallet_contract describe_signing_context -f ${_contract_} -s _description_ -p "test3"
 if -o ${_error_code_} 0
    echo ${ERROR} [Error ${_error_code_}] failed to fetch extensible signing context test3 ${ENDC}
@@ -109,6 +116,27 @@ if -o ${_error_code_} 0
    exit -v ${_error_code_}
 fi
 echo TEST3 KEY : ${_key_}
+
+identity_wallet_contract get_extended_verifying_key -f ${_contract_} -s _extended_key_ -p "test3"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch extended verifying key test3 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST3 KEY : ${_extended_key_}
+
+identity_wallet_contract get_verifying_key -f ${_contract_} -s _key_ -p "test3" "extend1" "extend2"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch verifying key test3 extend1 extend2 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST3 KEY : ${_key_}
+
+identity_wallet_contract get_extended_verifying_key -f ${_contract_} -s _extended_key_ -p "test3" "extend1" "extend2"
+if -o ${_error_code_} 0
+   echo ${ERROR} [Error ${_error_code_}] failed to fetch extended verifying key test3 extend1 extende2 ${ENDC}
+   exit -v ${_error_code_}
+fi
+echo TEST3 KEY : ${_extended_key_}
 
 ## =================================================================
 echo ${HEADER} test key signing/verification, normal keys, these should succeed ${ENDC}

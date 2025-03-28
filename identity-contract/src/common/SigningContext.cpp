@@ -135,7 +135,8 @@ bool ww::identity::SigningContext::verify_signature(
 // -----------------------------------------------------------------
 bool ww::identity::SigningContext::generate_keys(
     std::string& private_key_str,     // PEM encoded ECDSA private and public keys
-    std::string& public_key_str) const
+    std::string& public_key_str,
+    std::string& chain_code_str) const
 {
     pdo_contracts::crypto::signing::PrivateKey private_key;
     ww::types::ByteArray chain_code;
@@ -147,6 +148,8 @@ bool ww::identity::SigningContext::generate_keys(
 
     ERROR_IF_NOT(private_key.Serialize(private_key_str), "Failed to serialize private key");
     ERROR_IF_NOT(public_key.Serialize(public_key_str), "Failed to serialize public key");
+
+    ERROR_IF_NOT(ww::crypto::b64_encode(chain_code, chain_code_str), "Failed to encode chain code");
 
     return true;
 }

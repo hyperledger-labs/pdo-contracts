@@ -351,11 +351,65 @@ bool ww::identity::identity::get_verifying_key(const Message& msg, const Environ
     // extended with the path from the message
     context.set_context_path(extended_path);
 
-    std::string private_key, public_key;
-    ASSERT_SUCCESS(rsp, context.generate_keys(private_key, public_key),
+    std::string private_key, public_key, chain_code;
+    ASSERT_SUCCESS(rsp, context.generate_keys(private_key, public_key, chain_code),
                    "unexpected error, failed to generate public key");
 
     // ---------- RETURN ----------
     ww::value::String result(public_key.c_str());
+    return rsp.value(result, false);
+}
+
+// -----------------------------------------------------------------
+// METHOD:
+//   get_extended_verifying_key
+//
+//   This method is similar to get_verifying_key, but it returns the
+//   chain code associated with the verifying key. This is a separate
+//   method in order to allow for different policies on who may invoke
+//   the method.
+//
+// JSON PARAMETERS:
+//   IDENTITY_GET_VERIFYING_KEY_PARAM_SCHEMA
+// RETURNS:
+//   PEM encoded public key
+// -----------------------------------------------------------------
+bool ww::identity::identity::get_extended_verifying_key(const Message& msg, const Environment& env, Response& rsp)
+{
+    ASSERT_INITIALIZED(rsp);
+
+    ASSERT_SUCCESS(rsp, msg.validate_schema(IDENTITY_GET_VERIFYING_KEY_PARAM_SCHEMA),
+                   "invalid request, missing required parameters");
+
+    // Get the context path parameter
+    std::vector<std::string> context_path;
+    ASSERT_SUCCESS(rsp, get_context_path(msg, context_path),
+                   "invalid request, ill-formed context path");
+
+    // Find the signing context referenced by the context path
+    ww::identity::SigningContextManager manager(signing_context_store);
+    ww::identity::SigningContext context;
+    std::vector<std::string> extended_path;
+
+    ASSERT_SUCCESS(rsp, manager.find_context(context_path, extended_path, context),
+                   "invalid request, unable to locate context");
+    ASSERT_SUCCESS(rsp, context.is_extensible() || extended_path.size() == 0,
+                   "invalid request, extensible paths not allowed");
+
+    // The context that will be used to sign the message is found context
+    // extended with the path from the message
+    context.set_context_path(extended_path);
+
+    std::string private_key, public_key, chain_code;
+    ASSERT_SUCCESS(rsp, context.generate_keys(private_key, public_key, chain_code),
+                   "unexpected error, failed to generate public key");
+
+    // ---------- RETURN ----------
+    ww::value::Structure result(IDENTITY_GET_EXTENDED_VERIFYING_KEY_RESULT_SCHEMA);
+    ASSERT_SUCCESS(rsp, result.set_string("public_key", public_key.c_str()),
+                   "unexpected error, failed to set public key");
+    ASSERT_SUCCESS(rsp, result.set_string("chain_code", chain_code.c_str()),
+                   "unexpected error, failed to set chain code");
+
     return rsp.value(result, false);
 }

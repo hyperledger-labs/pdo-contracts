@@ -95,6 +95,35 @@ class op_get_verifying_key(pcontract.contract_op_base) :
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
+class op_get_extended_verifying_key(pcontract.contract_op_base) :
+
+    name = "get_extended_verifying_key"
+    help = "Get the verifying key and chain code for a context"
+
+    @classmethod
+    def add_arguments(cls, subparser) :
+        subparser.add_argument(
+            '-p', '--path',
+            help='Path to the signing context',
+            type=str,
+            nargs='+',
+            required=True)
+
+    @classmethod
+    def invoke(cls, state, session_params, path, **kwargs) :
+        session_params['commit'] = True
+
+        params = {
+            'context_path' : path,
+        }
+        message = invocation_request('get_extended_verifying_key', **params)
+        result = pcontract_cmd.send_to_contract(state, message, **session_params)
+        cls.log_invocation(message, result)
+
+        return result
+
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
 class op_register_signing_context(pcontract.contract_op_base) :
 
     name = "register_signing_context"
@@ -290,6 +319,7 @@ class cmd_create_identity(pcommand.contract_command_base) :
 __operations__ = [
     op_initialize,
     op_get_verifying_key,
+    op_get_extended_verifying_key,
     op_register_signing_context,
     op_describe_signing_context,
     op_sign,
