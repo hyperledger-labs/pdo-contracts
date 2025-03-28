@@ -24,6 +24,7 @@
 #define POLICY_AGENT_REGISTER_ISSUER_PARAM_SCHEMA       \
     "{"                                                 \
         SCHEMA_KW(issuer_identity, "") ","              \
+        SCHEMA_KW(context_path, [ "" ]) ","             \
         SCHEMA_KW(public_key, "") ","                   \
         SCHEMA_KW(chain_code, "")                       \
     "}"

@@ -126,9 +126,18 @@ bool ww::identity::policy_agent::register_trusted_issuer(const Message& msg, con
     const std::string public_key_str(msg.get_string("public_key"));
     const std::string chain_code_str(msg.get_string("chain_code"));
 
+    // Get and validate the path parameter. This is the path TO the
+    // key relative to the contract object, any verification key from
+    // this issuer must be prefixed by this key path; note that this
+    // is not the same as the context_path field in Context objects
+    // which describes the path to the key FROM the context.
+    std::vector<std::string> prefix_path;
+    ASSERT_SUCCESS(rsp, ww::identity::identity::get_context_path(msg, prefix_path),
+                   "invalid request, ill-formed context path");
+
     // ---------- create the verifying context ----------
     ww::identity::VerifyingContext verifier;
-    ASSERT_SUCCESS(rsp, verifier.initialize(public_key_str, chain_code_str),
+    ASSERT_SUCCESS(rsp, verifier.initialize(prefix_path, public_key_str, chain_code_str),
                    "invalid request, invalid issuer public key/chain code");
     ASSERT_SUCCESS(rsp, save_trusted_issuer(issuer_identity, verifier),
                    "unexpected error, failed to save issuer information");
@@ -176,7 +185,8 @@ bool ww::identity::policy_agent::issue_policy_credential(const Message& msg, con
     ww::identity::VerifyingContext verifier;
     ASSERT_SUCCESS(rsp, fetch_trusted_issuer(vc.proof_.verificationMethod_.id_, verifier),
                          "invalid request, unknown issuer");
-    verifier.set_context_path(vc.proof_.verificationMethod_.context_path_);
+    ASSERT_SUCCESS(rsp, verifier.extend_context_path(vc.proof_.verificationMethod_.context_path_),
+                                "invalid request, ill-formed context path");
 
     ASSERT_SUCCESS(rsp, verifier.verify_signature(message, signature),
                          "invalid request, signature verification failed");

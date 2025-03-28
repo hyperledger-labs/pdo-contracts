@@ -26,6 +26,7 @@
 
 #define VERIFYING_CONTEXT_SCHEMA                \
     "{"                                         \
+        SCHEMA_KW(prefix_path, [ "" ]) ","     \
         SCHEMA_KW(public_key, "") ","           \
         SCHEMA_KW(chain_code, "" )              \
     "}"
@@ -42,8 +43,15 @@ namespace identity
             pdo_contracts::crypto::signing::PublicKey& public_key,
             ww::types::ByteArray& chain_code) const;
 
+        std::vector<std::string> prefix_path_; // path to the key relative to the root
+
     public:
-        bool initialize(const std::string& public_key, const std::string& chain_code);
+        bool initialize(
+            const std::vector<std::string>& prefix_path,
+            const std::string& public_key,
+            const std::string& chain_code);
+
+        bool extend_context_path(const std::vector<std::string>& context_path);
 
         bool verify_signature(
             const ww::types::ByteArray& message,

@@ -38,6 +38,17 @@ bool ww::identity::VerifyingContext::deserialize(const ww::value::Object& contex
     if (! ww::identity::VerifyingContext::verify_schema(context))
         return false;
 
+    ww::value::Array prefix_path;
+    if (! context.get_value("prefix_path", prefix_path))
+        return false;
+
+    size_t count = prefix_path.get_count();
+    for (size_t index = 0; index < count; index++)
+    {
+        const std::string context_name(prefix_path.get_string(index));
+        prefix_path_.push_back(context_name);
+    }
+
     public_key_ = context.get_string("public_key");
     chain_code_ = context.get_string("chain_code");
 
@@ -48,6 +59,15 @@ bool ww::identity::VerifyingContext::deserialize(const ww::value::Object& contex
 bool ww::identity::VerifyingContext::serialize(ww::value::Value& serialized_context) const
 {
     ww::value::Structure context(VERIFYING_CONTEXT_SCHEMA);
+
+    ww::value::Array prefix_path;
+    for (auto c = prefix_path_.begin(); c < prefix_path_.end(); c++)
+    {
+        ww::value::String s(c->c_str());
+        if (! prefix_path.append_value(s))
+            return false;
+    }
+    context.set_value("prefix_path", prefix_path);
 
     if (! context.set_string("public_key", public_key_.c_str()))
         return false;
@@ -65,6 +85,7 @@ bool ww::identity::VerifyingContext::serialize(ww::value::Value& serialized_cont
 // intended to provide a means of checking input from the user.
 // -----------------------------------------------------------------
 bool ww::identity::VerifyingContext::initialize(
+    const std::vector<std::string>& prefix_path,
     const std::string& encoded_public_key, // PEM encoded public key
     const std::string& encoded_chain_code) // base64 encoded chaincode
 {
@@ -77,9 +98,38 @@ bool ww::identity::VerifyingContext::initialize(
 
     public_key_ = encoded_public_key;
     chain_code_ = encoded_chain_code;
+    prefix_path_ = prefix_path;
 
     return true;
 }
+
+// -----------------------------------------------------------------
+// extend_context_path
+//
+// Verify that the context path starts with the prefix path. If it
+// does, then extend the context path with the remaining elements.
+// -----------------------------------------------------------------
+bool ww::identity::VerifyingContext::extend_context_path(const std::vector<std::string>& context_path)
+{
+    if (context_path.size() < prefix_path_.size())
+        return false;
+
+    std::vector<std::string>::const_iterator prefix_element = prefix_path_.begin();
+    std::vector<std::string>::const_iterator context_element = context_path.begin();
+
+    // Verify that the context path starts with the prefix path
+    for ( ; prefix_element < prefix_path_.end(); prefix_element++, context_element++)
+    {
+        ERROR_IF(*prefix_element != *context_element, "Context path does not match prefix path");
+    }
+
+    // Extend the context path with the remaining elements
+    for ( ; context_element < context_path.end(); context_element++)
+        context_path_.push_back(*context_element);
+
+    return true;
+}
+
 
 // -----------------------------------------------------------------
 // verify
