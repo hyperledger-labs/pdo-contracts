@@ -61,7 +61,7 @@ namespace identity
         static bool verify_schema(const ww::value::Object& deserialized_object)
         {
             return ww::exchange::SerializeableObject::verify_schema_actual(
-                deserialized_object, SIGNING_CONTEXT_SCHEMA);
+                deserialized_object, VERIFYING_CONTEXT_SCHEMA);
         }
 
         bool deserialize(const ww::value::Object& serialized_context) override;

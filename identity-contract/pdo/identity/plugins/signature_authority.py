@@ -29,6 +29,7 @@ import pdo.identity.plugins.identity as identity
 __all__ = [
     'op_initialize',
     'op_get_verifying_key',
+    'op_get_extended_verifying_key',
     'op_register_signing_context',
     'op_describe_signing_context',
     'op_sign',
@@ -42,6 +43,7 @@ __all__ = [
 
 op_initialize = identity.op_initialize
 op_get_verifying_key = identity.op_get_verifying_key
+op_get_extended_verifying_key = identity.op_get_extended_verifying_key
 op_register_signing_context = identity.op_register_signing_context
 op_describe_signing_context = identity.op_describe_signing_context
 op_sign = identity.op_sign
@@ -168,6 +170,7 @@ class cmd_sign_credential(pcommand.contract_command_base) :
 __operations__ = [
     op_initialize,
     op_get_verifying_key,
+    op_get_extended_verifying_key,
     op_register_signing_context,
     op_describe_signing_context,
     op_sign,

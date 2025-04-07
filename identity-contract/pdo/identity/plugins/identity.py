@@ -27,6 +27,7 @@ import pdo.common.crypto as pcrypto
 __all__ = [
     'op_initialize',
     'op_get_verifying_key',
+    'op_get_extended_verifying_key',
     'op_register_signing_context',
     'op_describe_signing_context',
     'op_sign',

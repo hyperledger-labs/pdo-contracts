@@ -54,17 +54,21 @@ ww::identity::SigningContextManager ww::identity::identity::get_context_manager(
 // RETURNS:
 //   true if path successfully created
 // -----------------------------------------------------------------
-bool ww::identity::identity::get_context_path(const Message& msg, std::vector<std::string>& context_path)
+bool ww::identity::identity::get_context_path(
+    const Message& msg,
+    std::vector<std::string>& context_path,
+    size_t minimum_size)
 {
     ww::value::Array context_path_array;
     if (! msg.get_value("context_path", context_path_array))
         return false;
 
-    // context path must have at least one element
-    if (context_path_array.get_count() < 1)
+    // note that minimum size defaults to 1
+    if (context_path_array.get_count() < minimum_size)
         return false;
 
     context_path.resize(0);
+
     for (size_t i = 0; i < context_path_array.get_count(); i++)
     {
         const std::string s(context_path_array.get_string(i));

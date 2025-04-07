@@ -443,14 +443,14 @@ bool ww::identity::VerifiableCredential::build(
 {
     // De-serializing the input will check for a schema match and
     // will unpack the expected fields
-    if (! credential_.deserialize(credential))
-        return false;
+    ERROR_IF_NOT(credential_.deserialize(credential),
+                 "unable to deserialize credential for signing");
 
     // Re-serializing the credential will ensure that the format contains
     // no additional information beyond the credential fields
     std::string serialized_credential;
-    if (! credential_.serialize_string(serialized_credential))
-        return false;
+    ERROR_IF_NOT(credential_.serialize_string(serialized_credential),
+                 "unable to serialize credential for signing");
 
     // Base64 encode the serialized credential and save it in the
     // serializedCredential_ field

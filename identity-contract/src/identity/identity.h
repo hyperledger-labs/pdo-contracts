@@ -103,7 +103,7 @@ namespace identity
     bool get_verifying_key(const Message& msg, const Environment& env, Response& rsp);
     bool get_extended_verifying_key(const Message& msg, const Environment& env, Response& rsp);
 
-    bool get_context_path(const Message& msg, std::vector<std::string>& context_path);
+    bool get_context_path(const Message& msg, std::vector<std::string>& context_path, size_t minimum_size = 1);
     ww::identity::SigningContextManager get_context_manager(void);
 
 }; // identity

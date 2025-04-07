@@ -119,9 +119,7 @@ bool ww::identity::VerifyingContext::extend_context_path(const std::vector<std::
 
     // Verify that the context path starts with the prefix path
     for ( ; prefix_element < prefix_path_.end(); prefix_element++, context_element++)
-    {
-        ERROR_IF(*prefix_element != *context_element, "Context path does not match prefix path");
-    }
+        ERROR_IF((*prefix_element) != (*context_element), "Context path does not match prefix path");
 
     // Extend the context path with the remaining elements
     for ( ; context_element < context_path.end(); context_element++)

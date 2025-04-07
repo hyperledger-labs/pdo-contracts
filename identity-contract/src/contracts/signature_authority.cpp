@@ -57,6 +57,7 @@ contract_method_reference_t contract_method_dispatch_table[] = {
     CONTRACT_METHOD2(initialize, ww::identity::identity::initialize),
 
     CONTRACT_METHOD2(get_verifying_key, ww::identity::identity::get_verifying_key),
+    CONTRACT_METHOD2(get_extended_verifying_key, ww::identity::identity::get_extended_verifying_key),
     CONTRACT_METHOD2(register_signing_context, ww::identity::identity::register_signing_context),
     CONTRACT_METHOD2(describe_signing_context, ww::identity::identity::describe_signing_context),
     CONTRACT_METHOD2(sign, ww::identity::identity::sign),
