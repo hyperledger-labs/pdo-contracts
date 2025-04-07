@@ -106,14 +106,19 @@ bool signing::PublicKey::InitializeFromNumericKey(const ww::types::ByteArray& nu
 {
     int res;
 
+    // --------------- Setup the big number context  ---------------
+
     crypto::BN_CTX_ptr b_ctx(BN_CTX_new(), BN_CTX_free);
     ERROR_IF_NULL(b_ctx, "Crypto Error (PublicKey::InitializeFromNumericKey): Cound not create BN context");
+
+    // --------------- Get curve information ---------------
 
     EC_GROUP_ptr group(EC_GROUP_new_by_curve_name(curve_), EC_GROUP_clear_free);
     ERROR_IF_NULL(group, "Crypto Error (PublicKey::InitializeFromNumericKey): Cound not create group");
 
     EC_GROUP_set_point_conversion_form(group.get(), POINT_CONVERSION_COMPRESSED);
 
+    // --------------- Create the public key ---------------
     EC_KEY_ptr public_key(EC_KEY_new(), EC_KEY_free);
     ERROR_IF_NULL(public_key, "Crypto Error (PublicKey::InitializeFromNumericKey): Cound not create public_key");
 
@@ -364,12 +369,15 @@ bool signing::PublicKey::DerivePublicKey(
 
     // --------------- Get curve information ---------------
 
-    const EC_GROUP *ec_group = EC_KEY_get0_group(key_);
+    crypto::EC_GROUP_ptr ec_group(EC_GROUP_new_by_curve_name(curve_), EC_GROUP_clear_free);
+    ERROR_IF_NULL(ec_group, "Crypto Error (PublicKey::InitializeFromPrivateKey): Could not create EC_GROUP");
+
+    EC_GROUP_set_point_conversion_form(ec_group.get(), POINT_CONVERSION_COMPRESSED);
 
     BIGNUM_ptr curve_order_ptr(BN_new(), BN_free);
     ERROR_IF_NULL(curve_order_ptr, "Crypto Error (PublicKey::DerivePublicKey): Failed to create curve order bignum");
 
-    res = EC_GROUP_get_order(ec_group, curve_order_ptr.get(), ctx.get());
+    res = EC_GROUP_get_order(ec_group.get(), curve_order_ptr.get(), ctx.get());
     ERROR_IF(res <= 0, "Crypto Error (PublicKey::DerivePublicKey): Failed to get curve order");
 
     // make sure the chain code is the correct size
@@ -401,24 +409,40 @@ bool signing::PublicKey::DerivePublicKey(
     // The final step is to add the child key to the parent key to get the next extended key
     // BIP:  Ki is point(parse256(IL)) + Kpar
 
-    const EC_POINT *ec_point = EC_KEY_get0_public_key(key_);
+    // setup the public key
+    crypto::EC_POINT_ptr child_key_point(EC_POINT_new(ec_group.get()), EC_POINT_free);
+    ERROR_IF_NULL(child_key_point, "Crypto Error (PrivateKey::InitializeFromNumericKey): Could not allocate point");
 
-    // convert child_key bytearray to a point
-    crypto::EC_POINT_ptr child_key_point_ptr(EC_POINT_new(ec_group), EC_POINT_free);
-    ERROR_IF_NULL(child_key_point_ptr, "Crypto Error (PublicKey::DerivePublicKey): Failed to create child key point");
+    crypto::BIGNUM_ptr child_key_bn(BN_bin2bn((const unsigned char*)child_key.data(), child_key.size(), NULL), BN_free);
+    ERROR_IF_NULL(child_key_bn, "Crypto Error (PrivateKey::InitializeFromNumericKey): Could not create bignum");
 
-    res = EC_POINT_oct2point(ec_group, child_key_point_ptr.get(), child_key.data(), child_key.size(), ctx.get());
-    ERROR_IF(res <= 0, "Crypto Error (PublicKey::DerivePublicKey): Failed to convert child key to point");
+    // do we need to do modulus on the child key?
+
+    res = EC_POINT_mul(ec_group.get(), child_key_point.get(), child_key_bn.get(), NULL, NULL, ctx.get());
+    ERROR_IF(res <= 0, "Crypto Error (PrivateKey::InitializeFromNumericKey): point multiplication failed");
 
     // add the child key point to the parent key point
-    res = EC_POINT_add(ec_group, child_key_point_ptr.get(), ec_point, child_key_point_ptr.get(), ctx.get());
+    const EC_POINT *ec_point = EC_KEY_get0_public_key(key_);
+    res = EC_POINT_add(ec_group.get(), child_key_point.get(), ec_point, child_key_point.get(), ctx.get());
+
+    EC_KEY_ptr public_key(EC_KEY_new(), EC_KEY_free);
+    ERROR_IF_NULL(public_key, "Crypto Error (PublicKey::InitializeFromNumericKey): Cound not create public_key");
+
+    res = EC_KEY_set_group(public_key.get(), ec_group.get());
+    ERROR_IF(res <= 0, "Crypto Error (PublicKey::InitializeFromNumericKey): Could not set EC_GROUP");
+
+    res = EC_KEY_set_public_key(public_key.get(), child_key_point.get());
+    ERROR_IF(res <= 0, "Crypto Error (PublicKey::InitializeFromNumericKey): Cound not set public key");
 
     // --------------- Create the return values ----------------
-    extended_key.curve_ = curve_;
-    res = EC_KEY_set_public_key(extended_key.key_, child_key_point_ptr.get());
-    ERROR_IF(res <= 0, "Crypto Error (PublicKey::DerivePublicKey): Failed to set public key");
-
     extended_chain_code = child_chain_code;
+
+    extended_key.curve_ = curve_;
+    extended_key.key_ = public_key.get();
+    public_key.release();
+
+    std::string extended_key_str;
+    extended_key.Serialize(extended_key_str);
 
     return true;
 }
