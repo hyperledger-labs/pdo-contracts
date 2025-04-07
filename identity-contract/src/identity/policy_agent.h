@@ -20,6 +20,10 @@
 #include "Environment.h"
 #include "Message.h"
 #include "Response.h"
+#include "Value.h"
+
+#include "common/Credential.h"
+#include "common/VerifyingContext.h"
 
 #define POLICY_AGENT_REGISTER_ISSUER_PARAM_SCHEMA       \
     "{"                                                 \
@@ -44,9 +48,24 @@ namespace identity
 {
 namespace policy_agent
 {
+    // Policy Agent contract methods
     bool initialize_contract(const Environment& env);
     bool issue_policy_credential(const Message& msg, const Environment& env, Response& rsp);
     bool register_trusted_issuer(const Message& msg, const Environment& env, Response& rsp);
+
+    // Functions to extend the functionality of the policy agent
+    bool save_trusted_issuer(const std::string& issuer_id, const ww::identity::VerifyingContext& vc);
+    bool fetch_trusted_issuer(const std::string& issuer_id, ww::identity::VerifyingContext& vc);
+    bool verify_credential(const ww::value::Object& vc_object, ww::identity::VerifiableCredential vc);
+    bool issue_credential(
+        const std::string& originator,
+        const std::string& contract_id,
+        const ww::identity::Credential& credential,
+        ww::identity::VerifiableCredential& vc);
+
+    // This function must be defined by the contract, this is not a very clean way to do
+    // this but WASM does not seem to support function pointers very well
+    bool policy_agent_function(const ww::identity::Credential&, ww::identity::Credential);
 
 }; // policy_agent
 }; // identity

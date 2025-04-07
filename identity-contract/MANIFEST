@@ -3,8 +3,9 @@ setup.py
 pdo/__init__.py
 pdo/identity/__init__.py
 pdo/identity/plugins/__init__.py
-pdo/identity/plugins/signature_authority.py
 pdo/identity/plugins/identity.py
+pdo/identity/plugins/policy_agent.py
+pdo/identity/plugins/signature_authority.py
 pdo/identity/resources/__init__.py
 pdo/identity/resources/resources.py
 pdo/identity/scripts/__init__.py

@@ -46,3 +46,12 @@ if -o ${_error_code_} 0
    echo ${ERROR} [ERROR ${_error_code_}] signature_authority test failed; ${_error_message_}
    exit -v ${_error_code_}
 fi
+
+## =================================================================
+echo ${HEADER} run policy_agent contract tests ${ENDC}
+## =================================================================
+script -f ${_path_}/tests/policy_agent.psh
+if -o ${_error_code_} 0
+   echo ${ERROR} [ERROR ${_error_code_}] policy_agent test failed; ${_error_message_}
+   exit -v ${_error_code_}
+fi

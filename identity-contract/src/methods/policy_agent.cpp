@@ -36,11 +36,15 @@
 #include "identity/common/VerifyingContext.h"
 
 static KeyValueStore trusted_issuer_store("issuer_store");
+static KeyValueStore policy_metadata_store("policy_metadata_store");
+
+const std::string md_issuer_path("issuer_path");
+const std::string initial_issuer_path("__ISSUER__");
 
 // -----------------------------------------------------------------
 // FUNCTION: save_trusted_issuer
 // -----------------------------------------------------------------
-bool save_trusted_issuer(
+bool ww::identity::policy_agent::save_trusted_issuer(
     const std::string& issuer_id,
     const ww::identity::VerifyingContext& vc)
 {
@@ -59,7 +63,7 @@ bool save_trusted_issuer(
 // -----------------------------------------------------------------
 // FUNCTION: fetch_trusted_issuer
 // -----------------------------------------------------------------
-bool fetch_trusted_issuer(
+bool ww::identity::policy_agent::fetch_trusted_issuer(
     const std::string& issuer_id,
     ww::identity::VerifyingContext& vc)
 {
@@ -76,6 +80,93 @@ bool fetch_trusted_issuer(
 
     return true;
 }
+
+// -----------------------------------------------------------------
+// FUNCTION: verify_credential
+// -----------------------------------------------------------------
+bool ww::identity::policy_agent::verify_credential(
+    const ww::value::Object& vc_object,
+    ww::identity::VerifiableCredential vc)
+{
+    ERROR_IF_NOT(vc.deserialize(vc_object), "invalid request, ill-formed credential");
+
+    // Verify the credential signature
+
+    // The signature was computed over the base64 encoded credential so we
+    // do not need to decode the credential before checking the signature
+    const std::string serialized_credential(vc.get_serialized_credential());
+    ww::types::ByteArray message(serialized_credential.begin(), serialized_credential.end());
+
+    ww::types::ByteArray signature;
+    ERROR_IF_NOT(ww::crypto::b64_decode(vc.proof_.proofValue_, signature),
+                 "invalid request, ill-formed signature");
+
+    ww::identity::VerifyingContext verifier;
+    ERROR_IF_NOT(fetch_trusted_issuer(vc.proof_.verificationMethod_.id_, verifier),
+                 "invalid request, unknown issuer");
+
+    ERROR_IF_NOT(verifier.extend_context_path(vc.proof_.verificationMethod_.context_path_),
+                 "invalid request, ill-formed context path");
+
+    ERROR_IF_NOT(verifier.verify_signature(message, signature),
+                 "invalid request, signature verification failed");
+
+    return true;
+}
+
+// -----------------------------------------------------------------
+// FUNCTION: issue_credential
+// -----------------------------------------------------------------
+bool ww::identity::policy_agent::issue_credential(
+    const std::string& originator,
+    const std::string& contract_id,
+    const ww::identity::Credential& credential,
+    ww::identity::VerifiableCredential& vc)
+{
+    // the context path that we are using is the path configured in the policy
+    // agent (initially the initial_issuer_path) plus the hash of the originator's
+    // public key. the originator's public key is hashed to ensure that the context path
+    // is unique to the originator.
+
+    // hash the originator's public key
+    ww::types::ByteArray originator_bytes(originator.begin(), originator.end());
+    ww::types::ByteArray originator_hash;
+    ERROR_IF_NOT(ww::crypto::hash::sha256_hash(originator_bytes, originator_hash),
+                 "unexpected error, failed to hash the originator");
+
+    std::string encoded_originator;
+    ERROR_IF_NOT(ww::crypto::b64_encode(originator_hash, encoded_originator),
+                 "unexpected error, failed to encode the originator");
+
+    // setup the context path
+    std::vector<std::string> context_path = { initial_issuer_path, encoded_originator };
+    ww::identity::SigningContext context;
+    std::vector<std::string> extended_path;
+
+    ww::identity::SigningContextManager manager = ww::identity::identity::get_context_manager();
+    ERROR_IF_NOT(manager.find_context(context_path, extended_path, context),
+                 "unexpected error, failed to locate the policy issuer context");
+
+    context.set_context_path(extended_path);
+
+    // std::vector<const std::string>::iterator path_element;
+    // for (path_element = extended_path.begin(); path_element < extended_path.end(); path_element++)
+    //     context_path.push_back(*path_element);
+
+    // Sign the credential using the signing context just created
+    ww::identity::VerifiableCredential vc_out;
+    const ww::identity::IdentityKey identity(contract_id, context_path);
+
+    ww::value::Object credential_object;
+    ERROR_IF_NOT(credential.serialize(credential_object),
+                 "unexpected error, failed to serialize the credential");
+
+    ERROR_IF_NOT(vc.build(credential_object, identity, context),
+                 "unexpected error, failed to build the credential");
+
+    return true;
+}
+
 // -----------------------------------------------------------------
 // METHOD: initialize_contract
 //   contract initialization method
@@ -90,6 +181,20 @@ bool ww::identity::policy_agent::initialize_contract(const Environment& env)
 {
     // ---------- initialize the base contract ----------
     if (! ww::identity::identity::initialize_contract(env))
+        return false;
+
+    // ----------initialize the trusted issuer ----------
+    // the trusted issuer is the path to the root key used to
+    // sign credentials that are generated by this policy agent
+    if (! policy_metadata_store.set(md_issuer_path, initial_issuer_path))
+        return false;
+
+    std::vector<std::string> context_path = { initial_issuer_path };
+    const std::string description("initial issuer path");
+    const bool extensible = true;
+
+    ww::identity::SigningContextManager manager = ww::identity::identity::get_context_manager();
+    if (! manager.add_context(extensible, description, context_path))
         return false;
 
     return true;
@@ -119,7 +224,7 @@ bool ww::identity::policy_agent::register_trusted_issuer(const Message& msg, con
     ASSERT_SENDER_IS_OWNER(env, rsp);
     ASSERT_INITIALIZED(rsp);
 
-    ASSERT_SUCCESS(rsp, msg.validate_schema(IDENTITY_INITIALIZE_PARAM_SCHEMA),
+    ASSERT_SUCCESS(rsp, msg.validate_schema(POLICY_AGENT_REGISTER_ISSUER_PARAM_SCHEMA),
                    "invalid request, missing required parameters");
 
     const std::string issuer_identity(msg.get_string("issuer_identity"));
@@ -132,7 +237,7 @@ bool ww::identity::policy_agent::register_trusted_issuer(const Message& msg, con
     // is not the same as the context_path field in Context objects
     // which describes the path to the key FROM the context.
     std::vector<std::string> prefix_path;
-    ASSERT_SUCCESS(rsp, ww::identity::identity::get_context_path(msg, prefix_path),
+    ASSERT_SUCCESS(rsp, ww::identity::identity::get_context_path(msg, prefix_path, 0),
                    "invalid request, ill-formed context path");
 
     // ---------- create the verifying context ----------
@@ -163,48 +268,33 @@ bool ww::identity::policy_agent::issue_policy_credential(const Message& msg, con
                    "invalid request, missing required parameters");
 
     // Get the credential parameter
-    ww::value::Object credential;
-    ASSERT_SUCCESS(rsp, msg.get_value("credential", credential),
-                   "missing required parameter; credential");
-
-    ww::identity::VerifiableCredential vc;
-    ASSERT_SUCCESS(rsp, vc.deserialize(credential),
-                   "invalid request, ill-formed credential");
+    ww::value::Object vc_object_in;
+    ASSERT_SUCCESS(rsp, msg.get_value("credential", vc_object_in), "missing required parameter; credential");
 
     // Verify the credential signature
-
-    // The signature was computed over the base64 encoded credential so we
-    // do not need to decode the credential before checking the signature
-    const std::string serialized_credential(vc.get_serialized_credential());
-    ww::types::ByteArray message(serialized_credential.begin(), serialized_credential.end());
-
-    ww::types::ByteArray signature;
-    ASSERT_SUCCESS(rsp, ww::crypto::b64_decode(vc.proof_.proofValue_, signature),
-                   "invalid request, ill-formed signature");
-
-    ww::identity::VerifyingContext verifier;
-    ASSERT_SUCCESS(rsp, fetch_trusted_issuer(vc.proof_.verificationMethod_.id_, verifier),
-                         "invalid request, unknown issuer");
-    ASSERT_SUCCESS(rsp, verifier.extend_context_path(vc.proof_.verificationMethod_.context_path_),
-                                "invalid request, ill-formed context path");
-
-    ASSERT_SUCCESS(rsp, verifier.verify_signature(message, signature),
-                         "invalid request, signature verification failed");
+    ww::identity::VerifiableCredential vc_in;
+    ASSERT_SUCCESS(rsp, verify_credential(vc_object_in, vc_in), "invalid request, ill-formed credential");
 
     // And build the veriable credential; just wanted to note that it would be
     // completely appropriate to make a constructor for VC's that took the
     // information for build; however, there are no exceptions with our current
     // WASM interpreter so failure in the constructor would be a catastrophic
     // failure for the contract
-    // ww::identity::VerifiableCredential vc;
-    // ASSERT_SUCCESS(rsp, vc.build(credential, identity, extended_key_seed),
-    //                "invalid request, ill-formed credential");
 
     // ---------- RETURN ----------
-    // Finally pull the serialized verifiable credential and send it back
-    ww::value::Object serialized_vc;
-    ASSERT_SUCCESS(rsp, vc.serialize(serialized_vc),
+    ww::identity::Credential credential_out;
+    CONTRACT_SAFE_LOG(3, "prepare to evaluate the policy");
+
+    ASSERT_SUCCESS(rsp, policy_agent_function(vc_in.credential_, credential_out),
+                   "policy failed");
+
+    ww::identity::VerifiableCredential vc_out;
+    ASSERT_SUCCESS(rsp, issue_credential(env.originator_id_, env.contract_id_, credential_out, vc_out),
+                   "unexpected error, failed to create the new credential");
+
+    ww::value::Object serialized_vc_out;
+    ASSERT_SUCCESS(rsp, vc_out.serialize(serialized_vc_out),
                    "unexpected error, failed to serialized the credential");
 
-    return rsp.value(serialized_vc, false);
+    return rsp.value(serialized_vc_out, false);
 }

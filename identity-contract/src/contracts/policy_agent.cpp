@@ -34,6 +34,26 @@
 #include "identity/policy_agent.h"
 
 // -----------------------------------------------------------------
+// FUNCTION: echo_policy
+//
+// This is a simple policy function that is useful for testing. It
+// simply reissues the credential that it receives.
+// -----------------------------------------------------------------
+bool ww::identity::policy_agent::policy_agent_function(
+    const ww::identity::Credential& credential_in,
+    ww::identity::Credential credential_out)
+{
+    ww::value::Object v;
+
+    ERROR_IF_NOT(credential_in.serialize(v),
+                 "unexpected error, failed to serialize the credential");
+    ERROR_IF_NOT(credential_out.deserialize(v),
+                 "unexpected error, failed to deserialize the credential");
+
+    return true;
+}
+
+// -----------------------------------------------------------------
 // METHOD: initialize_contract
 //   contract initialization method
 //

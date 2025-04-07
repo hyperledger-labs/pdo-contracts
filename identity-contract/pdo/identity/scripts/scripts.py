@@ -25,5 +25,10 @@ def signature_authority() :
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
+def policy_agent() :
+    run_shell_command('do_policy_agent', 'pdo.identity.plugins.policy_agent')
+
+# -----------------------------------------------------------------
+# -----------------------------------------------------------------
 def identity() :
     run_shell_command('do_identity', 'pdo.identity.plugins.identity')
