@@ -27,9 +27,6 @@ set --conditional -s _bin_ -v ${home}/contracts/identity/scripts
 
 script -f ${_bin_}/init.psh
 
-set -s _contract_ -v ${save}/identity.pdo
-set -s _owner_ -v user1
-
 trap_error
 
 ## =================================================================
