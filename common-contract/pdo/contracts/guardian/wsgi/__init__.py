@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pdo.inference.wsgi.add_endpoint import AddEndpointApp
-from pdo.inference.wsgi.info import InfoApp
-from pdo.inference.wsgi.process_capability import ProcessCapabilityApp
-from pdo.inference.wsgi.provision_token_issuer import ProvisionTokenIssuerApp
-from pdo.inference.wsgi.provision_token_object import ProvisionTokenObjectApp
+from pdo.contracts.guardian.wsgi.add_endpoint import AddEndpointApp
+from pdo.contracts.guardian.wsgi.info import InfoApp
+from pdo.contracts.guardian.wsgi.process_capability import ProcessCapabilityApp
+from pdo.contracts.guardian.wsgi.provision_token_issuer import ProvisionTokenIssuerApp
+from pdo.contracts.guardian.wsgi.provision_token_object import ProvisionTokenObjectApp
 
 
 __all__ = [

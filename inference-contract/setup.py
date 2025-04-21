@@ -71,7 +71,6 @@ setup(
         'pdo.inference.common',
         'pdo.inference.operations',
         'pdo.inference.model_scoring_scripts',
-        'pdo.inference.wsgi',
         'pdo.inference.resources',
         'pdo.inference.resources.etc',
         'pdo.inference.resources.context',
@@ -81,26 +80,18 @@ setup(
     include_package_data=True,
     # add everything from requirements.txt here
     install_requires = [
-        'colorama',
-        'colorlog',
-        'lmdb',
-        'toml',
-        'twisted',
-        'jsonschema>=3.0.1',
-        'futures==3.1.1',
         'numpy==1.24.4',
         'opencv-python>=4.6.0',
         'tensorflow-serving-api==2.11.0',
         'pdo-client>=' + pdo_client_version,
         'pdo-common-library>=' + pdo_client_version,
-        'pdo-sservice>=' + pdo_client_version,
         'pdo-contracts>=' + pdo_contracts_version,
         'pdo-exchange>=' + pdo_contracts_version,
     ],
     entry_points = {
         'console_scripts' : [
            'inference_token=pdo.inference.scripts.scripts:inference_token',
-           'guardian_service=pdo.inference.scripts.guardianCLI:Main',
+           'guardian_service=pdo.contracts.guardian.scripts.guardianCLI:Main',
         ]
     }
 )

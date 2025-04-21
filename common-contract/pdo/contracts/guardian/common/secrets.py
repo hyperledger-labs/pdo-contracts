@@ -21,7 +21,7 @@ handling contract method invocation requests.
 
 import json
 
-from pdo.inference.common.utility import ValidateJSON
+from pdo.contracts.guardian.common.utility import ValidateJSON
 import pdo.common.crypto as crypto
 
 import logging
@@ -44,7 +44,7 @@ __secret_schema__ = {
 def recv_secret(capability_key, secret) :
     """Process an incoming secret
 
-    :param capability_key pdo.inference.common.capability_keys.CapabilityKeys: decryption key
+    :param capability_key pdo.contracts.guardian.common.capability_keys.CapabilityKeys: decryption key
     :param secret str: the secret to be unpacked
     :returns dict: the parsed json message in the secret
     """
@@ -68,7 +68,7 @@ def recv_secret(capability_key, secret) :
 def send_secret(capability_key, message) :
     """Create a secret for transmission
 
-    :param capability_key pdo.inference.common.capability_keys.CapabilityKeys: decryption key
+    :param capability_key pdo.contracts.guardian.common.capability_keys.CapabilityKeys: decryption key
     :param message dict: dictionary that will be encrypted as JSON in the secret
     :returns dict: the secret
     """

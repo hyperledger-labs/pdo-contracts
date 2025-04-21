@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = [ 'jupyter', 'plugins', 'wsgi', 'resources', 'scripts', 'common', 'model_scoring_scripts', 'operations']
+__all__ = [ 'jupyter', 'plugins', 'resources', 'scripts', 'common', 'model_scoring_scripts', 'operations']

@@ -27,7 +27,7 @@ import pdo.client.builder.contract as pcontract
 import pdo.client.builder.shell as pshell
 from pdo.client.builder import invocation_parameter
 
-from pdo.inference.common.guardian_service import GuardianServiceClient
+from pdo.contracts.guardian.common.guardian_service import GuardianServiceClient
 
 __all__ = [
     'op_provision_token_issuer',

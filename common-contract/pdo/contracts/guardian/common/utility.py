@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = [
-    'ovms_predict',
-    'utility',
-    ]
+import jsonschema
+
+# -----------------------------------------------------------------
+def ValidateJSON(instance, schema):
+    try:
+        jsonschema.validate(instance=instance, schema=schema)
+    except jsonschema.exceptions.ValidationError as err:
+        return False
+    return True

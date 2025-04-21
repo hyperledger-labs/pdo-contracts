@@ -13,6 +13,10 @@
 # limitations under the License.
 
 __all__ = [
-    'ovms_predict',
+    'capability_keys',
+    'capability_keystore',
+    'endpoint_registry',
+    'guardian_service',
+    'secrets',
     'utility',
-    ]
+]

@@ -20,11 +20,11 @@ handling contract method invocation requests.
 """
 
 from http import HTTPStatus
+import importlib
 import json
 
-from pdo.inference.common.utility import ValidateJSON
-from pdo.inference.common.secrets import recv_secret
-from pdo.inference.operations import capability_handler_map
+from pdo.contracts.guardian.common.utility import ValidateJSON
+from pdo.contracts.guardian.common.secrets import recv_secret
 from pdo.common.wsgi import ErrorResponse, UnpackJSONRequest
 
 import logging
@@ -63,8 +63,16 @@ class ProcessCapabilityApp(object) :
         self.capability_store = capability_store
         self.endpoint_registry = endpoint_registry
 
+        try :
+            operation_module_name = config['GuardianService']['Operations']
+        except KeyError as ke :
+            logger.error('No operation map configured')
+            raise
+
+        operation_module = importlib.import_module(operation_module_name)
+
         self.capability_handler_map = {}
-        for (op, handler) in capability_handler_map.items() :
+        for (op, handler) in operation_module.capability_handler_map.items() :
             self.capability_handler_map[op] = handler(config)
 
     # -----------------------------------------------------------------

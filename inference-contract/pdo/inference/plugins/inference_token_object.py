@@ -28,7 +28,7 @@ import pdo.client.commands.contract as pcontract_cmd
 
 import pdo.exchange.plugins.token_object as token_object
 
-from pdo.inference.common.guardian_service import GuardianServiceClient
+from pdo.contracts.guardian.common.guardian_service import GuardianServiceClient
 
 __all__ = [
     'op_initialize',
@@ -121,7 +121,7 @@ class op_do_inference(pcontract.contract_op_base) :
 
         message = invocation_request('do_inference', **params)
         capability = pcontract_cmd.send_to_contract(state,  message, **session_params)
-        
+
         capability = json.loads(capability)
 
         cls.log_invocation(message, capability)
@@ -135,7 +135,7 @@ class op_do_inference(pcontract.contract_op_base) :
         # send the capability to the guardian, this returns a dictionary
         result = service_client.process_capability(**capability)
         return result
-        
+
 ## -----------------------------------------------------------------
 ## -----------------------------------------------------------------
 class cmd_do_inference(pcommand.contract_command_base) :
@@ -220,4 +220,3 @@ do_inference_token = pcommand.create_shell_command('inference_token', __commands
 def load_commands(cmdclass) :
     pshell.bind_shell_command(cmdclass, 'inference_token', do_inference_token)
     pshell.bind_shell_command(cmdclass, 'inference_token_contract', do_inference_token_contract)
-                                                                                             
