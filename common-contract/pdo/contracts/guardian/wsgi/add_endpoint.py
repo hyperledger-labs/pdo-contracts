@@ -23,7 +23,7 @@ from http import HTTPStatus
 import io
 import json
 
-from pdo.inference.common.utility import ValidateJSON
+from pdo.contracts.guardian.common.utility import ValidateJSON
 from pdo.common.wsgi import ErrorResponse, UnpackJSONRequest
 
 import logging

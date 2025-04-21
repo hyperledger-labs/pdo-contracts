@@ -14,7 +14,7 @@
 
 import shelve
 
-from pdo.inference.common.capability_keys import CapabilityKeys
+from pdo.contracts.guardian.common.capability_keys import CapabilityKeys
 
 import logging
 logger = logging.getLogger(__name__)

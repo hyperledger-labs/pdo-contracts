@@ -12,16 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import jsonschema
 import cv2
-
-# -----------------------------------------------------------------
-def ValidateJSON(instance, schema):
-    try:
-        jsonschema.validate(instance=instance, schema=schema)
-    except jsonschema.exceptions.ValidationError as err:
-        return False
-    return True
 
 # -----------------------------------------------------------------
 def CropResize(img,cropx,cropy):

@@ -24,7 +24,9 @@ https://github.com/openvinotoolkit/model_server/tree/main/demos/image_classifica
 import cv2
 import numpy as np
 
-from pdo.inference.common.utility import ValidateJSON, CropResize
+from pdo.inference.common.utility import CropResize
+from pdo.contracts.guardian.common.utility import ValidateJSON
+
 from pdo.inference.model_scoring_scripts.model_scoring_script_base import ModelScoringScriptBase
 from pdo.inference.model_scoring_scripts.image_classes import imagenet_classes
 

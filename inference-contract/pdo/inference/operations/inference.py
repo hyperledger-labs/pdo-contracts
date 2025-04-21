@@ -18,7 +18,7 @@ This file defines the InvokeApp class, a WSGI interface class for
 handling contract method invocation requests.
 """
 
-from pdo.inference.common.utility import ValidateJSON
+from pdo.contracts.guardian.common.utility import ValidateJSON
 from pdo.common.key_value import KeyValueStore
 
 from pdo.inference.model_scoring_scripts import model_scoring_scripts_map

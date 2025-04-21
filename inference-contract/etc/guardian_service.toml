@@ -20,6 +20,7 @@
 Identity = "${identity}"
 HttpPort = 7900
 Host = "${host}"
+Operations = 'pdo.inference.operations'
 
 # --------------------------------------------------
 # StorageService -- information about passing kv stores
@@ -59,7 +60,7 @@ ScoringScriptModule = "ImageClassification"
 
 #do not change the following variable. Please see README.mdb
 
-OpenVINOModelServerAddress = "localhost" 
+OpenVINOModelServerAddress = "localhost"
 OpenVINOModelServerPort = 9000
 
 #model specific params, used by model scoring script

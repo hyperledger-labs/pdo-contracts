@@ -22,8 +22,8 @@ handling contract method invocation requests.
 from http import HTTPStatus
 import json
 
-from pdo.inference.common.utility import ValidateJSON
-from pdo.inference.common.secrets import send_secret, recv_secret
+from pdo.contracts.guardian.common.utility import ValidateJSON
+from pdo.contracts.guardian.common.secrets import send_secret, recv_secret
 from pdo.common.wsgi import ErrorResponse, UnpackJSONRequest
 from pdo.common.keys import EnclaveKeys
 

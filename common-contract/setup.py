@@ -84,10 +84,13 @@ setup(
     ],
     include_package_data=True,
     install_requires = [
-        'colorama',
         'ipywidgets',
+        'jsonschema>=3.0.1',
+        'requests',
+        'twisted',
         'pdo-client>=' + pdo_client_version,
         'pdo-common-library>=' + pdo_client_version,
+        'pdo-sservice>=' + pdo_client_version,
     ],
     entry_points = {
     }

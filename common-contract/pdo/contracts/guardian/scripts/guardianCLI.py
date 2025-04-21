@@ -29,9 +29,9 @@ import pdo.common.logger as plogger
 import pdo.common.utility as putils
 
 from pdo.common.wsgi import AppWrapperMiddleware
-from pdo.inference.wsgi import wsgi_operation_map
-from pdo.inference.common.capability_keystore import CapabilityKeyStore
-from pdo.inference.common.endpoint_registry import EndpointRegistry
+from pdo.contracts.guardian.wsgi import wsgi_operation_map
+from pdo.contracts.guardian.common.capability_keystore import CapabilityKeyStore
+from pdo.contracts.guardian.common.endpoint_registry import EndpointRegistry
 
 import logging
 logger = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ def TestService(config) :
     """
 
     from pdo.service_client.generic import MessageException
-    from pdo.inference.common.guardian_service import GuardianServiceClient
+    from pdo.contracts.guardian.common.guardian_service import GuardianServiceClient
 
     try :
         http_port = config['GuardianService']['HttpPort']
