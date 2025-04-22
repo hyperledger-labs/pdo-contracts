@@ -20,6 +20,28 @@
 #include "Message.h"
 #include "Types.h"
 #include "Value.h"
+#include "WasmExtensions.h"
+
+#define ERROR_IF_NULL(_ptr_, _message_, ...)            \
+    if ((_ptr_) == NULL)                                \
+    {                                                   \
+        CONTRACT_SAFE_LOG(3, _message_, ##__VA_ARGS__); \
+        return false;                                   \
+    }
+
+#define ERROR_IF(_condition_, _message_, ...)           \
+    if (_condition_)                                    \
+    {                                                   \
+        CONTRACT_SAFE_LOG(3, _message_, ##__VA_ARGS__); \
+        return false;                                   \
+    }
+
+#define ERROR_IF_NOT(_condition_, _message_, ...)       \
+    if (! (_condition_))                                \
+    {                                                   \
+        CONTRACT_SAFE_LOG(3, _message_, ##__VA_ARGS__); \
+        return false;                                   \
+    }
 
 namespace ww
 {
