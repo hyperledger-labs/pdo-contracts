@@ -27,5 +27,4 @@ def inference_token() :
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
 def inference_guardian() :
-    run_shell_command('do_inference_guardian', 'pdo.inference.plugins.inference_guardian')
-
+    run_shell_command('do_guardian_service', 'pdo.contracts.guardian.plugins.guardian_service')

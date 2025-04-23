@@ -9,7 +9,6 @@ MANIFEST.in
 ./pdo/inference/operations/__init__.py
 ./pdo/inference/plugins/inference_token_object.py
 ./pdo/inference/plugins/__init__.py
-./pdo/inference/plugins/inference_guardian.py
 ./pdo/inference/__init__.py
 ./pdo/inference/resources/resources.py
 ./pdo/inference/resources/__init__.py
@@ -19,9 +18,6 @@ MANIFEST.in
 ./pdo/inference/scripts/__init__.py
 ./pdo/inference/scripts/scripts.py
 ./pdo/inference/jupyter.py
-./scripts/gs_stop.sh
-./scripts/gs_start.sh
-./scripts/gs_status.sh
 ./context/tokens.toml
 ./etc/inference.toml
 ./etc/guardian_service.toml

@@ -23,7 +23,7 @@ _logger = logging.getLogger(__name__)
 # set up the context
 # -----------------------------------------------------------------
 guardian_context = jp_common.ContextTemplate('guardian', {
-    'module' : 'pdo.inference.plugins.inference_guardian',
+    'module' : 'pdo.contracts.guardian.plugins.guardian_service',
     'identity' : '${..token_issuer.identity}',
     'token_issuer_context' : '@{..token_issuer}',
     'service_only' : True,

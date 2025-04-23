@@ -40,6 +40,8 @@ fi
 # -----------------------------------------------------------------
 # Process command line arguments
 # -----------------------------------------------------------------
+COMMON_CONTRACT_ROOT=${PDO_HOME}/contracts/contracts
+
 SCRIPTDIR="$(dirname $(readlink --canonicalize ${BASH_SOURCE}))"
 SOURCE_ROOT="$(realpath ${SCRIPTDIR}/..)"
 
@@ -139,8 +141,8 @@ function cleanup {
     done
 
     yell "shutdown guardian and storage service"
-    ${PDO_HOME}/contracts/inference/scripts/gs_stop.sh
-    ${PDO_HOME}/contracts/inference/scripts/ss_stop.sh
+    ${COMMON_CONTRACT_ROOT}/scripts/gs_stop.sh
+    ${COMMON_CONTRACT_ROOT}/scripts/ss_stop.sh
 }
 
 trap cleanup EXIT
@@ -148,7 +150,7 @@ trap cleanup EXIT
 # -----------------------------------------------------------------
 # Start the guardian service and the storage service
 # -----------------------------------------------------------------
-try ${PDO_HOME}/contracts/inference/scripts/ss_start.sh -c -o ${PDO_HOME}/logs -- \
+try ${COMMON_CONTRACT_ROOT}/scripts/ss_start.sh -c -o ${PDO_HOME}/logs -- \
     --loglevel debug \
     --config guardian_service.toml \
     --config-dir ${PDO_HOME}/etc/contracts \
@@ -156,7 +158,7 @@ try ${PDO_HOME}/contracts/inference/scripts/ss_start.sh -c -o ${PDO_HOME}/logs -
 
 sleep 3
 
-try ${PDO_HOME}/contracts/inference/scripts/gs_start.sh -c -o ${PDO_HOME}/logs -- \
+try ${COMMON_CONTRACT_ROOT}/scripts/gs_start.sh -c -o ${PDO_HOME}/logs -- \
     --loglevel debug \
     --config guardian_service.toml \
     --config-dir ${PDO_HOME}/etc/contracts \

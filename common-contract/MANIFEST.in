@@ -1,4 +1,2 @@
-recursive-include ../build/example-contract *.b64
 recursive-include etc *.toml
-recursive-include context *.toml
-recursive-include scripts *.psh
+recursive-include scripts *.psh *.sh

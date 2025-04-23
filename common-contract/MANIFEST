@@ -22,3 +22,9 @@ pdo/contracts/jupyter/groups.py
 pdo/contracts/jupyter/keys.py
 pdo/contracts/jupyter/services.py
 pdo/contracts/jupyter/utility.py
+scripts/gs_stop.sh
+scripts/gs_start.sh
+scripts/gs_status.sh
+scripts/ss_stop.sh
+scripts/ss_start.sh
+scripts/ss_status.sh

@@ -30,7 +30,7 @@ source = "${ContractFamily.Exchange.vetting.source}"
 asset_type_context = "@{..asset_type}"
 
 [token.${token}.guardian]
-module = "pdo.inference.plugins.inference_guardian"
+module = "pdo.contracts.guardian.plugins.guardian_service"
 url = "${url}"
 identity = "${..token_issuer.identity}"
 token_issuer_context = "@{..token_issuer}"
