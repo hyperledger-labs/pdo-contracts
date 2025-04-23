@@ -12,4 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__all__ = [ 'inference_token_object']
+import pdo.client.builder.installer as pinstaller
+
+def install_common_resources() :
+    pinstaller.install_plugin_resources('pdo.common.resources', 'common')

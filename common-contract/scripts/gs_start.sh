@@ -85,6 +85,11 @@ until $(${F_SERVICE_CMD} $@ --test 2> /dev/null > /dev/null) ; do
     sleep 1
     tries=$((tries+1))
     if [ $tries = $max_tries ] ; then
+        if [ "${F_OUTPUTDIR}" != "" ]  ; then
+            echo "guardian service failed to start, check logs:"
+            cat $EFILE
+            cat $OFILE
+        fi
         die guardian service failed to start
     fi
 done

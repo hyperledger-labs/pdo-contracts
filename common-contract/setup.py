@@ -76,11 +76,21 @@ setup(
     url=author_url,
     package_dir = {
         'pdo' : 'pdo',
+        f'pdo.{contract_family}.resources.etc' : 'etc',
+        f'pdo.{contract_family}.resources.scripts' : 'scripts',
     },
     packages = [
         'pdo',
         f'pdo.{contract_family}',
         f'pdo.{contract_family}.jupyter',
+        f'pdo.{contract_family}.guardian',
+        f'pdo.{contract_family}.guardian.common',
+        f'pdo.{contract_family}.guardian.plugins',
+        f'pdo.{contract_family}.guardian.scripts',
+        f'pdo.{contract_family}.guardian.wsgi',
+        f'pdo.{contract_family}.resources',
+        f'pdo.{contract_family}.resources.etc',
+        f'pdo.{contract_family}.resources.scripts',
     ],
     include_package_data=True,
     install_requires = [
@@ -93,5 +103,8 @@ setup(
         'pdo-sservice>=' + pdo_client_version,
     ],
     entry_points = {
+        'console_scripts' : [
+           'guardian_service=pdo.contracts.guardian.scripts.guardianCLI:Main',
+        ]
     }
 )

@@ -61,7 +61,6 @@ setup(
         'pdo.inference.resources.etc' : 'etc',
         'pdo.inference.resources.context' : 'context',
         'pdo.inference.resources.contracts' : '../build/inference-contract',
-        'pdo.inference.resources.scripts' : 'scripts',
     },
     packages = [
         'pdo',
@@ -75,7 +74,6 @@ setup(
         'pdo.inference.resources.etc',
         'pdo.inference.resources.context',
         'pdo.inference.resources.contracts',
-        'pdo.inference.resources.scripts',
     ],
     include_package_data=True,
     # add everything from requirements.txt here

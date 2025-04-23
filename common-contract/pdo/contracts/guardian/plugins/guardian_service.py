@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-inference guardian plugins
+""" This file contains functions that can be used to implement most external guardian service
+interactions. It provides the minimal set of operations required for the token-guardian protocol.
 """
 
 import json
@@ -36,9 +36,6 @@ __all__ = [
     'op_add_endpoint',
     'cmd_provision_token_issuer',
     'cmd_provision_token_object',
-    'do_inference_guardian',
-    'do_inference_guardian_service',
-    'load_commands',
 ]
 
 ## -----------------------------------------------------------------
@@ -258,7 +255,6 @@ class cmd_provision_token_object(pcommand.contract_command_base) :
         cls.display('provisioned token object for guardian {}'.format(url))
         return json.loads(to_package)
 
-
 ## -----------------------------------------------------------------
 ## Create the generic, shell independent version of the aggregate command
 ## -----------------------------------------------------------------
@@ -269,18 +265,18 @@ __operations__ = [
     op_add_endpoint,
 ]
 
-do_inference_guardian_service = pcontract.create_shell_command('inference_guardian_service', __operations__)
+do_guardian_service_ops = pcontract.create_shell_command('guardian_service_ops', __operations__)
 
 __commands__ = [
     cmd_provision_token_issuer,
     cmd_provision_token_object,
 ]
 
-do_inference_guardian = pcommand.create_shell_command('inference_guardian', __commands__)
+do_guardian_service = pcommand.create_shell_command('guardian_service', __commands__)
 
 ## -----------------------------------------------------------------
 ## Enable binding of the shell independent version to a pdo-shell command
 ## -----------------------------------------------------------------
 def load_commands(cmdclass) :
-    pshell.bind_shell_command(cmdclass, 'inference_guardian', do_inference_guardian)
-    pshell.bind_shell_command(cmdclass, 'inference_guardian_service', do_inference_guardian_service)
+    pshell.bind_shell_command(cmdclass, 'guardian_service_ops', do_guardian_service_ops)
+    pshell.bind_shell_command(cmdclass, 'guardian_service', do_guardian_service)
