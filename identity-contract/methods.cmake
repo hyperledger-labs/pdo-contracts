@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-INCLUDE(family.cmake)
+INCLUDE(${CMAKE_CURRENT_LIST_DIR}/family.cmake)
 
 IF(NOT DEFINED EXCHANGE_INCLUDES)
   MESSAGE(FATAL_ERROR "EXCHANGE_INCLUDES is not defined")
