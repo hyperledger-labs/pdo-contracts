@@ -90,28 +90,32 @@ class ProcessCapabilityApp(object) :
                 return ErrorResponse(start_response, "invalid JSON")
 
         except KeyError as ke :
-            logger.error('missing field in request: %s', ke)
-            return ErrorResponse(start_response, 'missing field {0}'.format(ke))
+            logger.error(f'missing field in request: {ke}')
+            return ErrorResponse(start_response, f'missing field in request: {ke}')
         except Exception as e :
-            logger.error("unknown exception unpacking request (ProcessCapability); %s", str(e))
+            logger.error(f'unknown exception unpacking request (ProcessCapability); {e}')
             return ErrorResponse(start_response, "unknown exception while unpacking request")
 
         # dispatch the operation
         try :
             method_name = operation_message['method_name']
             parameters = operation_message['parameters']
-            logger.info("process capability operation %s with parameters %s", method_name, parameters)
+        except KeyError as ke :
+            logger.error(f'missing field {ke}')
+            return ErrorResponse(start_response, f'missing field {ke}')
 
+        logger.info("process capability operation %s with parameters %s", method_name, parameters)
+
+        try :
             operation = self.capability_handler_map[method_name]
             operation_result = operation(parameters)
             if operation_result is None :
                 return ErrorResponse(start_response, "operation failed")
-
         except KeyError as ke :
-            logger.error('unknown operation: %s', )
-            return ErrorResponse(start_response, 'missing field {0}'.format(ke))
+            logger.error(f'unknown operation {ke}')
+            return ErrorResponse(start_response, f'unknown operation {ke}')
         except Exception as e :
-            logger.error("unknown exception performing operation (ProcessCapability); %s", str(e))
+            logger.error(f'unknown exception performing operation (ProcessCapability); {e}')
             return ErrorResponse(start_response, "unknown exception while performing operation")
 
         # and process the result
