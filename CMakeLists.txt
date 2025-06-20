@@ -75,3 +75,12 @@ ADD_CUSTOM_TARGET(root-notebooks ALL DEPENDS ${ROOT_NOTEBOOKS})
 INSTALL(DIRECTORY docs/notebooks/
   DESTINATION "${PDO_JUPYTER_ROOT}/"
   FILES_MATCHING PATTERN "*.ipynb" PATTERN "*.png")
+
+ADD_CUSTOM_TARGET(uninstall)
+
+ADD_CUSTOM_COMMAND(
+    TARGET uninstall
+    POST_BUILD
+    COMMAND xargs -a ${CMAKE_BINARY_DIR}/install_manifest.txt rm -f
+    COMMAND echo "uninstall complete"
+)

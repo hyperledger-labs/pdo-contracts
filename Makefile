@@ -45,6 +45,12 @@ contracts : build
 install : contracts
 	@ cmake --install build
 
+uninstall :
+	@ echo Uninstall artifacts
+	@ if [ -d $(SOURCE_ROOT)/build ]; then \
+		make -C build uninstall; \
+	fi
+
 test : install
 	@ cmake -B build \
 		-DCMAKE_TOOLCHAIN_FILE=$(WAMR_TOOLCHAIN) \
