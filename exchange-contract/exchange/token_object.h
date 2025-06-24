@@ -76,6 +76,10 @@ namespace token_object
         const ww::value::Object& parameters,
         ww::value::Object& capability_result);
 
+    bool get_token_metadata(
+        const std::string& schema,
+        ww::value::Object& token_metadata);
+
 }; // token_object
 }; // exchange
 }; // ww
