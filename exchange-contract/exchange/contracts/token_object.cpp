@@ -48,6 +48,38 @@ const std::string capability_generation_key("capability_generation_key");
 static ww::exchange::LedgerStore ledger_store("token_ledger");
 
 // -----------------------------------------------------------------
+// NAME: get_token_metadata
+//
+// Pulls the stored token metadata (which is a serialized JSON object),
+// verifies the schema of the metadata, and returns it in the
+// token_metadata parameter. The expectation is that this function
+// will be called by token classes that specialize token behavior.
+// -----------------------------------------------------------------
+bool ww::exchange::token_object::get_token_metadata(
+    const std::string& schema,
+    ww::value::Object& token_metadata)
+{
+    std::string serialized_token_metadata;
+    ERROR_IF_NOT(token_object_store.get(token_metadata_key, serialized_token_metadata),
+                 "unexpected error: failed to get token metadata");
+
+    ww::value::Object deserialized_token_metadata;
+    ERROR_IF_NOT(deserialized_token_metadata.deserialize(serialized_token_metadata.c_str()),
+                 "unexpected error: failed to deserialized token metadata");
+
+    ww::value::Object token_metadata_schema;
+    ERROR_IF_NOT(token_metadata_schema.deserialize(schema.c_str()),
+                 "unexpected error: failed to deserialize token metadata schema");
+
+    ERROR_IF_NOT(deserialized_token_metadata.validate_schema(token_metadata_schema),
+                 "unexpected error: token metadata does not match schema");
+
+    token_metadata.set(deserialized_token_metadata);
+    return true;
+}
+
+
+// -----------------------------------------------------------------
 // METHOD: initialize_contract
 // -----------------------------------------------------------------
 bool ww::exchange::token_object::initialize_contract(const Environment& env)
