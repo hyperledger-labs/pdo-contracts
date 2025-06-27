@@ -48,7 +48,7 @@ install : contracts
 uninstall :
 	@ echo Uninstall artifacts
 	@ if [ -d $(SOURCE_ROOT)/build ]; then \
-		make -C build uninstall; \
+		make -C $(SOURCE_ROOT)/build uninstall; \
 	fi
 
 test : install
