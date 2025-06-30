@@ -65,7 +65,7 @@ bool ww::exchange::token_object::get_token_metadata(
 
     ww::value::Object deserialized_token_metadata;
     ERROR_IF_NOT(deserialized_token_metadata.deserialize(serialized_token_metadata.c_str()),
-                 "unexpected error: failed to deserialized token metadata");
+                 "unexpected error: failed to deserialize token metadata");
 
     ww::value::Object token_metadata_schema;
     ERROR_IF_NOT(token_metadata_schema.deserialize(schema.c_str()),
