@@ -47,29 +47,6 @@ from twisted.internet import reactor, defer
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.web.wsgi import WSGIResource
 
-## ----------------------------------------------------------------
-def ErrorResponse(request, error_code, msg) :
-    """Generate a common error response for broken requests
-    """
-
-    result = ""
-    if request.method != 'HEAD' :
-        result = msg + '\n'
-        result = result.encode('utf8')
-
-    request.setResponseCode(error_code)
-    request.setHeader(b'Content-Type', b'text/plain')
-    request.setHeader(b'Content-Length', len(result))
-    request.write(result)
-
-    try :
-        request.finish()
-    except :
-        logger.exception("exception during request finish")
-        raise
-
-    return request
-
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
 def __shutdown__(*args) :

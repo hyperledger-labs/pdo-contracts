@@ -48,6 +48,7 @@
 #define TO_OPERATION_SCHEMA                     \
     "{"                                         \
         SCHEMA_KW(nonce,"") ","                 \
+        SCHEMA_KW(request_identifier,"") ","    \
         SCHEMA_KW(method_name, "") ","          \
         SCHEMA_KWS(parameters, "{}")            \
     "}"
@@ -71,6 +72,13 @@ namespace token_object
 
     // utility functions
     bool initialize_contract(const Environment& env);
+
+    bool create_operation_package(
+        const std::string& request_identifier,
+        const std::string& method_name,
+        const ww::value::Object& parameters,
+        ww::value::Object& capability_result);
+
     bool create_operation_package(
         const std::string& method_name,
         const ww::value::Object& parameters,
@@ -79,6 +87,9 @@ namespace token_object
     bool get_token_metadata(
         const std::string& schema,
         ww::value::Object& token_metadata);
+
+    bool get_token_identity(
+        std::string& token_identity);
 
 }; // token_object
 }; // exchange

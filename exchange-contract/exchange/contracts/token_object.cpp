@@ -67,17 +67,25 @@ bool ww::exchange::token_object::get_token_metadata(
     ERROR_IF_NOT(deserialized_token_metadata.deserialize(serialized_token_metadata.c_str()),
                  "unexpected error: failed to deserialize token metadata");
 
-    ww::value::Object token_metadata_schema;
-    ERROR_IF_NOT(token_metadata_schema.deserialize(schema.c_str()),
-                 "unexpected error: failed to deserialize token metadata schema");
-
-    ERROR_IF_NOT(deserialized_token_metadata.validate_schema(token_metadata_schema),
+    ERROR_IF_NOT(deserialized_token_metadata.validate_schema(schema.c_str()),
                  "unexpected error: token metadata does not match schema");
 
     token_metadata.set(deserialized_token_metadata);
     return true;
 }
 
+// -----------------------------------------------------------------
+// get_token_identity
+//
+// Return the minted identity for this token object.
+// -----------------------------------------------------------------
+bool ww::exchange::token_object::get_token_identity(
+    std::string& token_identity)
+{
+    ERROR_IF_NOT(token_object_store.get(minted_identity_key, token_identity),
+                 "unexpected error: failed to get minted identity");
+    return true;
+}
 
 // -----------------------------------------------------------------
 // METHOD: initialize_contract
@@ -464,6 +472,24 @@ bool ww::exchange::token_object::create_operation_package(
     const ww::value::Object& parameters,
     ww::value::Object& capability_result)
 {
+    // No request identifier is specified so we'll generate a new one
+    ww::types::ByteArray identifier_raw;
+    if (! ww::crypto::random_identifier(identifier_raw))
+        return false;
+
+    std::string identifier;
+    if (! ww::crypto::b64_encode(identifier_raw, identifier))
+        return false;
+
+    return create_operation_package(identifier, method_name, parameters, capability_result);
+}
+
+bool ww::exchange::token_object::create_operation_package(
+    const std::string& request_identifier,
+    const std::string& method_name,
+    const ww::value::Object& parameters,
+    ww::value::Object& capability_result)
+{
     // Create the operation package, this will be the message in the
     // secret that we are going to create for the capability
     ww::value::Structure operation(TO_OPERATION_SCHEMA);
@@ -478,6 +504,9 @@ bool ww::exchange::token_object::create_operation_package(
 
     if (! operation.set_string("nonce", nonce.c_str()))
         return false;
+
+    if (! operation.set_string("request_identifier", request_identifier.c_str()))
+            return false;
 
     if (! operation.set_string("method_name", method_name.c_str()))
         return false;
