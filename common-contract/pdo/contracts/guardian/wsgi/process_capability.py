@@ -44,17 +44,21 @@ class ProcessCapabilityApp(object) :
                     "session_key_iv" : { "type" : "string" },
                     "encrypted_message" : { "type" : "string" },
                 },
+                "required" : [ "encrypted_session_key", "session_key_iv", "encrypted_message" ]
             },
-        }
+        },
+        "required" : [ "minted_identity", "operation" ],
     }
 
     __operation_schema__ = {
         "type" : "object",
         "properties" : {
             "nonce" : { "type" : "string" },
+            "request_identifier" : { "type" : "string" },
             "method_name" : { "type" : "string" },
             "parameters" : { "type" : "object" },
-        }
+        },
+        "required" : [ "nonce", "method_name", "parameters" ],
     }
 
     # -----------------------------------------------------------------
@@ -62,6 +66,7 @@ class ProcessCapabilityApp(object) :
         self.config = config
         self.capability_store = capability_store
         self.endpoint_registry = endpoint_registry
+        self.request_registry = {}        # map of sets, used to check for duplicate requests
 
         try :
             operation_module_name = config['GuardianService']['Operations']
@@ -81,39 +86,62 @@ class ProcessCapabilityApp(object) :
         try :
             request = UnpackJSONRequest(environ)
             if not ValidateJSON(request, self.__input_schema__) :
-                return ErrorResponse(start_response, "invalid JSON")
+                return ErrorResponse(start_response, "invalid JSON, malformed request")
 
-            capability_key = self.capability_store.get_capability_key(request['minted_identity'])
+            minted_identity = request['minted_identity']
+            capability_key = self.capability_store.get_capability_key(minted_identity)
 
             operation_message = recv_secret(capability_key, request['operation'])
             if not ValidateJSON(operation_message, self.__operation_schema__) :
-                return ErrorResponse(start_response, "invalid JSON")
+                return ErrorResponse(start_response, "invalid JSON, malformed operation")
 
         except KeyError as ke :
-            logger.error(f'missing field in request: {ke}')
+            logger.info(f'missing field in request: {ke}')
             return ErrorResponse(start_response, f'missing field in request: {ke}')
         except Exception as e :
             logger.error(f'unknown exception unpacking request (ProcessCapability); {e}')
             return ErrorResponse(start_response, "unknown exception while unpacking request")
 
-        # dispatch the operation
-        try :
-            method_name = operation_message['method_name']
-            parameters = operation_message['parameters']
-        except KeyError as ke :
-            logger.error(f'missing field {ke}')
-            return ErrorResponse(start_response, f'missing field {ke}')
+        # find the operation, we've already validated the JSON so no errors here
+        method_name = operation_message['method_name']
+        parameters = operation_message['parameters']
 
         logger.info("process capability operation %s with parameters %s", method_name, parameters)
 
         try :
             operation = self.capability_handler_map[method_name]
+        except KeyError as ke :
+            logger.info(f'unknown operation {ke}')
+            return ErrorResponse(start_response, f'unknown operation {ke}', HTTPStatus.NOT_FOUND)
+
+        # check for request replays
+        try :
+            if hasattr(operation, 'unique_requests') and operation.unique_requests is True :
+                request_identifier = operation_message.get('request_identifier')
+                if request_identifier is None :
+                    logger.info('missing request identifier for unique operation')
+                    return ErrorResponse(start_response, "missing request identifier for unique operation")
+
+                # add the minted identity to the registry if it does not exist
+                if self.request_registry.get(minted_identity) is None :
+                    self.request_registry[minted_identity] = set()
+
+                # check if the request identifier is already in the registry for this minted identity
+                if request_identifier in self.request_registry[minted_identity] :
+                    logger.info('duplicate request for unique operation')
+                    return ErrorResponse(start_response, 'duplicate request for unique operation', HTTPStatus.UNAUTHORIZED)
+
+                # add the request identifier to the registry for this minted identity
+                self.request_registry[minted_identity].add(request_identifier)
+        except Exception as e :
+            logger.error(f'unexpected error checking for duplicate request; {e}')
+            return ErrorResponse(start_response, "unexpected error checking for duplicate request")
+
+        # dispatch the operation
+        try :
             operation_result = operation(parameters)
             if operation_result is None :
-                return ErrorResponse(start_response, "operation failed")
-        except KeyError as ke :
-            logger.error(f'unknown operation {ke}')
-            return ErrorResponse(start_response, f'unknown operation {ke}')
+                return ErrorResponse(start_response, "operation failed", HTTPStatus.UNPROCESSABLE_ENTITY)
         except Exception as e :
             logger.error(f'unknown exception performing operation (ProcessCapability); {e}')
             return ErrorResponse(start_response, "unknown exception while performing operation")
