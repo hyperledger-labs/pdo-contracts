@@ -92,10 +92,10 @@ class GuardianServiceClient(GenericServiceClient) :
                 return response.json()
 
         except requests.HTTPError as he :
-            logger.warn('HTTP error [%s]; %s, %s', path, he.response.status_code, he.response.text.strip())
+            logger.warning('HTTP error [%s]; %s, %s', path, he.response.status_code, he.response.text.strip())
             raise MessageException(f'HTTP error [{he.response.status_code}]: {he.response.text.strip()}') from he
         except (requests.ConnectionError, requests.Timeout) as e :
-            logger.warn('network error connecting to service (%s); %s', path, str(e))
+            logger.warning('network error connecting to service (%s); %s', path, str(e))
             raise MessageException(str(e)) from e
 
     # -----------------------------------------------------------------
